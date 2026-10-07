@@ -52,12 +52,13 @@ const checks = [
   {file:'knowledge',name:'default',ref:'',tab:'product',contains:['Управление знаниями'],excludes:['>Knowledge<']},
   {file:'capabilities',name:'CapabilityList',ref:'',tab:'',contains:['Доверенная автономность'],excludes:['>Capabilities<']},
   {file:'benchmark',name:'default',ref:'',tab:'lab',contains:['Бенчмарки'],excludes:['Benchmark Lab']},
-  {file:'catalog',name:'default',ref:'telemetry',tab:'Flow',contains:['Выберите основу Flow','Custom Flow','Subagents']},
+  {file:'catalog',name:'default',ref:'telemetry',tab:'Flow',contains:['Каталог','Сценарии','Скиллы','Сабагенты','HG SDLC · v1','Обновление зависимостей'],excludes:['Выберите основу Flow','Откройте детали']},
+  {file:'regulation',name:'default',ref:'',tab:'',contains:['Регуляторы','Контрольные функции','Пакет политик','Скиллы','Сабагенты','Черновик','Действует','Выводится из эксплуатации','Выведена из эксплуатации'],excludes:['>Regulation<','Control functions','Policy Package','Отозвана','Аннулирована','Заменена']},
   {file:'capabilities',name:'CapabilityView',ref:'cap-dep',tab:'releases',contains:['Тег задач','dep-update']},
   {file:'capabilities',name:'CapabilityView',ref:'cap-dep',tab:'monitoring',contains:['Тег Trusted Capability','dep-update']},
 ];
 const appSource=fs.readFileSync(path.join(root,'components/kontur/app.tsx'),'utf8');
-for(const label of ['Главная','Доски задач','Сообщения','Управление знаниями','Окружение','Автономизация','Доверенная автономность','Бенчмарки'])if(!appSource.includes(`title:'${label}'`))throw new Error(`Sidebar label missing: ${label}`);
+for(const label of ['Главная','Доски задач','Сообщения','Управление знаниями','Окружение','Автономизация','Доверенная автономность','Бенчмарки','Каталог','Регуляторы'])if(!appSource.includes(`title:'${label}'`))throw new Error(`Sidebar label missing: ${label}`);
 for(const label of ['Знания','Среда','Автоматизация','Возможности','Лаборатория оценок'])if(appSource.includes(`title:'${label}'`))throw new Error(`Old sidebar label remains: ${label}`);
 for(const fixture of checks){
  const value={...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:fixture.file,ref:fixture.ref,tab:fixture.tab};
