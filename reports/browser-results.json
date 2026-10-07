@@ -1,0 +1,408 @@
+{
+  "mode": "HTTP-bridge (about:blank; bearer session; event polling)",
+  "browser": "Chromium 144.0.7559.96",
+  "viewports": [
+    [
+      1536,
+      960
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ]
+  ],
+  "results": [
+    {
+      "name": "UI-01: пустое создание через форму, роли, стабильный ввод",
+      "status": "passed",
+      "durationMs": 787
+    },
+    {
+      "name": "UI-02: смета → явный заказ → ресурсы Ready → установка HG Ready",
+      "status": "passed",
+      "durationMs": 7167
+    },
+    {
+      "name": "UI-03: проект PO → bindings платформы → исполняемый Flow инженера",
+      "status": "passed",
+      "durationMs": 1329
+    },
+    {
+      "name": "UI-04: Trial без релиза → Input в треде → тот же Run, сохранённый composer draft",
+      "status": "passed",
+      "durationMs": 3273
+    },
+    {
+      "name": "UI-05: неверный diff → запрет approval → содержательный Rework",
+      "status": "passed",
+      "durationMs": 396
+    },
+    {
+      "name": "UI-06: Rework → знание → независимая публикация → явное подключение новой версии",
+      "status": "passed",
+      "durationMs": 966
+    },
+    {
+      "name": "UI-07: новый snapshot с правилом → мобильный Input и корректное ревью на 390 px",
+      "status": "passed",
+      "durationMs": 6411
+    },
+    {
+      "name": "UI-08: evaluation → peer review → PO → UAT точного пакета → допуск → Deployment",
+      "status": "passed",
+      "durationMs": 7448
+    },
+    {
+      "name": "UI-09: 390 px Rework, сохранённый текст, Escape/focus, offline без скрытого approval",
+      "status": "passed",
+      "durationMs": 2016
+    },
+    {
+      "name": "UI-10: script в сообщении отображается как текст, без исполнения",
+      "status": "passed",
+      "durationMs": 276
+    }
+  ],
+  "pageErrors": [],
+  "limitations": [
+    "Native localhost origin blocked by browser administrator in this execution environment.",
+    "Bridge bypasses browser cookie/CORS/localStorage transport; it does not prove native-origin behavior.",
+    "Native SSE endpoint is tested separately by Node HTTP tests."
+  ],
+  "httpWriteCalls": [
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "space.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "plan.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "provision.start"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "installation.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "project.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "binding.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "binding.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "binding.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "binding.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "definition.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "definition.validate"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "run.startTrial"
+    },
+    {
+      "path": "/gates/gate_3c68ba44278346ec/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.answer"
+    },
+    {
+      "path": "/gates/gate_12a58bfc4a8f4e7f/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.decide"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "knowledge.propose"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "knowledge.publish"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "definition.save"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "run.startTrial"
+    },
+    {
+      "path": "/gates/gate_744e7426abba4a98/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.answer"
+    },
+    {
+      "path": "/gates/gate_9e6d444122314051/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.decide"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "evaluation.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "candidate.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "candidate.technical"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "candidate.scope"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "environment.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "uat.start"
+    },
+    {
+      "path": "/gates/gate_903516aac2594896/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.answer"
+    },
+    {
+      "path": "/gates/gate_b235178ce057435f/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.decide"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "uat.accept"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "release.admit"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "environment.create"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "deployment.create"
+    },
+    {
+      "path": "/demo/session",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/gates/gate_747ca35d985b4037/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/gates/gate_747ca35d985b4037/challenges",
+      "method": "POST",
+      "status": 200,
+      "type": null
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "gate.decide"
+    },
+    {
+      "path": "/commands",
+      "method": "POST",
+      "status": 200,
+      "type": "message.send"
+    }
+  ]
+}

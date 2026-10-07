@@ -1,0 +1,9 @@
+/** Independent deterministic oracle over structured behavior; never executes uploaded code. */
+export const EXPECTED_UI = { 200: 'data', 204: 'empty', 503: 'unavailable' };
+export function verifyBehavior(behavior, taskClass = 'ui') { if (taskClass === 'docs') {
+    const pass = behavior?.citations === true && behavior?.unsafeClaims === false;
+    return { passed: pass, oracle: 'docs-contract@1', expected: { citations: true, unsafeClaims: false }, observed: behavior, findings: pass ? [] : ['Документ должен содержать происхождение и не содержать неподтверждённых заявлений'] };
+} const passed = Object.entries(EXPECTED_UI).every(([key, v]) => behavior?.[key] === v); return { passed, oracle: 'http-states@1', expected: EXPECTED_UI, observed: behavior, findings: passed ? [] : ['HTTP 503 должен отображаться как unavailable, а не empty'] }; }
+export function behaviorFor(run, snapshot) { if (run.taskClass === 'docs')
+    return { citations: true, unsafeClaims: false }; const learned = snapshot.lock.some(v => v.rule === 'http-503-unavailable' || /503/.test(v.content || '')); const instructed = run.input?.behavior === 'separate' && /503|недоступ|unavailable/i.test(run.input?.explanation || ''); const reworked = !!run.reworkInput && /503|недоступ|unavailable/i.test(run.reworkInput); const fixed = learned || reworked || (instructed && run.fixture !== 'rework') || run.fixture === 'clean'; return { 200: 'data', 204: 'empty', 503: run.fixture === 'bad-diff' ? 'empty' : fixed ? 'unavailable' : 'empty' }; }
+export function mutationTest() { const wrong = { 200: 'data', 204: 'empty', 503: 'empty' }; const correct = { ...EXPECTED_UI }; return { oracle: 'http-states@1', wrongRejected: !verifyBehavior(wrong).passed, correctAccepted: verifyBehavior(correct).passed, mutant: wrong, expected: EXPECTED_UI, synthetic: true }; }

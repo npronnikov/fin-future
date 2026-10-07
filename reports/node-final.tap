@@ -1,0 +1,248 @@
+
+> kontur-teamspace@6.0.0-prototype.1 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: TS-041 TS-042 TS-043 TS-046 TS-050: canonical thread, mentions, idempotent message-to-task, text/reactions never approve
+ok 1 - TS-041 TS-042 TS-043 TS-046 TS-050: canonical thread, mentions, idempotent message-to-task, text/reactions never approve
+  ---
+  duration_ms: 339.748287
+  type: 'test'
+  ...
+# Subtest: TS-047 TS-048: private assistant history and proposal are per identity; cancelled confirmation creates no task
+ok 2 - TS-047 TS-048: private assistant history and proposal are per identity; cancelled confirmation creates no task
+  ---
+  duration_ms: 107.893579
+  type: 'test'
+  ...
+# Subtest: TS-049: delayed outbox replay creates exactly one gate card and never makes a decision
+ok 3 - TS-049: delayed outbox replay creates exactly one gate card and never makes a decision
+  ---
+  duration_ms: 129.021782
+  type: 'test'
+  ...
+# Subtest: TS-061 TS-063 TS-064 TS-065 TS-066 TS-067 TS-068 TS-094: knowledge provenance, hierarchy, protected backlinks, peer publication and pinned context
+ok 4 - TS-061 TS-063 TS-064 TS-065 TS-066 TS-067 TS-068 TS-094: knowledge provenance, hierarchy, protected backlinks, peer publication and pinned context
+  ---
+  duration_ms: 311.84901
+  type: 'test'
+  ...
+# Subtest: Additional ACL regression: graph dependency cannot expose someone else’s private knowledge version
+ok 5 - Additional ACL regression: graph dependency cannot expose someone else’s private knowledge version
+  ---
+  duration_ms: 86.967519
+  type: 'test'
+  ...
+# Subtest: TS-082 TS-083: repeated usage event is deduplicated, adjustment appends without rewriting original cost
+ok 6 - TS-082 TS-083: repeated usage event is deduplicated, adjustment appends without rewriting original cost
+  ---
+  duration_ms: 96.467551
+  type: 'test'
+  ...
+# Subtest: TS-001 TS-002: empty state, explicit space, three roles, channels and persistent setup
+ok 7 - TS-001 TS-002: empty state, explicit space, three roles, channels and persistent setup
+  ---
+  duration_ms: 42.519965
+  type: 'test'
+  ...
+# Subtest: TS-003 TS-005: role cannot be spoofed; planning creates no resources
+ok 8 - TS-003 TS-005: role cannot be spoofed; planning creates no resources
+  ---
+  duration_ms: 35.316575
+  type: 'test'
+  ...
+# Subtest: TS-004: setup fields and saved stage survive a server restart
+ok 9 - TS-004: setup fields and saved stage survive a server restart
+  ---
+  duration_ms: 20.289679
+  type: 'test'
+  ...
+# Subtest: TS-006 TS-007 TS-008: attestation failure, idempotent provision and retry retain resources
+ok 10 - TS-006 TS-007 TS-008: attestation failure, idempotent provision and retry retain resources
+  ---
+  duration_ms: 57.213458
+  type: 'test'
+  ...
+# Subtest: TS-009: cancellation prevents further provisioning but retains paid resources
+ok 11 - TS-009: cancellation prevents further provisioning but retains paid resources
+  ---
+  duration_ms: 139.391595
+  type: 'test'
+  ...
+# Subtest: TS-010: foreign collections/search/commands denied; simulator cannot step a foreign space
+ok 12 - TS-010: foreign collections/search/commands denied; simulator cannot step a foreign space
+  ---
+  duration_ms: 125.737887
+  type: 'test'
+  ...
+# Subtest: TS-011 TS-012 TS-013 TS-014 TS-015 TS-016: mock profiles, custom owner validation, unsupported control
+ok 13 - TS-011 TS-012 TS-013 TS-014 TS-015 TS-016: mock profiles, custom owner validation, unsupported control
+  ---
+  duration_ms: 153.785969
+  type: 'test'
+  ...
+# Subtest: TS-017 TS-018 TS-019 TS-020: installation failure/retry, pinned runtime, project links, read-only tool
+ok 14 - TS-017 TS-018 TS-019 TS-020: installation failure/retry, pinned runtime, project links, read-only tool
+  ---
+  duration_ms: 139.268365
+  type: 'test'
+  ...
+# Subtest: TS-089: same actionId with different payload produces conflict, never a second effect
+ok 15 - TS-089: same actionId with different payload produces conflict, never a second effect
+  ---
+  duration_ms: 7.923016
+  type: 'test'
+  ...
+# Subtest: TS-071 TS-072 TS-074 TS-075 TS-077: evaluation/mutation, arena not admission, immutable candidate and independent technical reviewer
+ok 16 - TS-071 TS-072 TS-074 TS-075 TS-077: evaluation/mutation, arena not admission, immutable candidate and independent technical reviewer
+  ---
+  duration_ms: 463.503241
+  type: 'test'
+  ...
+# Subtest: TS-078 TS-079: UAT exact snapshot, explicit admission and idempotent scoped deployment
+ok 17 - TS-078 TS-079: UAT exact snapshot, explicit admission and idempotent scoped deployment
+  ---
+  duration_ms: 434.506018
+  type: 'test'
+  ...
+# Subtest: TS-076: team candidate pins coordinator, routing, specialists and delegation limits (single-class admission scope)
+ok 18 - TS-076: team candidate pins coordinator, routing, specialists and delegation limits (single-class admission scope)
+  ---
+  duration_ms: 193.132459
+  type: 'test'
+  ...
+# Subtest: TS-069 TS-070: exact component consumers, revoke stops dependent work and prevents unsafe rollback
+ok 19 - TS-069 TS-070: exact component consumers, revoke stops dependent work and prevents unsafe rollback
+  ---
+  duration_ms: 498.803787
+  type: 'test'
+  ...
+# Subtest: TS-073 TS-080 TS-085 TS-086 TS-087: distinct release types, honest cohort, product outcome and explicit improvement
+ok 20 - TS-073 TS-080 TS-085 TS-086 TS-087: distinct release types, honest cohort, product outcome and explicit improvement
+  ---
+  duration_ms: 273.938591
+  type: 'test'
+  ...
+# Subtest: TS-097: failed durable write changes neither live state nor success events, retry works
+ok 21 - TS-097: failed durable write changes neither live state nor success events, retry works
+  ---
+  duration_ms: 156.946928
+  type: 'test'
+  ...
+# Subtest: TS-098: corrupt primary enters read-only verified-backup recovery, preserves corrupt bytes, never silently resets
+ok 22 - TS-098: corrupt primary enters read-only verified-backup recovery, preserves corrupt bytes, never silently resets
+  ---
+  duration_ms: 2.377527
+  type: 'test'
+  ...
+# Subtest: Single-writer lock rejects a second simultaneous store
+ok 23 - Single-writer lock rejects a second simultaneous store
+  ---
+  duration_ms: 0.644152
+  type: 'test'
+  ...
+# Subtest: TS-090: actual HTTP SSE cursor replay, scoped events and invalidated session (not browser transport)
+ok 24 - TS-090: actual HTTP SSE cursor replay, scoped events and invalidated session (not browser transport)
+  ---
+  duration_ms: 125.275279
+  type: 'test'
+  ...
+# Subtest: TS-096: XSS remains data; dangerous graph paths and origin writes are rejected; session cookie flags
+ok 25 - TS-096: XSS remains data; dangerous graph paths and origin writes are rejected; session cookie flags
+  ---
+  duration_ms: 79.552535
+  type: 'test'
+  ...
+# Subtest: Checked namespace export/import: corrupt digest and dangling references rejected, import into fresh state
+ok 26 - Checked namespace export/import: corrupt digest and dangling references rejected, import into fresh state
+  ---
+  duration_ms: 135.459031
+  type: 'test'
+  ...
+# Subtest: TS-039: automatic server scheduler progresses after client disconnect without UI timers
+ok 27 - TS-039: automatic server scheduler progresses after client disconnect without UI timers
+  ---
+  duration_ms: 2892.664663
+  type: 'test'
+  ...
+# Subtest: TS-021 TS-022: Actor cloning has a fresh identity and no memory, grants or approvals
+ok 28 - TS-021 TS-022: Actor cloning has a fresh identity and no memory, grants or approvals
+  ---
+  duration_ms: 143.581344
+  type: 'test'
+  ...
+# Subtest: TS-023 TS-024 TS-025 TS-027 TS-028: saved graph semantics, round-trip metadata, invalid graph and revision conflicts
+ok 29 - TS-023 TS-024 TS-025 TS-027 TS-028: saved graph semantics, round-trip metadata, invalid graph and revision conflicts
+  ---
+  duration_ms: 93.846391
+  type: 'test'
+  ...
+# Subtest: TS-026: bounded rework loop stops instead of repeating forever
+ok 30 - TS-026: bounded rework loop stops instead of repeating forever
+  ---
+  duration_ms: 191.283073
+  type: 'test'
+  ...
+# Subtest: TS-029 TS-031 TS-035 TS-036: Trial without release pins snapshot and resumes the same run after typed input
+ok 31 - TS-029 TS-031 TS-035 TS-036: Trial without release pins snapshot and resumes the same run after typed input
+  ---
+  duration_ms: 123.489023
+  type: 'test'
+  ...
+# Subtest: TS-032 TS-033 TS-034: draft Production, non-ready environment and protected original task denied before effect
+ok 32 - TS-032 TS-033 TS-034: draft Production, non-ready environment and protected original task denied before effect
+  ---
+  duration_ms: 99.178102
+  type: 'test'
+  ...
+# Subtest: TS-037 TS-051 TS-052 TS-053 TS-054 TS-055: typed field validation, wrong role, stale/digest/expiry and single decision
+ok 33 - TS-037 TS-051 TS-052 TS-053 TS-054 TS-055: typed field validation, wrong role, stale/digest/expiry and single decision
+  ---
+  duration_ms: 160.927324
+  type: 'test'
+  ...
+# Subtest: TS-056 TS-057 TS-068: Rework retains old artifacts, attempts, digest and cost
+ok 34 - TS-056 TS-057 TS-068: Rework retains old artifacts, attempts, digest and cost
+  ---
+  duration_ms: 177.137151
+  type: 'test'
+  ...
+# Subtest: TS-038: Condition uses different permitted graph branches for different fixture checks
+ok 35 - TS-038: Condition uses different permitted graph branches for different fixture checks
+  ---
+  duration_ms: 143.123529
+  type: 'test'
+  ...
+# Subtest: TS-030 TS-040 TS-081: team routing differs for UI/docs, joins wait and child budgets share root
+ok 36 - TS-030 TS-040 TS-081: team routing differs for UI/docs, joins wait and child budgets share root
+  ---
+  duration_ms: 195.602076
+  type: 'test'
+  ...
+# Subtest: TS-058 TS-059 TS-060: InDoubt blocks retry/takeover; reconciliation, drain/checkpoint and human return fence
+ok 37 - TS-058 TS-059 TS-060: InDoubt blocks retry/takeover; reconciliation, drain/checkpoint and human return fence
+  ---
+  duration_ms: 215.696511
+  type: 'test'
+  ...
+# Subtest: TS-084: exhausted root budget stops paid work and requests the product owner
+ok 38 - TS-084: exhausted root budget stops paid work and requests the product owner
+  ---
+  duration_ms: 124.249357
+  type: 'test'
+  ...
+# Subtest: TS-039 TS-088: persisted job and pending gate/challenge survive server restart
+ok 39 - TS-039 TS-088: persisted job and pending gate/challenge survive server restart
+  ---
+  duration_ms: 128.158418
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 39
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4276.052331

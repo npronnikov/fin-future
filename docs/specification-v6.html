@@ -1,0 +1,1749 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'"><title>КОНТУР Team Space · Спецификация 6.0</title><style>
+:root{--bg:#f4f6f3;--paper:#fff;--ink:#192f2b;--muted:#586d67;--line:#dbe5df;--brand:#24624d;--accent:#cfea96;--nav:#15332c;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-synthesis:none;color:var(--ink);background:var(--bg);line-height:1.68;font-size:16px}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}a{color:#286e56;text-underline-offset:3px}a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid #aa7737;outline-offset:3px}.sidebar{position:fixed;inset:0 auto 0 0;width:286px;background:var(--nav);color:#e9f2ed;display:flex;flex-direction:column;z-index:40}.brand{padding:27px 23px 18px}.brand strong{font-size:25px;letter-spacing:2px;display:block}.brand small{font-size:11px;letter-spacing:1px;color:#c6dfca}.search-wrap{padding:0 18px 13px}.search-wrap label{display:block;font-size:12px;color:#d6e6dc;margin-bottom:7px}.search-wrap input{width:100%;padding:10px 11px;border:1px solid #55766b;border-radius:8px;color:white;background:#21473c;font-size:14px}.search-wrap input::placeholder{color:#b2cbbf}.status{font-size:11px;margin:8px 2px 0;color:#cde3d4}.toc{overflow:auto;padding:0 11px 15px;scrollbar-width:thin;flex:1}.toc a{display:flex;gap:10px;padding:8px 10px;color:#d6e6dc;font-size:12px;line-height:1.5;text-decoration:none;border-radius:7px;margin:3px 0}.toc a span{color:#abcab4;flex:0 0 18px}.toc a:hover,.toc a.active{background:#2a5242;color:#fff}.nav-foot{padding:13px 23px;border-top:1px solid #3d5b50;font-size:11px;line-height:1.6;color:#c7dacf}.main{margin-left:286px}.toolbar{position:sticky;top:0;z-index:25;background:#ffffffee;border-bottom:1px solid var(--line);padding:13px 29px;display:flex;justify-content:space-between;align-items:center;gap:12px;backdrop-filter:blur(12px)}.toolbar span{font-size:12px;font-weight:600;color:#50715f;letter-spacing:.4px}.toolbar button{background:white;color:#244b3a;border:1px solid #cadacf;border-radius:7px;padding:7px 12px;font-size:13px}.toolbar .menu{display:none}.document{max-width:1250px;margin:0 auto;padding:29px 30px 55px}.hero{background:#1c493b;color:#fff;border-radius:17px;padding:36px 39px}.hero h1{font-size:46px;letter-spacing:-1.7px;line-height:1.15;margin:12px 0 20px}.hero p{font-size:17px;color:#dcecdf;max-width:800px;margin:0}.hero .eyebrow{font-size:11px;letter-spacing:1.6px;color:#dbedab}.hero-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}.hero-tags span{font-size:11px;border:1px solid #698b74;border-radius:5px;padding:5px 9px;color:#eef4d9}.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:17px 0}.summary-grid>div{padding:19px;background:#fff;border:1px solid var(--line);border-radius:10px}.summary-grid b{font-size:29px;color:var(--brand);display:block;line-height:1.1}.summary-grid span{font-size:12px;color:var(--muted);display:block;margin-top:8px}.preface{padding:25px 28px;background:#eaf1e5;border:1px solid #d4e1cc;border-radius:12px;margin:20px 0 26px;font-size:14px}.preface h1,.preface h2{display:none}.preface p{margin:10px 0}.chapter{scroll-margin-top:90px;padding:32px 33px;margin:0 0 23px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow-wrap:anywhere}.chapter h2{font-size:28px;line-height:1.28;letter-spacing:-.6px;margin:0 0 23px;scroll-margin-top:90px}.chapter h3{font-size:20px;line-height:1.4;margin:29px 0 12px;letter-spacing:-.15px}.chapter p{font-size:15px;line-height:1.85;margin:0 0 16px}.table-scroll{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:8px;margin:21px 0 24px}table{border-collapse:collapse;width:100%;font-size:13px;line-height:1.65;min-width:650px}th{background:#edf3e8;text-align:left;color:#214d36;font-size:12px;padding:13px;vertical-align:top}td{padding:13px;border-top:1px solid var(--line);vertical-align:top}tr:nth-child(even) td{background:#fafcf8}td+td,th+th{border-left:1px solid #e8eee7}code{font:12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;background:#edf3ed;padding:2px 5px;border-radius:4px;color:#264f3c;overflow-wrap:anywhere}pre{padding:20px 22px;background:#15342c;border-radius:9px;color:#d9eade;overflow:auto;max-width:100%;white-space:pre;font-size:13px;line-height:1.75}pre code{background:none;color:inherit;padding:0;font-size:12.5px;white-space:pre;overflow-wrap:normal}.ref{font-size:11px;border:1px solid #cbded0;border-radius:4px;padding:2px 4px;background:#edf6ed;text-decoration:none;white-space:nowrap}.source{padding:20px 0;border-top:1px solid var(--line);scroll-margin-top:95px}.source h3{margin:0 0 9px;font-size:18px}.source p{font-size:14px}.source code{font-size:11px}.flow-diagram{display:flex;align-items:stretch;gap:9px;padding:18px;background:#f3f7ef;border:1px solid #dce7d3;border-radius:10px;flex-wrap:wrap;margin:8px 0 24px}.flow-diagram>div{flex:1 1 135px;background:white;border:1px solid #d7e5cf;border-radius:7px;padding:13px;min-width:0}.flow-diagram>span{align-self:center;color:#729860;font-size:23px}.flow-diagram b{font-size:14px;line-height:1.6;display:block}.flow-diagram small{font-size:9px;letter-spacing:.8px;color:#6b8659;display:block;margin-bottom:7px}.flow-diagram p{font-size:11px!important;margin:8px 0 0;line-height:1.5!important}.architecture{padding:17px;background:#f2f6ef;border-radius:10px;border:1px solid #d8e4d0;margin:18px 0 24px}.arch-band{padding:17px;background:#234e3b;color:white;border-radius:7px;text-align:center}.arch-band b{display:block;font-size:16px}.arch-band span{font-size:12px;display:block;margin-top:7px}.arch-band.light{background:#e1ecd9;color:#31533e;margin:10px 0 0}.arch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}.arch-grid>div{background:white;border:1px solid #d7e4cf;padding:15px;border-radius:7px}.arch-grid b{font-size:13px}.arch-grid p{font-size:12px!important;line-height:1.55!important;margin:7px 0 0}.empty-result{display:none;background:white;border:1px solid var(--line);border-radius:12px;padding:30px;color:var(--muted)}.footer{font-size:12px;color:var(--muted);padding:8px}.skip{position:fixed;top:-60px;left:10px;background:white;color:#173d2b;padding:10px;z-index:100}.skip:focus{top:8px}[hidden]{display:none!important}
+@media(max-width:1150px){.sidebar{width:256px}.main{margin-left:256px}.document{padding:23px 21px}.chapter{padding:27px 24px}.hero{padding:29px}.hero h1{font-size:38px}.chapter h2{font-size:25px}.toolbar{padding:12px 21px}}
+@media(max-width:800px){.sidebar{width:286px;transform:translateX(-100%);transition:transform .15s}.nav-open .sidebar{transform:translateX(0)}.main{margin-left:0}.toolbar .menu{display:inline-flex}.toolbar>span{font-size:10px}.document{padding:18px 15px}.chapter{padding:24px 21px}.summary-grid{gap:9px}.summary-grid>div{padding:15px}.summary-grid b{font-size:25px}.hero h1{font-size:36px}}
+@media(max-width:480px){.hero{padding:26px 23px}.hero h1{font-size:33px}.hero p{font-size:15px}.summary-grid{grid-template-columns:1fr 1fr}.chapter{padding:23px 18px}.chapter h2{font-size:23px}.chapter h3{font-size:18px}.chapter p{font-size:14px}.preface{padding:20px}.toolbar{padding:10px 13px}.toolbar>span{display:none}.flow-diagram{display:block}.flow-diagram>div{margin:7px 0}.flow-diagram>span{display:block;text-align:center;transform:rotate(90deg)}.arch-grid{grid-template-columns:1fr}pre{padding:16px}table{font-size:12px}.document{padding:14px 10px}.hero-tags span{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media print{@page{size:A4;margin:16mm}.sidebar,.toolbar,.skip,.summary-grid{display:none!important}.main{margin:0}.document{max-width:none;padding:0}.hero{background:white!important;color:#183a2b;padding:0 0 25px;border-bottom:2px solid #285940;border-radius:0}.hero p,.hero .eyebrow{color:#365744}.hero h1{font-size:31pt}.hero-tags{display:none}.preface{background:white;border:0;padding:15px 0}.chapter{display:block!important;border:0;padding:18px 0;margin:0;border-top:1px solid #bbcbbd;border-radius:0;break-before:page}.chapter h2{font-size:20pt}.chapter h3{font-size:14pt;break-after:avoid}.chapter p{font-size:10pt;line-height:1.6;widows:3;orphans:3}.table-scroll{overflow:visible}table{min-width:0;font-size:8pt;table-layout:fixed}th{font-size:8pt}td,th{padding:7px}tr{break-inside:avoid}thead{display:table-header-group}pre{background:#f3f5f0;color:#183727;white-space:pre-wrap;font-size:8pt}pre code{white-space:pre-wrap;font-size:8pt}.flow-diagram,.architecture{break-inside:avoid}a{text-decoration:none}.source{break-inside:avoid}.source p{font-size:9pt}}
+</style></head><body><a class="skip" href="#s01">К спецификации</a><aside class="sidebar" aria-label="Содержание"><div class="brand"><strong>КОНТУР</strong><small>TEAM SPACE · СПЕЦИФИКАЦИЯ 6.0</small></div><div class="search-wrap"><label for="search">Поиск по документу</label><input id="search" type="search" placeholder="Setup, гейты, знания, TS-001…" autocomplete="off"><div id="search-status" class="status" aria-live="polite"></div></div><nav class="toc"><a href="#s01" data-nav="s01"><span>01</span>Основания и приоритет требований</a><a href="#s02" data-nav="s02"><span>02</span>Что является продуктом</a><a href="#s03" data-nav="s03"><span>03</span>Роли и ответственность</a><a href="#s04" data-nav="s04"><span>04</span>Структура приложения и контексты</a><a href="#s05" data-nav="s05"><span>05</span>Центральный пользовательский маршрут</a><a href="#s06" data-nav="s06"><span>06</span>Setup командного пространства</a><a href="#s07" data-nav="s07"><span>07</span>Установка основы: три полноценные ветки</a><a href="#s08" data-nav="s08"><span>08</span>Проект, задачи и команда</a><a href="#s09" data-nav="s09"><span>09</span>AI-сотрудники, субагенты и команды</a><a href="#s10" data-nav="s10"><span>10</span>Studio: рабочий конвейер, а не рисунок</a><a href="#s11" data-nav="s11"><span>11</span>Пробное исполнение и эмуляция работы команды</a><a href="#s12" data-nav="s12"><span>12</span>Мессенджер и Human Workbench</a><a href="#s13" data-nav="s13"><span>13</span>Каталог компонентов и их жизненный цикл</a><a href="#s14" data-nav="s14"><span>14</span>Знания: страницы, атомарные заметки и память</a><a href="#s15" data-nav="s15"><span>15</span>Harness, Sandbox, инструменты и своя LLM</a><a href="#s16" data-nav="s16"><span>16</span>История, Benchmark и Test Arena</a><a href="#s17" data-nav="s17"><span>17</span>Релиз доверенной автономности</a><a href="#s18" data-nav="s18"><span>18</span>Размещения, три релиза и мониторинг</a><a href="#s19" data-nav="s19"><span>19</span>Экономика, продуктовые метрики и цикл улучшения</a><a href="#s20" data-nav="s20"><span>20</span>Соответствие компонентам C01–C22 из исходного ТЗ</a><a href="#s21" data-nav="s21"><span>21</span>Предметная модель и состояния</a><a href="#s22" data-nav="s22"><span>22</span>API, события и серверная консистентность</a><a href="#s23" data-nav="s23"><span>23</span>Компонентная архитектура React + Node.js</a><a href="#s24" data-nav="s24"><span>24</span>Демо-данные и сценарный движок</a><a href="#s25" data-nav="s25"><span>25</span>Нефункциональные требования и удобство</a><a href="#s26" data-nav="s26"><span>26</span>Приёмка: что означает «приложение готово»</a><a href="#s27" data-nav="s27"><span>27</span>Поставка и защита от повторения ошибки с файлами</a><a href="#s28" data-nav="s28"><span>28</span>Решения, приоритет реализации и перенос в production</a><a href="#s29" data-nav="s29"><span>29</span>Внешние референсы и пределы заимствования</a><a href="#s30" data-nav="s30"><span>30</span>Происхождение вложений и итоговая граница</a></nav><div class="nav-foot">4 октября 2026 · проект к реализации<br>3 роли · 22 компонента исходного ТЗ<br>Критерии приложения: planned</div></aside><main class="main"><div class="toolbar"><button class="menu" id="menu" aria-expanded="false">☰ Содержание</button><span>ПЛАТФОРМА + РАБОЧАЯ СРЕДА · ОДНО ПРИЛОЖЕНИЕ</span><div><button id="clear">Сбросить поиск</button> <button id="print">Печать</button></div></div><div class="document"><header class="hero"><div class="eyebrow">НОВАЯ ФУНКЦИОНАЛЬНАЯ И ТЕХНИЧЕСКАЯ СПЕЦИФИКАЦИЯ</div><h1>Команда настраивает.<br>Агенты выполняют.<br>Человек решает.</h1><p>От пустого Team Space до автономного конвейера. Инфраструктура, оркестраторы, разработка, мессенджер, встроенные Human Gates и проверяемые знания — в одной системе.</p><div class="hero-tags"><span>TRIAL ДО РЕЛИЗА</span><span>WORKFLOW + ASSISTANT TEAM</span><span>REWORK → KNOWLEDGE</span><span>REACT + NODE.JS MOCK</span></div></header><div class="summary-grid"><div><b>3</b><span>типа человеческих ролей</span></div><div><b>30</b><span>разделов спецификации</span></div><div><b>22</b><span>компонента исходной архитектуры</span></div><div><b>100</b><span>планируемых критериев приёмки</span></div></div><div class="preface"><h1>КОНТУР Team Space</h1>
+<h2>Спецификация 6.0 · единая среда людей и AI-агентов</h2>
+<p><strong>Статус:</strong> спецификация новой реализации, а не описание уже поставленного приложения. <strong>Дата:</strong> 4 октября 2026 года. <strong>Базовый сценарий:</strong> автономная разработка ПО. <strong>Поставка:</strong> компонентное React-приложение и простой Node.js-сервер с воспроизводимой эмуляцией инфраструктуры, оркестраторов, агентов и внешних эффектов.</p>
+<p><strong>Главное требование:</strong> пользователь проходит путь от пустого командного пространства до работающего конвейера. Еще до релиза он запускает черновой Flow в Sandbox, получает вопросы и инженерные задачи в мессенджере, принимает гейты, возвращает работу, сохраняет опыт как знание и проверяет следующую версию. Инженерная платформа и рабочая среда — части одного приложения, а не два несвязанных демонстрационных продукта.</p>
+<p>Документ восстановлен по последним уточнениям заказчика и трем вложениям. Утраченный архив Team Space не является источником подтвержденной реализации. Предыдущие заявления о количестве команд, тестов и готовности сборок не переносятся в эту спецификацию.</p>
+</div><div id="empty-result" class="empty-result">По запросу ничего не найдено. Сбросьте поиск или используйте другой термин.</div><section class="chapter" data-title="01. Основания и приоритет требований"><h2 id="s01">01. Основания и приоритет требований</h2>
+<p><strong>[U] Последние уточнения заказчика</strong> определяют продуктовую структуру: одно приложение; командный setup; инфраструктура перед установкой основы; три роли; пробные запуски до релиза; Slack-подобная работа; инженерные Human Gates в тредах; полноценные компоненты и организация знаний.</p>
+<p><strong><a class="ref" href="#source-A1">[A1]</a> «Финансовые продукты в организации будущего», v2</strong> задает Team Space, шесть архитектурных контуров, компоненты C01–C22, Flow/Run, отдельные допуски, память, полную стоимость, оценку и клиентский Outcome. Основания: главы 4–9, C06–C11, C14–C20, C21/C22 и приёмка. Три последних пользовательских роли заменяют более широкую ролевую модель только в демонстрационном интерфейсе; они не изображают полную модель банковского управления рисками.</p>
+<p><strong><a class="ref" href="#source-A2">[A2]</a> «Путь к автономной разработке», v42</strong> задает различие между тем, кто управляет переходами, и тем, что сохраняется между задачами; связку Capability / Trust / Expansion; фиксацию зависимостей; цикл Human Guidance → Evidence → улучшение-кандидат → Benchmark → Release. Это авторская архитектурная модель, не доказательство готовности конкретной интеграции.</p>
+<p><strong><a class="ref" href="#source-A3">[A3]</a> «Студия автономной разработки», v3</strong> задает маршрут «Техническая основа → Инфраструктура → Окружение → Flow → Отладка → История → Пакет → UAT → Выпуск». В исходном демо отладка собственной сборки ограничена. В версии 6 это ограничение намеренно меняется: поддерживаемый пользовательский граф и команда ассистентов должны исполняться нашим mock-runtime, а не только отображаться. Универсальное исполнение произвольного загруженного кода не требуется.</p>
+<p>Все описанные далее экраны, поля, API, роли и критерии — <strong>проектные требования версии 6</strong>. Сведения о внешних продуктах выделены в разделе 29. Не подтвержденные извне API нельзя выдавать за существующие vendor-методы.</p>
+</section><section class="chapter" data-title="02. Что является продуктом"><h2 id="s02">02. Что является продуктом</h2><div aria-label="Жизненный цикл команды" class="flow-diagram" role="group"><div><small>ПОДГОТОВКА</small><b>Команда → ресурсы → основа</b><p>Платформенный инженер</p></div><span aria-hidden="true">→</span><div><small>РАБОТА</small><b>Проект → Flow → пробный Run</b><p>Продукт-инженер + AI</p></div><span aria-hidden="true">→</span><div><small>ОБРАТНАЯ СВЯЗЬ</small><b>Чат → решение → знание</b><p>Встроенный Human Gate</p></div><span aria-hidden="true">→</span><div><small>ВЫПУСК</small><b>Испытания → допуск → среда</b><p>Три раздельных решения</p></div></div>
+<p>Продукт — <strong>командная среда создания, испытания и эксплуатации способов автономной работы</strong>, встроенная в место повседневного общения людей и агентов. Центр UX — Team Space; центр исполнения — конкретный Run; центр допуска — неизменная версия способности выполнять ограниченный класс задач.</p>
+<p>Три взаимосвязанных цикла:</p>
+<p><strong>Подготовка:</strong> Team Space → инфраструктура → установленная основа → технические подключения → проект.</p>
+<p><strong>Работа:</strong> задача → Flow или команда ассистентов → Run → вопрос / артефакт / Human Gate → решение продукт-инженера → принятый результат.</p>
+<p><strong>Развитие:</strong> наблюдение / Rework → знание или изменение компонента → новая конфигурация → испытания → допуск → UAT → размещение → эксплуатационная обратная связь.</p>
+<p>Необходимо различать намерение владельца продукта, исполняемую конфигурацию и текущую работу. Сообщение «сделайте это» не становится ни выданным правом, ни релизом. Установка оркестратора не выдает разрешения на production. Успешное ревью одной задачи не допускает все будущие задачи.</p>
+<h3>Что входит в эту поставку</h3>
+<p>Связанный и сохраняемый frontend/backend-прототип всех основных путей: setup, облачный каталог, выбор основы, проект, три режима композиции, версии компонентов, пробные запуски, мессенджер, гейты, знания, оценка, два вида capability release, три вида управляемого релиза, среды, метрики, бюджет, ошибки и восстановление. Дополнительные клиентские сценарии из A1 сохраняются как маркированные синтетические демонстрации; они не заменяют центральный SDLC-путь.</p>
+<h3>Что именно эмулируется</h3>
+<p>Создание VM, PostgreSQL и Kafka; установка vendor-продуктов; модельный inference; checkout/PR/CI; внешние действия и product rollout. Их настройки влияют на состояние и доступность следующих действий. Кнопка «установить» должна создать объект установки и события проверки, а не только зеленый бейдж.</p>
+<p>Реальными внутри прототипа должны быть HTTP API, серверная модель ролей и scope, проверка переходов, версии, идентификаторы, сохранение, связи, конфликтное редактирование, outbox/SSE, логика эмулятора и расчеты на синтетических данных. Это не промышленная аутентификация, настоящая изоляция процессов или подтвержденная безопасность банка.</p>
+</section><section class="chapter" data-title="03. Роли и ответственность"><h2 id="s03">03. Роли и ответственность</h2>
+<p>В интерфейсе ровно <strong>три типа человеческих ролей</strong>. AI-сотрудники имеют собственные identities и ограниченные grants, но не являются четвертой человеческой ролью. Для демонстрации независимого ревью допустимы два человека с ролью «продукт-инженер».</p>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Действие</th>
+<th>Владелец продукта</th>
+<th>Продукт-инженер</th>
+<th>Платформенный инженер</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сформулировать цель, гипотезу, приоритет и бюджет</td>
+<td>Создает и принимает</td>
+<td>Уточняет и оценивает</td>
+<td>Видит инфраструктурную часть</td>
+</tr>
+<tr>
+<td>Запросить Team Space</td>
+<td>Создает заявку</td>
+<td>Может подготовить запрос</td>
+<td>Создает пространство и исполняет заявку</td>
+</tr>
+<tr>
+<td>Заказать ресурсы, установить основу, настроить grants</td>
+<td>Согласует стоимость сверх лимита</td>
+<td>Видит и запрашивает</td>
+<td>Настраивает и исполняет</td>
+</tr>
+<tr>
+<td>Создать проект и привязать бизнес-цели</td>
+<td>Владеет проектом</td>
+<td>Создает технический черновик</td>
+<td>Подключает repo/CI/runtime</td>
+</tr>
+<tr>
+<td>Настроить Flow, роли AI-команды и skills проекта</td>
+<td>Просматривает границы и результат</td>
+<td>Собирает внутри разрешенного каталога</td>
+<td>Задает допустимые типы, runtime и технические лимиты</td>
+</tr>
+<tr>
+<td>Запустить черновик в Sandbox</td>
+<td>Поручает тестовую задачу</td>
+<td>Запускает и отлаживает</td>
+<td>Диагностирует платформу</td>
+</tr>
+<tr>
+<td>Ответить на инженерный вопрос, принять diff, назначить Rework</td>
+<td>Не подменяет инженерный гейт</td>
+<td>Принимает решение</td>
+<td>Не подменяет инженерный гейт</td>
+</tr>
+<tr>
+<td>Ответить на вопрос о бизнес-смысле</td>
+<td>Отвечает на адресованный вопрос</td>
+<td>Может запросить уточнение владельца</td>
+<td>Нет</td>
+</tr>
+<tr>
+<td>Проверить и опубликовать предметное знание</td>
+<td>Подтверждает бизнес-смысл при необходимости</td>
+<td>Проверяет и публикует; не сам себе peer reviewer</td>
+<td>Проверяет технические/политические пакеты своей области</td>
+</tr>
+<tr>
+<td>Выпустить автономную способность</td>
+<td>Принимает область и остаточный риск в demo-политике</td>
+<td>Подписывает технические основания и UAT</td>
+<td>Проверяет совместимость среды и размещает</td>
+</tr>
+<tr>
+<td>Выпустить конкретное изменение продукта</td>
+<td>Разрешает выпуск по продуктовой политике</td>
+<td>Подтверждает реализацию и проверки</td>
+<td>Исполняет размещение либо предоставляет разрешенный adapter</td>
+</tr>
+<tr>
+<td>Приостановить работу</td>
+<td>Останавливает работу своего проекта</td>
+<td>Останавливает свой Run</td>
+<td>Останавливает среду/установку при инциденте</td>
+</tr>
+<tr>
+<td>Расширить платформенные права</td>
+<td>Не может</td>
+<td>Не может</td>
+<td>Только через отдельную версию политики и проверку</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Назначения, не глобальная власть.</strong> Membership связывает человека, роль, Team Space и при необходимости проект. Наличие роли в одной команде не открывает соседнюю. Платформенный инженер видит операционные метаданные, но не получает автоматически личные сообщения и частную память сотрудников.</p>
+<p><strong>Разделение подготовки и приёмки.</strong> Технический автор кандидата может испытать его, но независимый technical review выполняет другой продукт-инженер. Это та же роль, другая identity. В обычном task review продукт-инженер может принять работу агента, которую он сам поставил; если он внес исправление через Takeover, для защищенного peer review назначается другой продукт-инженер.</p>
+<p><strong>Граница трехролевая demo-модель / банк.</strong> Высокорисковые изменения кредитных условий, платежей, auth и доступов к клиентским данным блокируются. Владелец продукта не изображается регулятором или универсальным владельцем риска. В будущей промышленной интеграции применяются отдельные control-функции; сейчас их отсутствие не компенсируется checkbox.</p>
+</section><section class="chapter" data-title="04. Структура приложения и контексты"><h2 id="s04">04. Структура приложения и контексты</h2>
+<p>Постоянная оболочка: организация → выбранный Team Space → проект или «все проекты» → рабочий раздел. Выбранное окружение показывается рядом с объектом исполнения, но не превращает все приложение в один глобальный environment-фильтр. У Run всегда своя среда и своя зафиксированная конфигурация.</p>
+<p><strong>Работа:</strong> «Мой день», каналы, личные диалоги, задачи, Human Inbox, персональный ассистент.</p>
+<p><strong>Разработка автономности:</strong> проекты, AI-сотрудники, Studio, пробные запуски, компоненты, знания, испытания и арена, релизы автономности.</p>
+<p><strong>Платформа:</strong> setup, ресурсы и сервисы, установленные системы, интеграции и доступы, среды и размещения, мониторинг, аудит и затраты.</p>
+<p>Разделы — не отдельные приложения. Из Run открывается его тред; из треда — Workbench; из Rework — заметка; из заметки — потребители; из развертывания — точная версия Flow и история запусков. Открытие боковой панели не сбрасывает позицию в канале, фильтр доски и черновик сообщения.</p>
+<h3>Основные маршруты</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Маршрут</th>
+<th>Экран и предмет действия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/spaces</code></td>
+<td>Список пространств и создание нового</td>
+</tr>
+<tr>
+<td><code>/s/:space/setup</code></td>
+<td>Возобновляемая подготовка командного пространства</td>
+</tr>
+<tr>
+<td><code>/s/:space/work</code></td>
+<td>Персональная очередь, поручения и ожидаемые решения</td>
+</tr>
+<tr>
+<td><code>/s/:space/channels/:channel?thread=:thread</code></td>
+<td>Канал с открытым рабочим тредом</td>
+</tr>
+<tr>
+<td><code>/s/:space/tasks/:task</code></td>
+<td>Задача, подзадачи и связанные Runs</td>
+</tr>
+<tr>
+<td><code>/s/:space/platform/resources</code></td>
+<td>Облачный каталог, план и ресурсы</td>
+</tr>
+<tr>
+<td><code>/s/:space/platform/installations/:installation</code></td>
+<td>Основа, версия, конфигурация, health и capabilities</td>
+</tr>
+<tr>
+<td><code>/s/:space/projects/:project</code></td>
+<td>Паспорт проекта, repo, цели, команда и классы задач</td>
+</tr>
+<tr>
+<td><code>/s/:space/studio/:definition</code></td>
+<td>Flow, Actor или команда; canvas и свойства</td>
+</tr>
+<tr>
+<td><code>/s/:space/runs/:run</code></td>
+<td>Трасса, граф, попытки и тот же Workbench</td>
+</tr>
+<tr>
+<td><code>/s/:space/components/:component</code></td>
+<td>Версии, контракты, тесты, потребители</td>
+</tr>
+<tr>
+<td><code>/s/:space/knowledge/:page</code></td>
+<td>Страница / заметка, ссылки и происхождение</td>
+</tr>
+<tr>
+<td><code>/s/:space/evaluations/:evaluation</code></td>
+<td>Корзина, результаты и ограничения оценки</td>
+</tr>
+<tr>
+<td><code>/s/:space/releases/:release</code></td>
+<td>Кандидат, основания, решения, UAT и размещения</td>
+</tr>
+<tr>
+<td><code>/s/:space/environments/:environment</code></td>
+<td>Что где установлено и какая версия допуска активна</td>
+</tr>
+</tbody>
+</table></div>
+<p>Human Gate открывается как вложенный рабочий контекст через <code>gateId</code>; один и тот же React-компонент используется в чате, Human Inbox и трассе. Прямой URL должен восстанавливать экран после перезагрузки и повторно проверять scope. Недоступный объект дает понятный отказ без раскрытия его названия.</p>
+</section><section class="chapter" data-title="05. Центральный пользовательский маршрут"><h2 id="s05">05. Центральный пользовательский маршрут</h2>
+<p>Нормативный сценарий начинается с пустого пространства. Альтернатива «загрузить подготовленное демо» явно отделена и не выдается за результат действий пользователя.</p>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Шаг</th>
+<th>Роль и действие</th>
+<th>Что должно появиться</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Платформенный инженер: «Создать Team Space»</td>
+<td>Пространство, membership, базовые каналы; статус «Требуется инфраструктура»</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Выбрать облачный шаблон, quota, сеть, сервисы</td>
+<td>План ресурсов, смета и явные ограничения; еще ничего не установлено</td>
+</tr>
+<tr>
+<td>3</td>
+<td>«Заказать и подготовить»</td>
+<td>Provisioning job с этапами; ресурсы становятся Ready только после проверок</td>
+</tr>
+<tr>
+<td>4</td>
+<td>«Установить основу» или «Соберу из компонентов»</td>
+<td>Installation с версией adapter и доступными способами управления</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Подключить repo, tracker, CI, model gateway</td>
+<td>Scoped bindings с отдельным результатом проверки каждого подключения</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Владелец продукта: создать проект «Статусы заявок»</td>
+<td>Цель, метрика, проектная доска, ответственные и канал</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Продукт-инженер: создать Flow из шаблона</td>
+<td>Редактируемый черновик с вопросом, проверкой и инженерным approval</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Настроить исполнителей, skills и допустимый класс</td>
+<td>Валидация, dependency lock preview, стоимость и готовность Sandbox</td>
+</tr>
+<tr>
+<td>9</td>
+<td>«Пробный запуск», выбрать проектную задачу</td>
+<td>Snapshot, Run, рабочий тред и начальные события; релиза еще нет</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Агент просит уточнить неоднозначное поведение</td>
+<td>HumanTask продукт-инженеру, input-карточка в том же треде</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Инженер отвечает в карточке</td>
+<td>InputAnswer; продолжение Run, история исходного вопроса сохранена</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Агент готовит изменение и тесты</td>
+<td>Артефакты, diff и Human Approval в чате</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Инженер возвращает работу с причиной</td>
+<td>Новая попытка, прошлые артефакты остаются, предложение сохранить опыт</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Оформить и проверить знание</td>
+<td>Заметка с provenance, версия; подключение только к новой конфигурации</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Повторить испытания, подготовить кандидат</td>
+<td>Сравнимые результаты конкретного snapshot, область допуска и риски</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Technical review → PO approval → UAT → размещение</td>
+<td>Допущенная версия в выбранной среде; уведомление команды</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Поручить следующую in-scope задачу</td>
+<td>Run по размещенному релизу; вопросы, исключения и гейты снова в чате</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Изучить метрики, инициировать улучшение</td>
+<td>Новый Product Change Case либо Capability Change; не скрытая замена релиза</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Критический пример Rework:</strong> «Пустой список заявок и недоступность источника — разные состояния. При HTTP 503 нельзя отображать “У вас нет заявок”». Уточнение превращается в конкретное правило и проверку, а не в общий совет «будь внимательнее». Основание этого примера — A1, C11.</p>
+</section><section class="chapter" data-title="06. Setup командного пространства"><h2 id="s06">06. Setup командного пространства</h2>
+<h3>6.1 Создание команды</h3>
+<p>Форма содержит название, цель команды, владельца продукта, одного или нескольких продукт-инженеров, платформенного инженера, классификацию данных, лимит демонстрационных расходов и часовой пояс. Минимальное пространство создается без проекта и без установленного оркестратора. Должны сразу работать каналы <code>#общее</code> и <code>#платформа</code>, персональный inbox и чтение статуса заявки.</p>
+<p>Setup — сохраняемый объект <code>SetupSession</code>. «Назад» не уничтожает заполненные поля. После закрытия браузера путь возобновляется на незавершенном шаге. Изменение имени не пересоздает инфраструктуру. Изменение значимого плана после подготовки вызывает новый plan/diff; приложение показывает, что будет добавлено, изменено и остановлено.</p>
+<h3>6.2 План ресурсов</h3>
+<p>Каталог содержит VM/worker pool, PostgreSQL database, event broker/topic, object storage, web preview, CI runner, dev workspace, model quota и инфраструктурные модули. Для карточки обязательны: template version, владелец, состав ПО, sizing, network profile, данные, retention, стоимость, зависимости, условия готовности и метка «эмуляция».</p>
+<p>Быстрые шаблоны: «Минимальное SDLC-пространство», «Команда ассистентов» и «Собственная сборка». Kafka не обязательна для каждого пространства: в минимальном варианте события обслуживает mock-outbox. Пользователь может явно добавить broker, после чего в топологии появляются producer/consumer bindings и отдельная проверка связи.</p>
+<p>План сначала содержит инфраструктуру без установленного движка. Выбор будущего шаблона основы может предзаполнить ресурсы, но <strong>заказ инфраструктуры и установка системы — два разных действия и объекта</strong>.</p>
+<h3>6.3 Provisioning</h3>
+<p>Переходы: <code>Draft → Planned → Validating → Provisioning → Attesting → Ready</code>; альтернативы <code>Failed</code>, <code>Cancelled</code>, <code>Expired</code>. Этапы прогресса выполняет сервер: namespace, сеть, ресурсы, identities, тома, health checks. UI не переводит ресурс в Ready собственным таймером.</p>
+<p>Пользователь видит планируемое и фактическое состояние, endpoint-алиасы, проверку сети, проверку прав, срок аренды и журнал. При сбое есть причина и кнопки «Изменить план», «Повторить неуспешный этап», «Отменить». Повтор не создает второй экземпляр успешно подготовленного ресурса. Отмена не стирает уже понесенную стоимость.</p>
+<h3>6.4 Разделение пространств</h3>
+<p><code>TeamSpace</code> — организационная область; <code>Environment</code> — Sandbox/UAT/Production с bindings; <code>RunWorkspace</code> — временная рабочая копия для конкретного запуска; <code>Installation</code> — установленная основа; <code>Deployment</code> — привязка допущенного релиза к среде. Одна VM не подменяет все пять объектов.</p>
+<p>Среды команды изолируются логически в эмуляторе. В целевой архитектуре изоляция реализуется инфраструктурой; в этом прототипе badge «Sandbox» не обещает реальной защиты хост-машины.</p>
+</section><section class="chapter" data-title="07. Установка основы: три полноценные ветки"><h2 id="s07">07. Установка основы: три полноценные ветки</h2>
+<h3>7.1 Готовый оркестратор</h3>
+<p>В каталоге есть профили HG SDLC и Fabro; Symphony доступна как отдельный профиль scheduler/runner, не как копия универсального workflow engine. Карточка показывает назначение, происхождение сведений, тип размещения, поддерживаемые controls и ограничения adapter.</p>
+<p>Пользователь выбирает подготовленную среду, версию демонстрационного пакета, разрешенные модели, registry, state store и связи с платформенными сервисами. «Установить» создает job: compatibility → configuration → connection checks → start mock-service → Ready. После установки доступны «Конфигурация», «Проекты», «Flows», «Запуски», «Подключения», «Журнал» и «Обновить».</p>
+<p>HG SDLC-профиль демонстрирует AI Node, Command Node, Input Gate, Approval Gate и Terminal с циклом Rework. Fabro-профиль использует собственную видимую нотацию/описание и общую нормализованную трассу. Все vendor-вызовы в поставке заменены mock-adapter; совместимость с реальными API не заявляется.</p>
+<h3>7.2 Система управления AI-агентами</h3>
+<p>В этой ветке первичны каталог identities, координатор, специалисты, inbox агентов, расписания, task routing, память и scopes. Демонстрационные профили: «Управляемая команда агентов», Multica и OpenClaw-inspired. Они не обязаны иметь одинаковые controls: карточка adapter должна показывать отличия.</p>
+<p>OpenAI Frontier представляется как <strong>подключаемая корпоративная платформа через mock-connection</strong>, а не выдуманный образ для установки на локальную VM. Требования к отдельным API и deployment-формату остаются предметом будущей проверенной интеграции. Название Frontier само по себе не доказывает наличие произвольного choreography API.</p>
+<h3>7.3 «Соберу из компонентов»</h3>
+<p>Пользователь выбирает блоки: контроллер состояния или coordinator runtime, agent harness, model gateway, state store, event adapter, registry, context service, sandbox profile, tool gateway, human-interaction adapter, evaluation и telemetry. Для компонентов показываются типизированные порты и обязательные зависимости.</p>
+<p>Должно быть явно выбрано, <strong>кто владеет существенными переходами</strong>: workflow controller, agent coordinator либо bounded event choreography. При конфликте двух владельцев одного состояния сборка не проходит проверку. Брокер событий не объявляется оркестратором только потому, что он есть в топологии.</p>
+<p>Затем пользователь связывает порты, задает лимиты и запускает conformance-сценарии: старт, question/resume, approval/rework, pause/cancel, duplicate event, restart и artifact retrieval. Поддерживаемая сборка действительно запускает пробную работу в mock-runtime. Неизвестный node type или неподдерживаемый control дает понятную ошибку, а не фиктивное успешное исполнение.</p>
+<h3>7.4 Обновление основы</h3>
+<p>Обновление создает <code>InstallationRevision</code> с impact analysis. Начатые Runs сохраняют прежний runtime binding или переводятся в управляемую остановку при несовместимости. Нельзя автоматически подменить движок всех существующих запусков. Удаление установки с активными Runs блокируется до drain; исторические traces остаются доступны.</p>
+</section><section class="chapter" data-title="08. Проект, задачи и команда"><h2 id="s08">08. Проект, задачи и команда</h2>
+<p>Паспорт проекта содержит название, ожидаемый продуктовый результат, owner, repo и branch policy, систему задач, CI, каналы, источники знаний, метрики, бюджет, установленную основу и environments. Проектный черновик можно подготовить заранее, но Run не стартует без готовых обязательных bindings.</p>
+<p><code>TaskClassVersion</code> описывает входы, критерии результата, допустимые репозитории/пути/ресурсы, запрещенные области, категории данных, обязательные проверки, gate policy, бюджет и стоп-условия. Пример: «Изменение информационного frontend без auth, платежной логики, ставок и реальных клиентских данных».</p>
+<p><code>ProjectTask</code> содержит описание, acceptance criteria, priority, owner, исполнителя, класс, родителя и зависимости. <code>AgentWorkItem</code> описывает поручение конкретному агенту; <code>HumanTask</code> — вопрос или ревью для человека. Они связаны с общей задачей, но не заменяют ее.</p>
+<p>Доска: Backlog → Ready → In progress → Needs input / Review → Done; Cancelled отдельно. Перетаскивание карточки в Done не может обойти открытый обязательный Gate. Несколько Runs одной задачи хранятся в истории; один активный mutating Run на branch/workspace по умолчанию. Для разрешенного параллелизма выделяются отдельные workspaces и явный merge-step.</p>
+<p>Из сообщения создается draft Task с originMessageId. Из Task создается Run. Повтор команды с тем же actionId возвращает созданный объект, а не дубликат. Отмена задачи останавливает новые поручения и запрашивает остановку текущих, но не стирает совершенные эффекты.</p>
+</section><section class="chapter" data-title="09. AI-сотрудники, субагенты и команды"><h2 id="s09">09. AI-сотрудники, субагенты и команды</h2>
+<h3>9.1 Устойчивая identity</h3>
+<p>Различаются <code>ActorDefinitionVersion</code> — роль и поведение; <code>Actor</code> — адресуемый экземпляр; <code>Worker</code> — краткоживущий исполнитель; <code>Run</code> — конкретная работа. Карточка AI-сотрудника содержит имя с маркером AI, owner, команду, инструкцию, task classes, skills, subagents, tool policy, memory scope, model profile, capabilities и статус.</p>
+<p>Клонирование роли создает новую identity и пустую частную память. Чужие secrets, grants, approvals и история клиента не копируются. Статусы: Draft, Configured, Ready-for-test, Admitted, Active, Suspended, Retired. Configured дает право на разрешенный тестовый запуск, но не на производственное поручение.</p>
+<h3>9.2 Команда ассистентов</h3>
+<p><code>AssistantTeamDefinitionVersion</code> содержит coordinator, роли специалистов, допустимые классы задач, маршрутизацию, правила взаимодействия, максимальную глубину/число делегирований, WIP, budget, инструментальные scopes и обязательные Human Gates. Координатор может включать утвержденные subflows.</p>
+<p>Для каждой роли видны техническая реализация и стабильная версия, а для каждого поручения — parentTaskId, parentRunId, delegatedBy, allowedActions, inputRefs, expectedOutput и deadline. Результат специалиста принимается координатором только по контракту. Координатор не может выдать подчиненному более широкие права, чем получил сам.</p>
+<p><strong>Это не переименованный линейный Flow.</strong> Для двух классов задач должны получаться разные планы: например, UI-изменение включает разработчика и accessibility reviewer, а документационная задача — автора и fact checker. Независимые review-поручения могут выполняться параллельно; зависимые ожидают артефакт. Неизвестный класс вызывает маршрутизацию к человеку, а не произвольный вызов любого агента.</p>
+<h3>9.3 Actor + Workflow / Hybrid</h3>
+<p>Адресуемый сотрудник принимает сообщение и выбирает только разрешенный сценарий. Существенными переходами внутри выбранного Flow владеет его контроллер. Один Actor может иметь несколько допущенных workflows, но не переключает активный Run на другую версию без нового поручения.</p>
+</section><section class="chapter" data-title="10. Studio: рабочий конвейер, а не рисунок"><h2 id="s10">10. Studio: рабочий конвейер, а не рисунок</h2>
+<p>Экран разделен на каталог/палитру, canvas, свойства выбранного узла, dependencies, validation и Run preview. Переключатели: Flow / Actor / Assistant Team. Редактирование и просмотр выполнения используют один граф с разными режимами, а не разные несвязанные модели.</p>
+<h3>10.1 Поддерживаемые узлы</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Тип</th>
+<th>Семантика</th>
+<th>Результат или стоп</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start</td>
+<td>Проверяет вход и TaskClass</td>
+<td>Инициализированная работа</td>
+</tr>
+<tr>
+<td>AI Node</td>
+<td>Исполняет ограниченное поручение через harness</td>
+<td>Артефакт, вопрос или ошибка</td>
+</tr>
+<tr>
+<td>Command Node</td>
+<td>Вызывает только именованную mock-команду</td>
+<td>Структурированный результат проверки</td>
+</tr>
+<tr>
+<td>Human Input Gate</td>
+<td>Ожидает типизированный ответ назначенного человека</td>
+<td>InputAnswer либо отмена</td>
+</tr>
+<tr>
+<td>Human Approval Gate</td>
+<td>Ожидает решение по точному пакету</td>
+<td>Approve, Rework, Reject, Takeover request</td>
+</tr>
+<tr>
+<td>Condition</td>
+<td>Выбирает переход по безопасному выражению над состоянием</td>
+<td>Один разрешенный выход</td>
+</tr>
+<tr>
+<td>Subflow / Delegation</td>
+<td>Создает дочернее поручение по закрепленной версии</td>
+<td>Итог дочернего выполнения</td>
+</tr>
+<tr>
+<td>Parallel / Join</td>
+<td>Выполняет независимые ветви в лимите concurrency</td>
+<td>Join по объявленной политике</td>
+</tr>
+<tr>
+<td>Terminal</td>
+<td>Завершает результатом Accepted, Failed или Cancelled</td>
+<td>Зафиксированный итог</td>
+</tr>
+</tbody>
+</table></div>
+<p>Реальный shell, произвольный JavaScript и <code>eval</code> в описании графа не исполняются. Command Node выбирается из безопасного каталога fixtures. Поддерживаются ограниченные циклы: maximum visits, retry count и общий budget. Случайный бесконечный цикл отклоняется либо останавливается на лимите с явной причиной.</p>
+<h3>10.2 Свойства и версии</h3>
+<p>У узла есть stable nodeId, label, тип, исполнитель, instructionVersion, skillRefs, ruleRefs, subagentRefs, input/output schema, контекст, tools, retry policy, timeout, budget slice и mapping ответственного человека. Для Approval фиксируются review artifact set и обязательные checks. Позиция узла — UI layout, а не изменение поведения.</p>
+<p>«Сохранить черновик» увеличивает draftRevision. «Зафиксировать конфигурацию» создает immutable <code>DefinitionVersion</code> и resolved lock. «Пробный запуск» может сам зафиксировать текущий валидный draft как тестовый snapshot, <strong>без регистрации CapabilityRelease</strong>. Пользователь видит diff и идентификатор снимка.</p>
+<p>Validation должна ловить отсутствующий Start/Terminal, недостижимые узлы, отсутствующий переход для исхода, несовместимые схемы, незаданный reviewer, запрещенный инструмент, отсутствующий component version, отозванную dependency и неподдерживаемую операцию adapter.</p>
+<h3>10.3 Reuse и расширение</h3>
+<p>Из каталога можно взять Template, сделать Fork или Extend через разрешенные точки. Защищенные гейты и проверки явно отмечены. Удаление обязательной проверки не маскируется переносом узла за границу canvas. Изменение поведения создает новый snapshot и требует новых релевантных evidence; новый layout без semantic diff не обнуляет допуск.</p>
+<p>JSON-импорт имеет preview, schema validation и diff до сохранения. Неизвестные поддерживаемые metadata-поля сохраняются при round-trip; неизвестная исполняемая семантика отклоняется. Ошибка импорта не затирает текущий draft. Одновременное редактирование дает revision conflict с сохранением локального текста.</p>
+</section><section class="chapter" data-title="11. Пробное исполнение и эмуляция работы команды"><h2 id="s11">11. Пробное исполнение и эмуляция работы команды</h2>
+<h3>11.1 Условия старта</h3>
+<p>Для <code>run.startTrial</code> нужны ready Sandbox, рабочая Installation, проектная задача или явно созданная testTask, валидный snapshot, назначенный продукт-инженер, разрешенный class, необходимый контекст и достаточная reservation. Релиз и Production-допуск не нужны. Тестовая работа имеет <code>mode=trial</code>, synthetic data и запрет настоящих внешних эффектов.</p>
+<p>Режимы запуска: Trial, Benchmark, Shadow, UAT, Released. Shadow не совершает mutating actions. UAT связывается с кандидатом, но не считается уже производственной работой. Released разрешен только через действующее Deployment и актуальные approvals/bindings.</p>
+<h3>11.2 Исполнитель</h3>
+<p>В Node.js работает детерминированный simulator с seed, simulated clock, очередью pending jobs и fixture outputs. Он исполняет текущий разрешенный узел/поручение, а не проигрывает заранее нарисованный одинаковый ролик для любой конфигурации. Выбранный class, параметры узла, версия знания, ответ человека и исход проверки влияют на дальнейший путь.</p>
+<p>Поддерживаются автоматический ход, один шаг, пауза и ускорение. Эти controls относятся к демо, не дают дополнительных предметных полномочий. Сервер продолжает mock-run при закрытии вкладки; UI после открытия загружает состояние и пропущенные события. Это свойство создаваемого приложения, а не фоновая работа ассистента в чате.</p>
+<h3>11.3 Вопросы, артефакты и проверки</h3>
+<p>При неоднозначности создаются InputRequest, HumanTask и card в рабочем треде. Пока нет валидного ответа, зависимая ветвь стоит. Артефакты включают specification.md, implementation.diff, test-report.json, preview model и review summary. Каждый хранит source node, attempt, configurationDigest, contentDigest и synthetic=true.</p>
+<p>Mock-check получает независимо заданное ожидаемое поведение, а не верит строке агента «тесты прошли». Набор fixtures содержит намеренно неверный diff, который verifier обязан отклонить. Выбор «ответ по всем вопросам» не пропускает обязательное инженерное ревью.</p>
+<h3>11.4 Ошибки и восстановление</h3>
+<p>Transient failure допускает ограниченный retry той же операции. Rework означает новое содержательное поручение и попытку. Timeout mutating action дает <code>InDoubt</code>; автоматический повтор запрещен до read-back/reconciliation. Восстановление после crash читает сохраненный job и idempotency ledger; уже выполненная операция не исполняется повторно.</p>
+<p>Перед Takeover закрываются новые agent writes, увеличивается controlEpoch, завершаются или сверяются эффекты, фиксируется checkpoint и только затем выдается human writer lease. При <code>InDoubt</code> полноценное редактирование заблокировано. Return от человека фиксирует новый diff, закрывает lease, повторяет проверки и открывает новый agent epoch. Это эмуляция протокола, не общий SSH-доступ.</p>
+</section><section class="chapter" data-title="12. Мессенджер и Human Workbench"><h2 id="s12">12. Мессенджер и Human Workbench</h2><div aria-label="Трассировка решения" class="flow-diagram" role="group"><div><small>ENGINE</small><b>Run / node / attempt</b></div><span>→</span><div><small>SERVER</small><b>Gate + HumanTask</b></div><span>→</span><div><small>WORKSPACE</small><b>Тред + Workbench</b></div><span>→</span><div><small>DECISION</small><b>Проверка роли и digest</b></div><span>→</span><div><small>RESUME</small><b>Продолжение того же Run</b></div></div>
+<h3>12.1 Общение людей и агентов</h3>
+<p>Нужны проектные и командные каналы, ответы в тредах, личные диалоги, @mentions, непрочитанное, подписка на тему, поиск, реакции, закрепления и файлы/артефакты. Свое обычное сообщение можно редактировать с историей или удалить с tombstone. Системную карточку Gate нельзя удалить как способ отменить решение. «Сохранить как задачу» и «Предложить знание» создают связанные объекты.</p>
+<p>AI-сообщение показывает identity, owner, роль в команде, runtime/версию и связанную работу. Под именем исполнителя нельзя скрывать, что это AI. В канал не отправляется нескончаемый журнал внутренних рассуждений; видны рабочие события, краткое обоснование, доступные материалы, блокировка и ожидаемое действие.</p>
+<h3>12.2 Канонический рабочий тред</h3>
+<p>При старте Run создается корневая карточка: задача, Flow/команда, snapshot или release, среда, инициатор, ответственный, прогресс, бюджет и статус. Карточка имеет стабильный rootMessageId. Шаги, вопросы, review, Rework и итог публикуются в этом треде. У дочернего Run могут быть дочерние обсуждения, но связь с корнем сохраняется.</p>
+<p>Короткая копия карточки может появиться в другом разрешенном канале или Human Inbox; она ссылается на тот же gateId. Проекция не создает второе независимое решение. Ошибка публикации в чат не завершает и не согласует Run: outbox показывает pending/failed delivery и повторяет доставку без дубликатов.</p>
+<h3>12.3 Human Input</h3>
+<p>Карточка вопроса содержит суть неопределенности, точные вопросы, предложенные варианты, контекст, artifact refs, адресата, последствия ответа и срок. Поля: текст, enum, boolean, число или ссылка на согласованную спецификацию — по schema конкретного Gate.</p>
+<p>Пример: «Как различать пустую выдачу и недоступность API?». Инженер выбирает «Три отдельных состояния», пишет правило для 503 и отправляет через «Ответить и продолжить». Обычный текст в треде остается обсуждением; агент может предложить преобразовать его в ответ, но не обязан интерпретировать любое «ок» как разрешение.</p>
+<h3>12.4 Инженерный Approval</h3>
+<p>Из карточки открывается Workbench внутри приложения: постановка и acceptance criteria; изменения по файлам/строкам; результаты обязательных проверок; найденные проблемы; исходный и текущий артефакт; прошлые решения; расходы и цена доработки. На desktop это широкая боковая панель или полноэкранный встроенный режим. На mobile — тот же объект с последовательным раскрытием; нет скрытого согласования непросмотренного diff.</p>
+<p>Действия: «Принять просмотренную версию», «Вернуть на доработку», «Отклонить / остановить», «Запросить уточнение», «Передать другому продукт-инженеру», «Запросить Takeover». Назначение не дает адресату новых платформенных прав. Форма Rework требует причину, целевой этап и ожидаемое исправление; человеческое время учитывается отдельно.</p>
+<h3>12.5 Серверное решение</h3>
+<p>При открытии review сервер выдает challenge, связанный с userId, gateId, expectedRevision, artifactBundleDigest, разрешенными действиями и expiresAt. При отправке сервер проверяет membership, роль, assignment, state, challenge, срок, digest и separation-of-duties. Затем в одном сохраняемом переходе записывает Decision, закрывает HumanTask и создает продолжение Run и outbox-событие.</p>
+<p>Повтор с тем же actionId возвращает первоначальный результат. Второй человек со старой revision получает Conflict; решение не перетирается. Истекший срок не ведет к auto-approve. Запрос reassign либо новый Gate явно сохраняет происхождение. При недоступном сервере решения не ставятся в невидимую offline-очередь.</p>
+<h3>12.6 Персональный ассистент</h3>
+<p>Каждая человеческая identity имеет частный диалог. Ассистент показывает «что ждет меня», объясняет блокировки, собирает сводку проекта, находит разрешенное знание, помогает оформить задачу и ответ. Любое действие с эффектом требует явного подтверждения и соответствующего серверного права. Ассистент не подписывает технический approval вместо человека.</p>
+<p>История личного ассистента не публикуется в общий канал и не превращается в командную память автоматически. Сводка не раскрывает задачи соседней команды. В прототипе ответы формируются fixtures и запросами к разрешенному состоянию, а не вызовом настоящей LLM.</p>
+</section><section class="chapter" data-title="13. Каталог компонентов и их жизненный цикл"><h2 id="s13">13. Каталог компонентов и их жизненный цикл</h2>
+<h3>13.1 Что является компонентом</h3>
+<p>В каталоге представлены <code>SkillPackage</code>, <code>RulePack</code>, <code>InstructionSet</code>, <code>SubagentDefinition</code>, <code>ActorTemplate</code>, <code>WorkflowTemplate</code>, <code>TeamTemplate</code>, <code>KnowledgeModule</code>, <code>ToolAdapter</code>, <code>ModelProfile</code>, <code>HarnessProfile</code>, <code>RuntimeAdapter</code> и <code>SandboxProfile</code>. Платформенный сервис тоже имеет карточку, но ресурс экземпляра остается отдельным объектом.</p>
+<p>Карточка содержит назначение, owner, источник, scope, input/output contract, версии, зависимости, совместимость, разрешенные tools, тесты, consumers, статус, историю и ограничения. Из компонента открываются его применения в draft, release и active Run. Связь «используется» означает конкретную версию, а не совпадающее название.</p>
+<h3>13.2 Версии и публикация</h3>
+<p>Жизненный цикл: Draft → In review → Tested → Published → Deprecated / Revoked. Публикация создает immutable version и contentDigest. Новая версия не изменяет старую. Редактируемый Markdown не является production skill без owner, области применимости и tests.</p>
+<p>Для испытаний в Sandbox разрешены явно отмеченные draft-компоненты с digest и testOnly=true. Их наличие блокирует production candidate до публикации. Поэтому «можно пробовать до релиза» не означает «можно использовать непроверенный компонент в эксплуатации».</p>
+<p>Изменение разрешений или исполняемых helpers требует платформенного review. Продукт-инженер публикует предметные инструкции/skills внутри разрешенной границы. Peer reviewer не совпадает с автором версии. Публикация helper в прототипе хранит текст и результаты mock-checks, но не запускает произвольный пользовательский код.</p>
+<h3>13.3 Отзыв и совместимость</h3>
+<p>Deprecated предупреждает и запрещает новые подключения по политике. Revoked блокирует новые разрешенные действия затронутых Runs и новые старты; выполняющиеся операции сначала переводятся в контролируемое завершение/reconciliation. История не удаляется. Rollback на версию, использующую ту же отозванную dependency, запрещен.</p>
+<p>«Обновить зависимость» показывает semantic diff, новые полномочия, обязательные регрессии и список затронутых объектов. Нельзя автоматически заменить <code>skill@2</code> на <code>latest</code>. Fork шаблона сохраняет originRef, но не копирует допуски, identities и secrets.</p>
+</section><section class="chapter" data-title="14. Знания: страницы, атомарные заметки и память"><h2 id="s14">14. Знания: страницы, атомарные заметки и память</h2>
+<h3>14.1 Отдельный рабочий модуль</h3>
+<p>Это полноценная база знаний, а не таблица сообщений. Слева — дерево страниц команды/проекта и коллекции; в центре — редактор; справа — свойства, обратные ссылки, происхождение, версии и использование агентами. Режимы: «Страницы», «Атомарные заметки», «Граф связей», «Предложено из работы», «Устаревшее».</p>
+<p>Поддерживаются заголовки, абзацы, списки, код, таблицы, checklist и внутренние ссылки. Минимальный редактор может использовать структурированный Markdown вместо полного Notion, но должен сохранять страницы, ссылки и версии. Zettelkasten-подобная заметка выражает одно правило/наблюдение и имеет стабильный ID. Граф обязан быть альтернативой списку, а не единственным способом навигации.</p>
+<h3>14.2 Структура знания</h3>
+<p><code>KnowledgePage</code> содержит pageId, parentId, title, content, tags, owner, visibility, projectRefs, status и currentVersion. <code>KnowledgeVersion</code> — неизменный текст, digest, автор, reviewer, источник, appliesTo, exceptions, validUntil и tests. <code>KnowledgeLink</code> хранит тип связи: explains, refines, contradicts, derivedFrom, usedBy или supersedes.</p>
+<p>Пример дерева: «Команда / Проект Статусы / Контракты API / Состояния ответа». Связанная атомарная заметка: «503 не означает пустую выдачу». Она ссылается на API contract, исходный Rework, тест и skill. Backlinks строятся по IDs и фильтруются по доступу до отображения, чтобы заголовок закрытой страницы не утек через граф.</p>
+<h3>14.3 Передача опыта из Rework</h3>
+<p>После сохранения замечания появляется ненавязчивая карточка «Это правило пригодится команде?». Действия: «Сохранить знание», «Добавить к существующему», «Не сохранять». Отказ не мешает доработке.</p>
+<p>Предложенная заметка содержит проблему, применимость, правильное поведение, исключения, пример, контрпример, источник и предлагаемый тест. Инженер редактирует ее и отправляет на review. Дубликаты предлагаются по текстовому сходству/тегам, но не объединяются молча. Противоречивые версии требуют решения reviewer.</p>
+<p>Статусы: Draft → Proposed → In review → Published → Deprecated / Revoked. Из опубликованного знания можно создать новую версию SkillPackage. Между публикацией знания и включением в конвейер есть явное действие «Подключить к новой конфигурации».</p>
+<h3>14.4 Важное различие: input текущей работы и новая память</h3>
+<p>Замечание Rework немедленно доступно следующей попытке <strong>как зафиксированный InputAnswer/Decision</strong>, поскольку это часть текущего поручения. Но публикация новой страницы или skill не меняет pinned dependencies того же Run. Следующая конфигурация подключает опубликованную версию и проходит новые испытания. Так исправление текущей задачи не путается с выпуском нового поведения системы.</p>
+<h3>14.5 Контекст для агента</h3>
+<p>Различаются канонические знания, индекс поиска, оперативное состояние Run, episodic observations и частная память сотрудника. <code>ContextBundle</code> фиксирует конкретные версии источников и входных данных для шага, причины включения, snapshot policy и токенный лимит. Retrieval сначала проверяет scope и publication status, затем relevance/freshness, затем повторно права перед выдачей bundle.</p>
+<p>В прототипе поиск и сборка контекста могут быть детерминированными по тегам/словам; UI не выдает это за обученную семантическую модель. Пользователь видит «почему это знание вошло в контекст». Отозванный обязательный источник блокирует зависимый шаг. Удаление из retrieval и retention аудита — разные политики.</p>
+</section><section class="chapter" data-title="15. Harness, Sandbox, инструменты и своя LLM"><h2 id="s15">15. Harness, Sandbox, инструменты и своя LLM</h2>
+<h3>15.1 Harness</h3>
+<p>Профиль исполнения включает модель/версию, формат tool calls, prompt/instruction refs, бюджет шагов и токенов, schemas входа/выхода, memory policy, retry strategy и stop conditions. Harness управляет локальным агентным циклом; оркестратор владеет переходами между этапами. Отдельный supervisor следит за deadline, heartbeat и controlEpoch.</p>
+<h3>15.2 Sandbox</h3>
+<p>UI показывает слои: инфраструктурная VM/microVM, пользователь ОС и filesystem policy, сетевой egress proxy, временный workspace, gateway к tools и ресурсные лимиты. Исходный тезис «VM + OS sandbox» реализуется как требование многослойной границы, а не обещание абсолютной неуязвимости. Anthropic описывает и filesystem, и network isolation; приписывать его sandbox только сетевую функцию неверно. <a class="ref" href="#source-W02">[W02]</a></p>
+<p>В прототипе попытки записать вне workspace, выйти в запрещенный домен, прочитать чужой namespace или использовать отозванный grant возвращают типизированный policy denial и событие. Никакой настоящий вредоносный код для демонстрации не исполняется. Различаются «попытка заблокирована» и «запрещенный эффект действительно состоялся».</p>
+<h3>15.3 Tool Gateway и bindings</h3>
+<p>IntegrationBinding связывает installation/project/environment, конкретный ресурс, identity, разрешенные actions, secretRef, scope и test status. Например, право читать issue не дает права изменять задачу, а право подготовить PR не дает merge. Подключение secret демонстрируется ссылкой/маской; реальный токен не нужен и не должен попадать в экспорт или лог.</p>
+<p><code>ExternalAction</code> имеет stable actionId, target, payloadDigest, status Planned/Reserved/Executing/Succeeded/Failed/InDoubt/Reconciled и результат read-back. Повтор после сетевой ошибки не создает второй эффект. Pipeline completion и фактическое завершение действия различаются.</p>
+<h3>15.4 Model Gateway / внутренний inference</h3>
+<p>Отдельный каталог «Своя LLM» содержит deployment-профиль внутреннего inference: model identifier, weight/version reference, endpoint alias, data boundary, quota, context limit и routing policy. В setup можно заказать mock GPU quota или подключить уже существующий endpoint. Затем модель назначается через profile агенту или шагу.</p>
+<p>Настройки влияют на стоимость, ограничения и результаты fixtures. Реальные веса не обучаются, модель не загружается. Fallback нельзя включить в неразрешенный внешний provider; смена модели/весов требует новой конфигурации и применимых испытаний.</p>
+</section><section class="chapter" data-title="16. История, Benchmark и Test Arena"><h2 id="s16">16. История, Benchmark и Test Arena</h2>
+<h3>16.1 История реальной работы прототипа</h3>
+<p>История содержит только реально выполненные действия эмулятора либо явно импортированные synthetic batches. У каждой записи есть происхождение. Готовый demo-набор не может отображаться как измерения только что созданной пользователем команды.</p>
+<p>Фильтры: space, project, TaskClass, configurationDigest, mode, environment, human participation track и период. Run detail показывает все попытки, входы, артефакты, гейты, стоимость и итог. Неудачные и отмененные старты не исчезают из отчета.</p>
+<h3>16.2 Метрики</h3>
+<p>Обязательны accepted/all started, accepted without Rework/Takeover, Human Input count, planned approvals, Rework count, Takeover count, failure, cancellation, out-of-scope rejection, blocked action, prohibited effect, latency, human time и полная стоимость. «Принято без Rework/Takeover» не означает «без участия человека»: обязательные approvals и вопросы считаются отдельно.</p>
+<p>Знаменатель фиксируется при создании evaluation cohort. Поставленные в очередь, но не стартовавшие работы выделяются отдельно; незавершенные started не скрываются. При незрелой/незавершенной когорте вывод показывается как предварительный и не считается окончательным admission evidence. Не используется универсальный банковский порог «80%»; числовой demo threshold маркируется и задается EvaluationPlan.</p>
+<h3>16.3 EvaluationPlan и проверка evaluator</h3>
+<p>План фиксирует TaskClass, basket version, snapshot digest, human-guided/autonomous/expert-assisted track, memory mode, oracle versions, повторения, timeout, бюджет, pass/fail predicates и условия остановки. В корзину входят нормальный путь, неоднозначный input, плохой diff, отказ теста, запрещенный путь, недоступная dependency, пустые данные, повтор события и отмена.</p>
+<p>Oracle проверяет структурированные результаты и effects, а не self-report агента. Нужен отдельный mutation test: намеренно неверный результат должен сделать проверку красной. Model judge может оценивать текст с возможностью abstain, но не отменяет deterministic checks. Статистические интервалы в интерфейсе требуют указанного метода и единицы наблюдения; отсутствие расчета обозначается, а не маскируется числом.</p>
+<h3>16.4 Арена</h3>
+<p>Сравниваются кандидаты одного class/track на общей корзине и фиксированных budgets. Представлены correctness, safety, cost и человеческое участие, а не один магический score. При hard violation кандидат исключается независимо от предпочтения reviewer. Для слепого сравнения допускаются A/B, tie и abstain; апелляция сохраняет прежнюю оценку и новую revision.</p>
+<p>Победитель не размещается автоматически. ArenaReport — основание для отдельного допуска. Hidden holdout в этом локальном прототипе не обещает защищенность от пользователя, имеющего доступ к исходникам: закрытость отображения демонстрационная.</p>
+</section><section class="chapter" data-title="17. Релиз доверенной автономности"><h2 id="s17">17. Релиз доверенной автономности</h2>
+<h3>17.1 Объект выпуска</h3>
+<p><code>CapabilityRelease</code> — неизменяемый пакет способности выполнять ограниченный TaskClass с определенными исполнителями, знаниями, инструментами, контрольными точками, budgets, средой исполнения и evidence. Подписи/решения хранятся отдельными attestations по digest: manifest не содержит рекурсивную ссылку на свою собственную подпись. SHA-256 — идентификатор содержимого, не юридическая подпись.</p>
+<h3>17.2 Workflow-centric release</h3>
+<p>Пакет закрепляет FlowVersion, AI/Command/Gate definitions, transitions, всех skills/subagents/rules/instructions, harness, model profile, adapter contract, контекстную политику, task class, action bounds и mandatory checks. Страница релиза показывает весь dependency tree и объясняет, какую работу разрешено поручать этой версии.</p>
+<h3>17.3 Assistant-team-centric release</h3>
+<p>Пакет закрепляет TeamDefinitionVersion, coordinator, роли и версии специалистов, routing rules, допустимые классы, delegation/parallelism limits, обязательные subflows/gates, memory scopes, бюджеты и aggregation policy. Доказательства относятся к работе команды целиком, а не только к лучшему специалисту.</p>
+<p>Выпуск команды должен поддерживать разные планы в рамках объявленных классов. Добавление роли, изменение маршрутизации или подключение другого skill — новая версия; победа одиночного агента на арене не доказывает допуск его новой команды.</p>
+<h3>17.4 Жизненный цикл</h3>
+<p><code>Draft configuration → Trial snapshots → Evaluation → Candidate → Technical review → Scope/risk decision → UAT → Admitted release → Deployment → Active / Suspended / Revoked / Expired</code>.</p>
+<p>Candidate фиксирует configurationDigest, evidence bundle, plan, TaskClass и ограничения. Техническое заключение принимает другой продукт-инженер. Владелец продукта принимает ограниченную область и остаточный риск по demo-политике; hard violations не может разрешить никто. UAT исполняет тот же candidate snapshot в новых environment bindings, не редактируя исходный пакет.</p>
+<p>UAT-report имеет собственный digest и отдельное решение. После UAT допущенный release ссылается на candidate, отчет и decisions. Платформенный инженер создает Deployment с target environment, binding digest, quota и stop plan. Повтор того же deploy action не создает дубликат. Изменение значимых bindings требует новой проверки и соответствующего разрешения, а не молчаливого переноса approval.</p>
+<h3>17.5 Режимы доверенной автономности</h3>
+<p>Read-only suggestions; isolated trial; human-guided delivery; constrained autonomy; bounded initiative. Это внутренняя политика демо, не индустриальные уровни интеллекта. Обязательные контрольные точки сохраняются. Снять конкретный инженерный gate для конкретного low-risk class можно только в новой версии policy после evaluation и явного решения; UI перечисляет, что именно изменилось.</p>
+<p>Если вне класса найдена защищенная область, выполнение останавливается или передается человеку. Если достигнут лимит бюджета, предлагается запрос расширения; существующий approval не дает права потратить больше. Ухудшение качества запускает incident и ограничение новых запусков.</p>
+</section><section class="chapter" data-title="18. Размещения, три релиза и мониторинг"><h2 id="s18">18. Размещения, три релиза и мониторинг</h2>
+<p><strong>ProductRelease</strong> разрешает конкретное изменение продукта: artifact/commit digest, acceptance, checks, rollout и метрики. <strong>CapabilityRelease</strong> разрешает способ выполнения класса задач. <strong>PlatformRelease</strong> обновляет runtime, adapter, gateway или sandbox profile. Они связаны, но не выпускаются одной универсальной кнопкой.</p>
+<p>Среда показывает инфраструктуру, Installation revisions, активные Deployment, версии способностей, число running/waiting/blocked Runs, открытые gates, budgets, проверки bindings и incidents. Переключение Sandbox/UAT/Production не меняет версии «на лету».</p>
+<p>Мониторинг имеет три представления: «По средам», «По проектам», «По запускам». Из ошибки открываются affected Run, node, effect и тред. Состояние ожидающего человека — не авария, но overdue отражается в inbox/SLA. Недоставка уведомления — отдельная проблема, не approval failure.</p>
+<p><strong>Suspend</strong> прекращает новые dispatches и переводит активные действия в контролируемую остановку. <strong>Resume</strong> повторно проверяет срок допуска, зависимости, grants, budget и незавершенные эффекты. <strong>Rollback capability</strong> возвращает routing на ранее допущенную и еще действительную версию. Он не откатывает уже выпущенный продукт и не возвращает совершенные внешние действия. Product rollback — отдельный change/incident workflow.</p>
+<p>Incident содержит причину, область поражения, root trace, severity, owner, stop action, результаты reconciliation и решение о восстановлении. При revoke worker с устаревшим epoch не может продолжить запись. Audit показывает неизменяемую историю решений в рамках приложения; локальный JSON не объявляется юридическим WORM-хранилищем.</p>
+</section><section class="chapter" data-title="19. Экономика, продуктовые метрики и цикл улучшения"><h2 id="s19">19. Экономика, продуктовые метрики и цикл улучшения</h2>
+<h3>19.1 Полная стоимость</h3>
+<p>Смета и фактический ledger учитывают model usage, infrastructure allocation, tools, CI/evaluation, хранение, человеческое время и Rework. Деньги хранятся целыми минимальными единицами с currency, время — миллисекундами, токены — целыми. Все rate cards синтетические и версионированные.</p>
+<p>Перед mutating/платным действием создается reservation общего бюджета. Дочерние поручения используют тот же корневой envelope, а не получают бесконечный новый лимит. CostEntry учитывается один раз с аналитическими dimensions space/project/task/run/attempt/node/action. Повтор события не удваивает расход. Поздняя корректировка добавляет новую запись со ссылкой, не переписывает историю.</p>
+<p>Неизвестный расход не считается нулем. При недостатке бюджета Run останавливается; владелец продукта получает запрос с уже потраченным, резервом, ценой следующей попытки и альтернативой Stop. Запрос дополнительных средств не подписывается автоматически правом технического review.</p>
+<h3>19.2 Замыкание продуктовой петли</h3>
+<p>Проект задает исходную метрику, цель, окно измерения, источник, guardrails и критерий зрелости. После ProductRelease создается observation job. Он использует выбранный synthetic dataset и показывает результат владельцу продукта в проектном канале.</p>
+<p>Действия владельца: «Продолжить наблюдение», «Создать улучшение», «Остановить/откатить», «Отклонить гипотезу». Согласие на улучшение создает новый Product Change Case и проектную задачу, которая запускается по допущенному способу работы либо в Sandbox. Автономный запуск без очередного PO-confirm допустим только для заранее разрешенного класса инициативы и ограниченного бюджета.</p>
+<p>Проверка спроса/пользы не смешивается с Benchmark агента. Для клиентского эксперимента отдельно фиксируются assignment, actual exposure, условия, consent, cohort, maturity и outcome snapshot. Пропуски, SRM, дубли и нарушение guardrail блокируют вывод о масштабировании. Данные и статистические результаты — синтетические; «реальные исследования проведены» не заявляется.</p>
+<h3>19.3 Самоулучшение</h3>
+<p>ImprovementProposal связывает повторяющуюся причину Rework, исходные Runs, предлагаемый diff к skill/flow/team/model profile, гипотезу, cost и regression plan. Дальше работает отдельный конвейер: Observe → Proposal → Human Review → Sandbox Test → Benchmark → Candidate → Admission.</p>
+<p>Агент не повышает собственные permissions, не редактирует защищенные oracle и не подписывает себе допуск. Сокращение числа гейтов само по себе не считается улучшением. Результаты показывают качество, cost, вмешательства и нарушения в одном и том же TaskClass/track.</p>
+<h3>19.4 Дополнительные образы работы из исходного запроса</h3>
+<p>Встреча с клиентом представлена mock-процессом подготовки материалов: разрешенные исходные условия → проект предложения → AI-review → человеческое ревью → уведомление. Никакая ставка не назначается LLM и сообщение не отправляется реальному клиенту.</p>
+<p>Утренний PO-сценарий: сигнал о метрике → объяснение на synthetic observations → подтверждение гипотезы → новая задача разработки. Desktop-инженер: карточка Review → встроенный diff → решение. Mobile-инженер: question card → структурированный ответ → продолжение того же Run. Эти четыре сценария используют общие сущности, а не независимые мини-приложения.</p>
+</section><section class="chapter" data-title="20. Соответствие компонентам C01–C22 из исходного ТЗ"><h2 id="s20">20. Соответствие компонентам C01–C22 из исходного ТЗ</h2>
+<p>Все компоненты остаются видимыми и связаны с предметной моделью. Не каждый становится отдельным пунктом верхнего меню или отдельным микросервисом.</p>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Компонент A1</th>
+<th>Реализация в спецификации 6</th>
+<th>Граница прототипа</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C01 Messenger + Workbench + portal</td>
+<td>Каналы, Human Inbox, review drawer, setup</td>
+<td>Собственный web-мессенджер, не настоящий Slack</td>
+</tr>
+<tr>
+<td>C02 Low-code Studio</td>
+<td>Flow / Actor / Team / Hybrid, версии, reuse</td>
+<td>Поддерживаемый typed graph, не произвольный код</td>
+</tr>
+<tr>
+<td>C03 Внешняя оркестрация</td>
+<td>Installation, adapters, normalized events</td>
+<td>Vendor endpoints заменены эмулятором</td>
+</tr>
+<tr>
+<td>C04 Agent-directed / choreography</td>
+<td>Coordinator plans, delegation, event subscriptions</td>
+<td>Ограниченные планы и события; один state owner</td>
+</tr>
+<tr>
+<td>C05 Harness</td>
+<td>Worker profile, локальный цикл, schema и limits</td>
+<td>Синтетические tool/model responses</td>
+</tr>
+<tr>
+<td>C06 Cloud / Team Space</td>
+<td>Каталог, планы, jobs, ресурсы, leases</td>
+<td>Настоящие VM и брокеры не создаются</td>
+</tr>
+<tr>
+<td>C07 Sandbox</td>
+<td>Слои изоляции и policy-denial сценарии</td>
+<td>Не защитная граница для реальных процессов</td>
+</tr>
+<tr>
+<td>C08 Identity / delegation</td>
+<td>Три роли, membership, AI identity, grants, epoch</td>
+<td>Демо-сессия не enterprise IAM</td>
+</tr>
+<tr>
+<td>C09 Tool Gateway</td>
+<td>Раздельные bindings/actions, effect ledger</td>
+<td>PR/CI/Git и банковские actions — fixtures</td>
+</tr>
+<tr>
+<td>C10 Knowledge / Memory</td>
+<td>Страницы, заметки, provenance, ContextBundle</td>
+<td>Поиск детерминированный, ACL серверные</td>
+</tr>
+<tr>
+<td>C11 Skills</td>
+<td>Registry, lifecycle, tests, consumers</td>
+<td>Helper code хранится, не запускается произвольно</td>
+</tr>
+<tr>
+<td>C12 Своя LLM</td>
+<td>Внутренний model deployment/profile, quota, routing</td>
+<td>Нет обучения и настоящего inference</td>
+</tr>
+<tr>
+<td>C13 SDD / Verification</td>
+<td>Спецификация, diff, независимые checks</td>
+<td>Проверяемые синтетические артефакты</td>
+</tr>
+<tr>
+<td>C14 Evaluation</td>
+<td>Версионированные планы, baskets, oracle, mutation</td>
+<td>Отчет не доказательство production-надежности</td>
+</tr>
+<tr>
+<td>C15 Trusted autonomy</td>
+<td>Scope, bounds, passport, expiration, hard stops</td>
+<td>Допуски действуют только внутри demo-модели</td>
+</tr>
+<tr>
+<td>C16 Releases</td>
+<td>Product / Capability / Platform, UAT, deployment</td>
+<td>Нет настоящего production rollout</td>
+</tr>
+<tr>
+<td>C17 Human Gates</td>
+<td>Input, approval, Rework, Takeover</td>
+<td>Серверная логика, без квалифицированной подписи</td>
+</tr>
+<tr>
+<td>C18 Monitoring / Audit / Evidence</td>
+<td>Раздельные views, событийная история, artifact hashes</td>
+<td>Локальное хранение не WORM и не SIEM</td>
+</tr>
+<tr>
+<td>C19 Product / Client Outcome</td>
+<td>Hypothesis, experiment, maturity, guardrails</td>
+<td>Клиенты и эффекты synthetic</td>
+</tr>
+<tr>
+<td>C20 Self-improvement</td>
+<td>Proposal → test → review → version</td>
+<td>Никакого саморасширения прав</td>
+</tr>
+<tr>
+<td>C21 Economics</td>
+<td>Quotes, reservations, costs, human time</td>
+<td>Rate cards условные, не финансовый прогноз</td>
+</tr>
+<tr>
+<td>C22 Test Arena</td>
+<td>Сравнение, blind review, exclusions, appeal</td>
+<td>Не заменяет admission или клиентский эксперимент</td>
+</tr>
+</tbody>
+</table></div>
+</section><section class="chapter" data-title="21. Предметная модель и состояния"><h2 id="s21">21. Предметная модель и состояния</h2>
+<p>Общий контракт изменяемых сущностей: <code>id</code>, <code>spaceId</code>, при необходимости <code>projectId</code>, <code>revision</code>, <code>createdAt</code>, <code>updatedAt</code>, <code>createdBy</code>, <code>schemaVersion</code>. Ссылки хранят IDs; отображаемые имена не используются как ключи. Immutable versions имеют <code>versionId</code>, <code>contentDigest</code> и <code>originRef</code>, а не mutable revision содержимого.</p>
+<h3>21.1 Группы сущностей</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Группа</th>
+<th>Объекты</th>
+<th>Главная связь</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Организация</td>
+<td>Organization, User, Membership, TeamSpace, SetupSession</td>
+<td>Роли и scope команды</td>
+</tr>
+<tr>
+<td>Инфраструктура</td>
+<td>ResourceTemplate, ProvisionPlan, ProvisionJob, Resource, Environment, Installation, InstallationRevision, Binding</td>
+<td>Что заказано, установлено и доступно</td>
+</tr>
+<tr>
+<td>Проект</td>
+<td>Project, ProductChangeCase, TaskClassVersion, ProjectTask, MetricContract</td>
+<td>Зачем и какую работу выполняют</td>
+</tr>
+<tr>
+<td>Композиция</td>
+<td>DefinitionDraft, FlowVersion, ActorDefinitionVersion, Actor, TeamDefinitionVersion, ComponentVersion, DependencyLock</td>
+<td>Как выполняется класс работы</td>
+</tr>
+<tr>
+<td>Исполнение</td>
+<td>Run, Attempt, NodeExecution, WorkerLease, DelegatedWorkItem, ExternalAction, ContextBundle</td>
+<td>Кто что сделал с каким snapshot</td>
+</tr>
+<tr>
+<td>Взаимодействие</td>
+<td>Channel, Thread, Message, MessageRevision, InputRequest, HumanTask, GateRequest, ReviewChallenge, Decision</td>
+<td>Как человек входит в процесс</td>
+</tr>
+<tr>
+<td>Знания</td>
+<td>KnowledgePage, KnowledgeVersion, KnowledgeLink, KnowledgeProposal</td>
+<td>Происхождение и использование опыта</td>
+</tr>
+<tr>
+<td>Проверка</td>
+<td>Artifact, CheckResult, EvaluationPlan, BasketVersion, EvaluationRun, ArenaProtocol, ArenaReport</td>
+<td>Чем подтвержден результат</td>
+</tr>
+<tr>
+<td>Выпуск</td>
+<td>Candidate, Attestation, UATRun, CapabilityRelease, ProductRelease, PlatformRelease, Deployment</td>
+<td>Что и на каком основании разрешено</td>
+</tr>
+<tr>
+<td>Эксплуатация</td>
+<td>Incident, AuditEvent, OutboxEvent, CostQuote, Reservation, CostEntry, OutcomeSnapshot, ImprovementProposal</td>
+<td>Наблюдение, стоимость и развитие</td>
+</tr>
+</tbody>
+</table></div>
+<h3>21.2 Взаимосвязь идентификаторов</h3>
+<p><code>spaceId → projectId → taskId → runId → nodeExecutionId → attemptId → actionId / artifactId / gateId</code>.</p>
+<p><code>threadId</code> связан с rootRunId и taskId. <code>Decision</code> указывает gateId, reviewerId и exact target digest. <code>KnowledgeProposal</code> указывает decisionId / sourceMessageId / artifactRef. <code>Candidate</code> указывает configurationDigest и evidenceRefs. <code>Deployment</code> — releaseId и bindingDigest. CausationId и correlationId обеспечивают переход от исходной команды до последнего сообщения.</p>
+<h3>21.3 Машины состояний</h3>
+<p>Run: <code>Created → Queued → Running → WaitingInput / WaitingApproval / Reworking / Paused / InDoubt / TakeoverRequested / HumanOwned → Running → Accepted / Failed / Cancelled</code>. Ветка <code>Blocked</code> содержит typed reason и допустимые recovery-actions. После terminal-состояния новый запуск — новый Run, а не скрытое оживление старого.</p>
+<p>Human Gate: <code>Pending → Answered / Approved / ReworkRequested / Rejected / Expired / Superseded / Cancelled</code>. Устаревший Gate не возвращается в Pending: создается новая revision/замена с явной связью. В рамках нового review round создается новый challenge.</p>
+<p>Task: <code>Backlog → Ready → InProgress → NeedsInput / InReview → Done / Cancelled</code>. Состояние активного технического выполнения выводится из Run, ручной drag не отменяет Gate. <code>Done</code> требует acceptance policy задачи, а не только последнего зеленого node.</p>
+<p>Deployment: <code>Planned → Validating → Deploying → Active → Paused / Revoked / Expired / Retired</code>. При ошибке — <code>Failed</code> с сохранением последнего активного deployment. Rollback создает новое routing-событие, не переписывает историю размещений.</p>
+<h3>21.4 Инварианты</h3>
+<p>У изменяемого состояния один владелец. Не может быть двух writer leases на один workspace. Capability snapshot не меняется между шагами. ContextBundle каждого шага учитывает закрепленные dependencies и новые явно полученные inputs. Hard revoke действует независимо от pinning. Gate decision не принимается по чужой роли, неправильному digest, истекшему challenge или старой revision. Scope команды проверяется до выдачи списков, search, SSE, backlinks и artifact contents.</p>
+</section><section class="chapter" data-title="22. API, события и серверная консистентность"><h2 id="s22">22. API, события и серверная консистентность</h2>
+<h3>22.1 Транспорт</h3>
+<p>Один Node.js-сервис раздает frontend и <code>/api/v1</code>. Все write-операции идут через типизированные команды; GET не имеет побочных эффектов. UI не пишет в registry, runtime state или storage напрямую. Сервер возвращает session-scoped bootstrap и capabilities пользователя.</p>
+<p>Пример проектного command envelope — это наш API, не метод HG SDLC:</p>
+<pre><code class="language-json">{
+  "actionId": "act_demo_018",
+  "type": "gate.decide",
+  "spaceId": "space_demo",
+  "projectId": "project_status",
+  "targetId": "gate_017",
+  "expectedRevision": 3,
+  "payload": {
+    "challengeId": "challenge_017",
+    "targetDigest": "sha256:example-only",
+    "decision": "rework",
+    "reason": "503 нельзя показывать как пустой список",
+    "targetNodeId": "implement",
+    "humanTimeMs": 180000
+  }
+}
+</code></pre>
+<p>Права определяются server session, а не полем role в payload. Реальная сборка заменяет example digest вычисленным значением. Ответ команды содержит commandResult, измененные entity revisions, event sequence и trace/correlation IDs. HTTP 200 означает сохранение соответствующего результата команды, но не завершение длительного provisioning/job.</p>
+<h3>22.2 Основные endpoints</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /api/v1/demo/session</code></td>
+<td>Создать демонстрационную сессию выбранной identity</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/bootstrap</code></td>
+<td>Разрешенные пространства, роли, capabilities и counters</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/spaces/:spaceId/:collection</code></td>
+<td>Scoped списки с cursor/filter</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/spaces/:spaceId/entities/:type/:id</code></td>
+<td>Актуальный объект с revision</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/commands</code></td>
+<td>Единственная нормализованная write-граница</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/gates/:gateId/challenges</code></td>
+<td>Зафиксировать просмотр конкретного пакета</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/runs/:runId/trace</code></td>
+<td>События, связи, попытки и артефакты</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/events?spaceId=...&amp;after=...</code></td>
+<td>SSE разрешенных событий с cursor</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/artifacts/:artifactId</code></td>
+<td>Содержимое после проверки scope</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/demo/export</code></td>
+<td>Версионированный session export без secrets</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/demo/import/validate</code></td>
+<td>Dry-run, schema/relations/digest validation</td>
+</tr>
+<tr>
+<td><code>POST /api/v1/demo/import/apply</code></td>
+<td>Применение проверенного импорта отдельной командой</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/health</code></td>
+<td>Готовность сервера, storage и simulator</td>
+</tr>
+</tbody>
+</table></div>
+<p>Командные семейства: space/setup, resource/plan/provision, installation/binding, project/task/class, actor/team, flow/draft/version, run/control/reconcile, message/thread, gate/input/decision, knowledge/proposal/version, component/review/publish/revoke, evaluation/arena, candidate/admission/uat, deployment/incident, economics/outcome/improvement. Полная schema каждого действия является частью реализации; количество прежних команд не фиксируется как требование.</p>
+<h3>22.3 Протокол engine adapter</h3>
+<pre><code class="language-text">capabilities() -&gt; controls, supportedNodeTypes, eventSemantics
+validate(snapshot, bindings) -&gt; findings
+start(snapshotRef, taskRef, grantsRef, mode, actionId) -&gt; engineRunId
+getState(engineRunId) -&gt; normalizedState, nativeState, revision
+submitInput(gateRef, inputRef, expectedRevision, actionId)
+submitDecision(gateRef, decisionRef, expectedRevision, actionId)
+requestControl(runRef, PAUSE|CANCEL|TAKEOVER, epoch, actionId)
+getArtifacts(engineRunId, cursor) -&gt; artifactRefs
+exportEvents(engineRunId, afterSequence) -&gt; events
+</code></pre>
+<p>Controls, которых нет у реального adapter, должны возвращать Unsupported, а не имитироваться прямой записью в чужую БД. В прототипе mock-adapter реализует документированный набор; <code>nativeState</code> и normalized state хранятся отдельно.</p>
+<h3>22.4 События и чат</h3>
+<p>Event envelope: eventId, type, occurredAt, recordedAt, spaceId, projectId, aggregateId, aggregateRevision, sequence, correlationId, causationId, actorRef, refs и payload. Типы: resource.ready, installation.ready, run.started, node.completed, input.requested, gate.requested, decision.recorded, run.rework_started, knowledge.proposed, candidate.created, release.admitted, deployment.activated, outcome.observed.</p>
+<p>Публикация Decision и outbox выполняется в одном логическом commit. Доставка и SSE — at-least-once; consumer дедуплицирует по eventId. ChatProjection использует уникальные domain-event/message keys. «Exactly once» для всей сети не заявляется. При разрыве потока клиент продолжает с cursor; при слишком старом cursor получает resync и актуальный bootstrap.</p>
+<h3>22.5 Ошибки и гонки</h3>
+<p>Коды: ValidationError, Forbidden, NotFound, RevisionConflict, StaleReview, MissingDependency, ScopeViolation, BudgetExceeded, EnvironmentNotReady, AdapterUnsupported, ActionInDoubt, QuotaExceeded, RateLimited, StorageUnavailable. Ошибка содержит понятное сообщение, fields, retryable, currentRevision и recoveryActions без утечки закрытых данных.</p>
+<p>Idempotency ledger scoped по identity/space/actionId и requestDigest. Повтор того же тела возвращает прежний ответ; тот же actionId с другим телом дает Conflict. Storage error не должен оставлять в памяти «успешное» состояние, не сохраненное на диск. Нельзя отправить SSE success до устойчивого commit.</p>
+</section><section class="chapter" data-title="23. Компонентная архитектура React + Node.js"><h2 id="s23">23. Компонентная архитектура React + Node.js</h2><div class="architecture"><div class="arch-band"><b>Единое React-приложение</b><span>Setup · Studio · Чат · Human Workbench · Знания · Релизы · Мониторинг</span></div><div class="arch-band light"><b>HTTP commands / scoped reads / SSE</b><span>Общие runtime schemas · session identity · expected revision · actionId</span></div><div class="arch-grid"><div><b>Управление работой</b><p>Run, делегирование, gates, leases</p></div><div><b>Конфигурации и знания</b><p>Registry, версии, context bundles</p></div><div><b>Независимый контроль</b><p>Policy, admission, budgets, evidence</p></div></div><div class="arch-band light"><b>Mock adapters + single-writer store</b><span>Cloud · Engines · LLM · Tools / Entities · Events · Outbox · Jobs</span></div></div>
+<p>Новая реализация — модульный монолит с четкими контрактами, а не 22 отдельно разворачиваемых микросервиса. Один сервер и одна сборка frontend достаточны для прототипа. Логические границы позволяют позднее заменить persistence, IAM и engine adapters, не переписывая интерфейс.</p>
+<pre><code class="language-text">kontur-teamspace/
+  apps/web/src/
+    app/                    # shell, router, identity and space context
+    features/setup/         # setup wizard and provisioning progress
+    features/platform/      # resources, installations, bindings
+    features/projects/      # goals, task classes, tasks and board
+    features/studio/        # flow canvas, actor/team builder
+    features/runs/          # timeline, attempts, execution graph
+    features/messenger/     # channels, threads, personal assistant
+    features/review/        # shared Human Workbench and gate forms
+    features/knowledge/     # pages, notes, backlinks, versions
+    features/components/    # versioned registry and consumers
+    features/evaluations/   # baskets, reports, arena
+    features/releases/      # candidate, UAT, deployments
+    features/operations/    # metrics, audit, incidents, budgets
+    shared/ui/              # dialog, form, diff, table, badge, empty/error states
+    shared/data/            # API client, normalized entity store, SSE upserts
+  apps/server/src/
+    http/                   # sessions, scoped reads, commands, SSE
+    domain/                 # entities, invariants, command handlers
+    services/               # provisioning, runs, gates, knowledge, admission
+    adapters/mock/          # simulated cloud, engines, tools, models
+    persistence/            # single-writer snapshot store, migration, backup
+    projections/            # chat, human inbox, task state, audit
+    simulator/              # seeded fixtures, jobs, simulated clock
+  packages/contracts/       # shared runtime schemas and TypeScript types
+  fixtures/                 # versioned scenario inputs and expected outputs
+  tests/                    # domain, API, recovery and browser tests
+  docs/                     # this specification, API, scenarios and limitations
+  dist/                     # runnable frontend and compiled server
+</code></pre>
+<p><strong>Frontend:</strong> TypeScript/TSX для новой реализации; общие типы и validation schemas; функциональные компоненты; отделенные commands и selectors. Контекст содержит только identity/scope/navigation. Данные нормализованы по entity ID. Form drafts отделены от server snapshots, чтобы SSE не стирал введенный текст.</p>
+<p><code>RunCard</code> — одна проекция, используемая в канале, задаче и inbox. <code>HumanWorkbench</code> — один компонент review. <code>GateActionForm</code> получает gateId и просмотренный digest, не доверяет пропсам роли. <code>DependencyPicker</code> используется в Flow, Actor и Team. <code>KnowledgeEditor</code> и <code>KnowledgeReferencePicker</code> разделяют authoring и подключение. <code>useRunEvents</code> применяет только более новые revisions; при смене identity закрывает stream и очищает прежние scoped caches.</p>
+<p><strong>Backend:</strong> обработчик команды получает server identity, валидирует schema, проверяет scope/invariants, рассчитывает transition и сохраняет результаты. Simulator вызывает тот же domain layer, а не отдельный набор обходных функций. Отдельный reference-checker проверяет отсутствие «висячих» IDs при import/migration.</p>
+<p><strong>Хранение демо:</strong> один процесс Node.js, сериализованная очередь записей и versioned JSON snapshot с entities, events, outbox, pending jobs, idempotency ledger и simulator seed. Commit строится на копии состояния, валидируется, записывается во временный файл, синхронизируется и заменяет основной snapshot; только после успешного сохранения обновляются память и SSE. Должны сохраняться backup и checksum. Это ограниченная single-writer модель, не распределенная транзакционная БД.</p>
+<p>Для production persistence заменяется транзакционным repository implementation с отдельным artifact store. Интерфейсы repository/unit-of-work/event store задаются заранее. Прототип не допускает два одновременно пишущих серверных процесса в одну data-directory. JSON corruption не вызывает молчаливый factory reset: появляется recovery mode с проверкой backup.</p>
+</section><section class="chapter" data-title="24. Демо-данные и сценарный движок"><h2 id="s24">24. Демо-данные и сценарный движок</h2>
+<p>По умолчанию экран «Пространства» предлагает «Создать с нуля» и отдельную кнопку «Подготовленный пример». Пустой сценарий не содержит готовых релизов или выдуманной истории команды. На экране показывается origin данных: пользовательский mock-run, подготовленный fixture или импорт.</p>
+<p>Предустановленные человеческие identity: Анна — владелец продукта; Иван и Мария — продукт-инженеры; Максим — платформенный инженер. Типов ролей три, людей четыре. Можно создавать других демо-участников тех же ролей. Роль/профиль выбирается в demo-session, а не глобально на сервере для всех пользователей.</p>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>Ключевое поведение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clean delivery</td>
+<td>Trial → input → diff → check → approval → accepted</td>
+</tr>
+<tr>
+<td>Rework / API semantics</td>
+<td>Первая попытка смешивает empty/unavailable; правильный input исправляет следующую</td>
+</tr>
+<tr>
+<td>Knowledge applied</td>
+<td>Новый snapshot с опубликованным правилом проходит тот же regression case</td>
+</tr>
+<tr>
+<td>Agent team</td>
+<td>Разные class создают разные bounded планы и видимые поручения</td>
+</tr>
+<tr>
+<td>Provision failure</td>
+<td>Сбой сетевой проверки, Ready запрещен, retry сохраняет готовые ресурсы</td>
+</tr>
+<tr>
+<td>CI transient</td>
+<td>Ограниченный retry без дополнительного бизнес-решения</td>
+</tr>
+<tr>
+<td>Unknown effect</td>
+<td>Timeout после mock-PR, read-back находит один эффект</td>
+</tr>
+<tr>
+<td>Missing reviewer</td>
+<td>Нет доступного продукт-инженера; появляется адресная задача назначения</td>
+</tr>
+<tr>
+<td>Budget exhausted</td>
+<td>Новый шаг не стартует; запрос PO с полной ценой</td>
+</tr>
+<tr>
+<td>Scope violation</td>
+<td>Изменение auth/платежей блокируется до эффекта</td>
+</tr>
+<tr>
+<td>Dependency revoked</td>
+<td>Активная работа контролируемо останавливается; release consumer graph показывает impact</td>
+</tr>
+<tr>
+<td>Stale approval</td>
+<td>Два окна смотрят разные revisions; старое решение отклоняется</td>
+</tr>
+<tr>
+<td>Outcome below target</td>
+<td>PO получает сигнал и создает новую задачу улучшения</td>
+</tr>
+<tr>
+<td>Invalid experiment</td>
+<td>SRM, immature cohort или guardrail не дают масштабировать</td>
+</tr>
+</tbody>
+</table></div>
+<p>Fixture задает входы и ожидаемые результаты конкретного действия, но не разрешает перейти через несуществующий узел. Если пользователь удалил optional review, граф меняется; если обязательный gate удален, validation блокирует запуск/допуск. Bounded choreography подписывается на разрешенные типы событий и имеет dedupe key, maxDepth, maxEvents и budget, чтобы исходное событие не породило бесконечную цепь.</p>
+</section><section class="chapter" data-title="25. Нефункциональные требования и удобство"><h2 id="s25">25. Нефункциональные требования и удобство</h2>
+<p><strong>Доступность.</strong> Основные формы и Human Gates управляются с клавиатуры; у кнопок есть доступные названия, у диалогов — focus trap и восстановление фокуса. Цвет не единственный индикатор статуса. Текст основных экранов не мельче 14 px; плотный technical metadata — не мельче 12 px. У canvas есть табличная/списочная альтернатива. Reduced motion отключает необязательные анимации.</p>
+<p><strong>Адаптивность.</strong> Проверяются 390, 768 и 1536 px. На узком экране навигация сворачивается, Workbench становится полноэкранным, diff прокручивается внутри собственного блока. Страница не растягивается из-за длинного ID или графа. Mobile-приёмка включает input, review, Rework, возврат к треду и сохранение draft.</p>
+<p><strong>Сеть.</strong> У каждой команды есть loading, success и recoverable error. Повторные клики блокируются на клиенте, но серверная идемпотентность обязательна независимо от UI. Offline явно отображается; read cache маркируется как устаревший, approve offline запрещен. Reconnect не дублирует messages. Смена профиля не подмешивает события предыдущей identity.</p>
+<p><strong>Перегрузка.</strong> Вводятся pagination и лимиты выдачи; список тысяч сообщений не требует рендера всей истории. Числа latency/concurrency фиксируются как цели и измеряются на конкретном тестовом стенде, а не объявляются достигнутыми заранее. Acceptance-load: подготовленный dataset минимум 1 000 сообщений, 100 задач и 30 Runs; UI должен сохранять навигацию и ввод без потери состояния. Результат и стенд указываются в отчете.</p>
+<p><strong>Безопасность демо.</strong> Сервер по умолчанию слушает loopback, не имеет секретов и не исполняет загруженный код. Доступ к local filesystem ограничен data-directory и checked artifact paths. Markdown/HTML проходит безопасный renderer; тексты сообщений не выполняются. Импорт ограничен по размеру и проверяет schema, ссылки и namespace. Последующие подключения реальных сервисов требуют отдельного threat model и нельзя включить только переключением флага «production».</p>
+</section><section class="chapter" data-title="26. Приёмка: что означает «приложение готово»"><h2 id="s26">26. Приёмка: что означает «приложение готово»</h2>
+<p>Ниже перечислены <strong>планируемые критерии</strong>, не результаты уже проведенных тестов. Каждый имеет ID TS-001…TS-100, precondition, действие и проверяемый результат. Машиночитаемая копия приложена к спецификации; начальный статус всех критериев — <code>planned</code>.</p>
+<p>Обязательные сквозные маршруты: setup с HG-профилем; setup с системой управления агентами; собственная сборка; Trial до релиза; Input в чате; Approval/Rework; Rework → knowledge → следующий snapshot; workflow release; assistant-team release с разными планами; UAT/deploy; low outcome → новая задача; негативные права, stale approval, duplicate event и restart.</p>
+<p>Для критериев нужны не только отдельные unit tests. Минимум один end-to-end прогон каждого центрального маршрута выполняется через видимые UI-действия и настоящий HTTP-сервер. Подмена состояния через DevTools не считается прохождением пользовательского пути. API-only fixtures допустимы для fault injection, но сам ответ и recovery проверяются через интерфейс.</p>
+<h3>Командное пространство и инфраструктура</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-001 · Пустой старт</td>
+<td>Новая data-directory</td>
+<td>Открыть приложение</td>
+<td>Нет созданных от имени пользователя команд, ресурсов или релизов</td>
+</tr>
+<tr>
+<td>TS-002 · Создание пространства</td>
+<td>Профиль платформенного инженера</td>
+<td>Создать Team Space и назначить три роли</td>
+<td>Сохранены space, memberships и базовые каналы</td>
+</tr>
+<tr>
+<td>TS-003 · Ролевая граница setup</td>
+<td>Профиль продукт-инженера</td>
+<td>Отправить прямую команду provision</td>
+<td>Сервер возвращает Forbidden без создания ресурса</td>
+</tr>
+<tr>
+<td>TS-004 · Возобновление setup</td>
+<td>Мастер заполнен наполовину</td>
+<td>Перезагрузить страницу и сервер</td>
+<td>Поля и последняя сохраненная стадия восстановлены</td>
+</tr>
+<tr>
+<td>TS-005 · План до эффекта</td>
+<td>Выбран облачный шаблон</td>
+<td>Просмотреть план без подтверждения</td>
+<td>Видна смета; ресурсы еще не созданы</td>
+</tr>
+<tr>
+<td>TS-006 · Заказ ресурсов</td>
+<td>Валидный план в лимите</td>
+<td>Подтвердить provisioning</td>
+<td>Сервер создает job и выполняет этапы до Ready</td>
+</tr>
+<tr>
+<td>TS-007 · Сбой attestation</td>
+<td>Fixture неверной сети</td>
+<td>Завершить создание VM</td>
+<td>Среда не Ready; видна причина и recovery</td>
+</tr>
+<tr>
+<td>TS-008 · Идемпотентный provision</td>
+<td>Часть ресурсов готова</td>
+<td>Повторить запрос с прежним actionId</td>
+<td>Готовые ресурсы не дублируются</td>
+</tr>
+<tr>
+<td>TS-009 · Отмена подготовки</td>
+<td>Provisioning активен</td>
+<td>Отменить job</td>
+<td>Новые этапы остановлены; расходы и созданные ресурсы видны</td>
+</tr>
+<tr>
+<td>TS-010 · Изоляция команды</td>
+<td>Два Team Space с разными участниками</td>
+<td>Запросить чужой resource или поиск</td>
+<td>Нет доступа и утечки названий</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Установленная основа и проект</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-011 · HG-профиль</td>
+<td>Sandbox Ready</td>
+<td>Установить mock HG SDLC</td>
+<td>Есть versioned Installation, health, controls и bindings</td>
+</tr>
+<tr>
+<td>TS-012 · Agent-platform профиль</td>
+<td>Подготовленные ресурсы</td>
+<td>Установить mock-систему управления агентами</td>
+<td>Доступны identities, coordinator, routing и проектные поручения</td>
+</tr>
+<tr>
+<td>TS-013 · Внешняя платформа</td>
+<td>Каталог Frontier</td>
+<td>Открыть подключение</td>
+<td>Показан mock-connection; не обещана локальная установка vendor-образа</td>
+</tr>
+<tr>
+<td>TS-014 · Собственная сборка</td>
+<td>Пустой composition</td>
+<td>Выбрать контроллер, harness, store и human adapter</td>
+<td>Создается конфигурация и conformance-план</td>
+</tr>
+<tr>
+<td>TS-015 · Конфликт владельцев</td>
+<td>Один Run state назначен двум контроллерам</td>
+<td>Проверить сборку</td>
+<td>Validation отклоняет неоднозначное управление</td>
+</tr>
+<tr>
+<td>TS-016 · Unsupported control</td>
+<td>Adapter не поддерживает Takeover</td>
+<td>Запросить этот control</td>
+<td>Возвращается Unsupported без подделки состояния</td>
+</tr>
+<tr>
+<td>TS-017 · Сбой установки</td>
+<td>Fixture connection failure</td>
+<td>Запустить installation job</td>
+<td>Есть ошибка и retry; проектный Run заблокирован</td>
+</tr>
+<tr>
+<td>TS-018 · Смена runtime</td>
+<td>Есть активный Run старой версии</td>
+<td>Обновить Installation</td>
+<td>Run сохраняет binding либо контролируемо останавливается</td>
+</tr>
+<tr>
+<td>TS-019 · Создание проекта</td>
+<td>Пространство с готовой основой</td>
+<td>Создать проект, цель, канал и repo binding</td>
+<td>Связи сохранены; task board принадлежит проекту</td>
+</tr>
+<tr>
+<td>TS-020 · Scope инструмента</td>
+<td>Binding дает только чтение tracker</td>
+<td>Запросить изменение issue</td>
+<td>Сервер запрещает действие; отражает denied action</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Композиция, версии и AI-сотрудники</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-021 · Создание Actor</td>
+<td>Доступен утвержденный template</td>
+<td>Создать AI-сотрудника</td>
+<td>Есть собственная identity, owner и пустая частная память</td>
+</tr>
+<tr>
+<td>TS-022 · Клонирование</td>
+<td>Actor имеет память и grants</td>
+<td>Клонировать роль</td>
+<td>Новые identity и scope; память, secrets и approval не скопированы</td>
+</tr>
+<tr>
+<td>TS-023 · Flow из шаблона</td>
+<td>Настроен проект</td>
+<td>Добавить SDLC Flow</td>
+<td>Canvas и properties используют одну модель с human gates</td>
+</tr>
+<tr>
+<td>TS-024 · Редактирование графа</td>
+<td>Есть draft Flow</td>
+<td>Добавить узел, переход и поменять исполнителя</td>
+<td>Сохраняется новая draft revision с корректной семантикой</td>
+</tr>
+<tr>
+<td>TS-025 · Проверка графа</td>
+<td>Нет Terminal или есть недостижимый узел</td>
+<td>Запустить validation</td>
+<td>Показана ошибка с указанием узла</td>
+</tr>
+<tr>
+<td>TS-026 · Ограниченный цикл</td>
+<td>Rework-edge имеет maxVisits</td>
+<td>Достичь лимита</td>
+<td>Run останавливается с объяснением; бесконечный цикл невозможен</td>
+</tr>
+<tr>
+<td>TS-027 · JSON round-trip</td>
+<td>Импортируемый поддерживаемый граф</td>
+<td>Импортировать, открыть и экспортировать</td>
+<td>Семантика и разрешенные metadata не потеряны</td>
+</tr>
+<tr>
+<td>TS-028 · Поврежденный импорт</td>
+<td>Есть несохраненный draft</td>
+<td>Импортировать неверный JSON</td>
+<td>Ошибка не уничтожает локальный draft</td>
+</tr>
+<tr>
+<td>TS-029 · Immutable snapshot</td>
+<td>Run уже стартовал</td>
+<td>Изменить draft и skill selection</td>
+<td>Текущий Run использует прежний configurationDigest</td>
+</tr>
+<tr>
+<td>TS-030 · Team plan</td>
+<td>Команда поддерживает UI и docs классы</td>
+<td>Запустить задачи обоих классов</td>
+<td>Планы и специалисты различаются; child tasks связаны с проектом</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Запуски, вопросы и исполнение</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-031 · Trial без релиза</td>
+<td>Sandbox и валидный draft, release отсутствует</td>
+<td>Нажать Пробный запуск</td>
+<td>Созданы snapshot, Run, задача и тред; нет требования выпуска</td>
+</tr>
+<tr>
+<td>TS-032 · Запрет production draft</td>
+<td>Есть только trial snapshot</td>
+<td>Запустить Released в Production</td>
+<td>Команда отклонена до внешнего действия</td>
+</tr>
+<tr>
+<td>TS-033 · Несуществующая среда</td>
+<td>Environment не Ready</td>
+<td>Отправить startTrial</td>
+<td>Возвращается EnvironmentNotReady</td>
+</tr>
+<tr>
+<td>TS-034 · TaskClass boundary</td>
+<td>Задача касается защищенного auth</td>
+<td>Начать Run низкорискового класса</td>
+<td>Исполнение запрещено и создана объясняющая запись</td>
+</tr>
+<tr>
+<td>TS-035 · Неполный input</td>
+<td>Агент нашел неоднозначность</td>
+<td>Дойти до Input Gate</td>
+<td>Созданы InputRequest, HumanTask и card продукт-инженеру</td>
+</tr>
+<tr>
+<td>TS-036 · Продолжение ответа</td>
+<td>Открытый Input Gate</td>
+<td>Отправить валидный типизированный ответ</td>
+<td>Тот же Run продолжен; вопрос и ответ остаются в истории</td>
+</tr>
+<tr>
+<td>TS-037 · Невалидный ответ</td>
+<td>Вопрос требует enum и пояснение</td>
+<td>Отправить неподходящее значение</td>
+<td>Gate остается Pending; ошибка у соответствующего поля</td>
+</tr>
+<tr>
+<td>TS-038 · Разветвление</td>
+<td>Condition зависит от результата check</td>
+<td>Подать разные результаты fixtures</td>
+<td>Выполняются разные разрешенные ветви графа</td>
+</tr>
+<tr>
+<td>TS-039 · Закрытая вкладка</td>
+<td>Сервер выполняет Run</td>
+<td>Закрыть UI и открыть снова</td>
+<td>Работа и события сохранены; нет перезапуска с начала</td>
+</tr>
+<tr>
+<td>TS-040 · Параллельные поручения</td>
+<td>Есть независимые review-ветви</td>
+<td>Выполнить team plan в concurrency limit</td>
+<td>Join ждет требуемые результаты; budget общий</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Мессенджер и рабочий контекст</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-041 · Связный тред</td>
+<td>Run стартовал из проекта</td>
+<td>Открыть рабочую карточку</td>
+<td>Показаны task, snapshot, среда и одна корневая тема</td>
+</tr>
+<tr>
+<td>TS-042 · Ответы и mentions</td>
+<td>Канал проекта доступен человеку и AI</td>
+<td>Написать сообщение и ответить в треде</td>
+<td>Ответ связан с темой; mention создает уведомление</td>
+</tr>
+<tr>
+<td>TS-043 · Сообщение в задачу</td>
+<td>Есть обычное сообщение</td>
+<td>Создать задачу из сообщения дважды с одним actionId</td>
+<td>Одна задача с originMessageId</td>
+</tr>
+<tr>
+<td>TS-044 · Shared Workbench</td>
+<td>Один Gate доступен из чата и inbox</td>
+<td>Открыть оба представления</td>
+<td>Один gateId и одинаковый пакет review</td>
+</tr>
+<tr>
+<td>TS-045 · Возврат к работе</td>
+<td>Workbench открыт поверх треда</td>
+<td>Закрыть панель</td>
+<td>Сохранились scroll, фильтр и draft сообщения</td>
+</tr>
+<tr>
+<td>TS-046 · Emoji не approval</td>
+<td>Gate ожидает решения</td>
+<td>Отправить ок и реакцию одобрения</td>
+<td>Gate остается Pending</td>
+</tr>
+<tr>
+<td>TS-047 · Private assistant</td>
+<td>Личные диалоги двух пользователей</td>
+<td>Переключить identity и запросить историю</td>
+<td>Чужие сообщения и memory отсутствуют</td>
+</tr>
+<tr>
+<td>TS-048 · Ассистент с подтверждением</td>
+<td>Ассистент предложил создать задачу</td>
+<td>Отменить подтверждение</td>
+<td>Проектная задача не создана</td>
+</tr>
+<tr>
+<td>TS-049 · Сбой доставки</td>
+<td>Domain event сохранен, chat projection недоступна</td>
+<td>Восстановить доставку</td>
+<td>Одна карточка; Run не согласован автоматически</td>
+</tr>
+<tr>
+<td>TS-050 · Редактирование сообщения</td>
+<td>Автор меняет свой текст</td>
+<td>Редактировать или удалить обычное сообщение</td>
+<td>Есть revision или tombstone; Decision не изменяется</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Human Gates, Rework и управление</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-051 · Принятие работы</td>
+<td>Product engineer открыл актуальный пакет</td>
+<td>Подтвердить approval</td>
+<td>Decision связан с identity, revision и digest</td>
+</tr>
+<tr>
+<td>TS-052 · Неверная роль</td>
+<td>Gate требует продукт-инженера</td>
+<td>PO пытается принять через API</td>
+<td>Forbidden; gate и задача не изменены</td>
+</tr>
+<tr>
+<td>TS-053 · Stale review</td>
+<td>Открыт старый challenge</td>
+<td>Изменить пакет и подтвердить старый</td>
+<td>Conflict с предложением открыть актуальную версию</td>
+</tr>
+<tr>
+<td>TS-054 · Два reviewer</td>
+<td>Два окна открыли одну revision</td>
+<td>Оба отправляют разные решения</td>
+<td>Сохранено одно решение; второе получает conflict</td>
+</tr>
+<tr>
+<td>TS-055 · Истекший challenge</td>
+<td>Simulated clock прошел expiresAt</td>
+<td>Нажать Принять</td>
+<td>Решение отклонено; нет auto-approve</td>
+</tr>
+<tr>
+<td>TS-056 · Rework</td>
+<td>Есть diff и замечание</td>
+<td>Вернуть на целевой этап</td>
+<td>Создана новая попытка; прежние артефакты доступны</td>
+</tr>
+<tr>
+<td>TS-057 · Полная цена Rework</td>
+<td>У Run есть затраты и reservation</td>
+<td>Открыть форму доработки</td>
+<td>Видны факт, остаток, оценка следующего шага и время человека</td>
+</tr>
+<tr>
+<td>TS-058 · Takeover fence</td>
+<td>Агент владеет workspace</td>
+<td>Запросить Takeover</td>
+<td>Human writer появляется только после drain и checkpoint</td>
+</tr>
+<tr>
+<td>TS-059 · Неизвестный эффект</td>
+<td>Action имеет InDoubt</td>
+<td>Запросить Takeover или retry</td>
+<td>Запись/повтор заблокированы до reconciliation</td>
+</tr>
+<tr>
+<td>TS-060 · Возврат от человека</td>
+<td>HumanOwned с новым diff</td>
+<td>Вернуть управление</td>
+<td>Human lease закрыт; выполнены checks и выдан новый epoch</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Знания, память и компоненты</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-061 · Предложение знания</td>
+<td>Сохранен содержательный Rework</td>
+<td>Выбрать Сохранить знание</td>
+<td>Proposal содержит причину, применимость и sourceDecisionId</td>
+</tr>
+<tr>
+<td>TS-062 · Отказ от знания</td>
+<td>Появилось предложение заметки</td>
+<td>Выбрать Не сохранять</td>
+<td>Доработка продолжается без создания знания</td>
+</tr>
+<tr>
+<td>TS-063 · Редактор и иерархия</td>
+<td>Создана knowledge page</td>
+<td>Добавить дочернюю страницу, код и ссылку</td>
+<td>Контент и parent relationship сохраняются</td>
+</tr>
+<tr>
+<td>TS-064 · Атомарные заметки</td>
+<td>Есть правило и API contract</td>
+<td>Создать typed link</td>
+<td>Видны исходная ссылка и обратная ссылка</td>
+</tr>
+<tr>
+<td>TS-065 · Защищенные backlinks</td>
+<td>Закрытая страница связана с открытой</td>
+<td>Открыть граф чужим пользователем</td>
+<td>Нет текста или названия закрытого источника</td>
+</tr>
+<tr>
+<td>TS-066 · Публикация знания</td>
+<td>Proposal подготовлен автором</td>
+<td>Другой продукт-инженер проверяет и публикует</td>
+<td>Создана immutable KnowledgeVersion с reviewer и tests</td>
+</tr>
+<tr>
+<td>TS-067 · Знание влияет на новую версию</td>
+<td>Правило 503 опубликовано</td>
+<td>Подключить к новому snapshot и повторить regression</td>
+<td>Новый bundle содержит правило; fixture проверяет правильный исход</td>
+</tr>
+<tr>
+<td>TS-068 · Нет скрытого обновления</td>
+<td>Старый Run активен при публикации знания</td>
+<td>Продолжить Run</td>
+<td>Pinned skill не меняется; Rework input учтен отдельно</td>
+</tr>
+<tr>
+<td>TS-069 · Компонент и потребители</td>
+<td>Skill используется в двух releases</td>
+<td>Открыть карточку и версии</td>
+<td>Видны точные consumers и отдельные version digests</td>
+</tr>
+<tr>
+<td>TS-070 · Отзыв компонента</td>
+<td>Активный Run использует revoked skill</td>
+<td>Продолжить шаг и попробовать rollback</td>
+<td>Действия блокируются; небезопасный rollback запрещен</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Оценка, допуск и размещение</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-071 · Версионированная корзина</td>
+<td>Созданы class, snapshot и plan</td>
+<td>Запустить evaluation</td>
+<td>Все записи привязаны к одной объявленной конфигурации/track</td>
+</tr>
+<tr>
+<td>TS-072 · Проверка самого evaluator</td>
+<td>Fixture содержит намеренно неверный diff</td>
+<td>Запустить mutation test</td>
+<td>Verifier отклоняет неправильный результат</td>
+</tr>
+<tr>
+<td>TS-073 · Честный знаменатель</td>
+<td>В когорте есть failures и cancellations</td>
+<td>Открыть метрики</td>
+<td>Все started учтены; pending выделены и maturity видна</td>
+</tr>
+<tr>
+<td>TS-074 · Арена без автодопуска</td>
+<td>Кандидат показал лучший допустимый результат</td>
+<td>Завершить arena report</td>
+<td>Нет автоматического Admission/Deployment</td>
+</tr>
+<tr>
+<td>TS-075 · Workflow candidate</td>
+<td>Trial и evaluation завершены</td>
+<td>Зафиксировать кандидат</td>
+<td>Manifest закрепляет Flow и полный resolved lock</td>
+</tr>
+<tr>
+<td>TS-076 · Team candidate</td>
+<td>Проверена команда целиком</td>
+<td>Зафиксировать release команды</td>
+<td>Закреплены coordinator, routing, роли, subflows и limits</td>
+</tr>
+<tr>
+<td>TS-077 · Техническая независимость</td>
+<td>Кандидат подготовлен Иваном</td>
+<td>Попросить Ивана и затем Марию принять technical review</td>
+<td>Самосогласование отклонено; другой PE может решить</td>
+</tr>
+<tr>
+<td>TS-078 · UAT точного пакета</td>
+<td>Candidate согласован</td>
+<td>Запустить UAT и попытаться подменить snapshot</td>
+<td>Подмена отклонена; отчет связан с исходным digest</td>
+</tr>
+<tr>
+<td>TS-079 · Размещение</td>
+<td>Есть admitted release и valid bindings</td>
+<td>Платформенный инженер выполняет deploy</td>
+<td>Создан один Deployment и сообщение команды</td>
+</tr>
+<tr>
+<td>TS-080 · Три разных релиза</td>
+<td>Активен CapabilityRelease</td>
+<td>Открыть ProductRelease и PlatformRelease</td>
+<td>Отдельные пакеты и полномочия; нет общего выпуска всего</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Экономика, метрики и устойчивость</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-081 · Общий бюджет</td>
+<td>Команда породила child runs</td>
+<td>Зарезервировать несколько шагов</td>
+<td>Сумма не превышает root envelope; дочерний запуск не сбрасывает лимит</td>
+</tr>
+<tr>
+<td>TS-082 · Повтор usage</td>
+<td>CostEntry уже записан</td>
+<td>Повторить eventId</td>
+<td>Расход не удваивается</td>
+</tr>
+<tr>
+<td>TS-083 · Поздняя корректировка</td>
+<td>Есть принятый cost report</td>
+<td>Добавить adjustment</td>
+<td>Новая запись с originRef; старый ledger сохранен</td>
+</tr>
+<tr>
+<td>TS-084 · Недостаток средств</td>
+<td>Reservation превышает остаток</td>
+<td>Запустить следующий шаг</td>
+<td>Остановка и адресный запрос владельцу продукта</td>
+</tr>
+<tr>
+<td>TS-085 · Метрики продукта</td>
+<td>ProductRelease и synthetic observations готовы</td>
+<td>Запустить outcome job</td>
+<td>PO получает сигнал с contract, maturity и provenance</td>
+</tr>
+<tr>
+<td>TS-086 · Новый цикл улучшения</td>
+<td>PO видит цель не достигнута</td>
+<td>Подтвердить предложенное улучшение</td>
+<td>Новая задача связана с outcome; запуск в текущих границах</td>
+</tr>
+<tr>
+<td>TS-087 · Невалидный эксперимент</td>
+<td>Есть SRM или нарушенный guardrail</td>
+<td>Попробовать масштабирование</td>
+<td>Решение блокируется; причина видна</td>
+</tr>
+<tr>
+<td>TS-088 · Restart на gate</td>
+<td>Run ждет человека</td>
+<td>Перезапустить Node.js</td>
+<td>Gate, thread, challenge validity и pending job восстановлены</td>
+</tr>
+<tr>
+<td>TS-089 · Idempotency conflict</td>
+<td>actionId использован с одним телом</td>
+<td>Повторить его с другим payload</td>
+<td>Conflict без второго эффекта</td>
+</tr>
+<tr>
+<td>TS-090 · SSE reconnect и scope</td>
+<td>Разрыв потока или смена identity</td>
+<td>Восстановить соединение</td>
+<td>Пропуски восполнены; нет дублей и чужих событий</td>
+</tr>
+</tbody>
+</table></div>
+<h3>UX, хранение и конечная поставка</h3>
+<div aria-label="Таблица спецификации" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Предусловие</th>
+<th>Действие</th>
+<th>Проверяемый результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TS-091 · Мобильный input</td>
+<td>Viewport 390 px и ожидающий вопрос</td>
+<td>Ответить и вернуться в тред</td>
+<td>Поля, кнопки и результат доступны без page overflow</td>
+</tr>
+<tr>
+<td>TS-092 · Мобильный review</td>
+<td>Viewport 390 px и большой diff</td>
+<td>Открыть review и назначить Rework</td>
+<td>Нет скрытых controls и потери введенного текста</td>
+</tr>
+<tr>
+<td>TS-093 · Клавиатурный путь</td>
+<td>Без мыши</td>
+<td>Пройти форму, диалог и approval</td>
+<td>Фокус видим и возвращается; действия доступны</td>
+</tr>
+<tr>
+<td>TS-094 · Конфликт редакторов</td>
+<td>Два редактора знания смотрят одну revision</td>
+<td>Сохранить разные изменения</td>
+<td>Второй видит diff/conflict; локальный текст сохранен</td>
+</tr>
+<tr>
+<td>TS-095 · Offline approval</td>
+<td>Соединение с сервером потеряно</td>
+<td>Нажать решение</td>
+<td>Нет ложного успеха или скрытого offline-approval</td>
+</tr>
+<tr>
+<td>TS-096 · Безопасный контент</td>
+<td>В сообщение/импорт вставлен script или path traversal</td>
+<td>Открыть текст и выполнить import validate</td>
+<td>Код не исполняется; опасный путь отклонен</td>
+</tr>
+<tr>
+<td>TS-097 · Storage failure</td>
+<td>Mock storage возвращает ошибку записи</td>
+<td>Отправить команду</td>
+<td>Нет success event и незаписанного успешного состояния</td>
+</tr>
+<tr>
+<td>TS-098 · Поврежденный snapshot</td>
+<td>Основной state.json поврежден</td>
+<td>Запустить сервер</td>
+<td>Recovery mode и проверенный backup; нет тихого сброса</td>
+</tr>
+<tr>
+<td>TS-099 · Чистый дистрибутив</td>
+<td>Сформирован окончательный ZIP</td>
+<td>Проверить CRC, распаковать и выполнить npm start</td>
+<td>Сервер и UI работают из новой папки; hashes совпадают</td>
+</tr>
+<tr>
+<td>TS-100 · Проверяемый отчет</td>
+<td>Выполнены тестовые команды</td>
+<td>Сформировать release report</td>
+<td>Есть raw results и ограничения; непроверенные пункты не отмечены passed</td>
+</tr>
+</tbody>
+</table></div>
+</section><section class="chapter" data-title="27. Поставка и защита от повторения ошибки с файлами"><h2 id="s27">27. Поставка и защита от повторения ошибки с файлами</h2>
+<p>В итоговой поставке приложения должны быть исходники, runnable dist, package/lock files, лицензии включенных зависимостей, README, спецификация, API schemas, test sources, raw test reports, screenshots и файл контрольных сумм. Не включаются чужие секреты, browser profiles или пользовательские личные данные.</p>
+<p>Целевой запуск готовой поставки: распаковать → перейти в каталог → <code>npm start</code>. Дистрибутив должен содержать готовый frontend и Node.js-server без требующего отдельной установки runtime npm-пакета. Для разработки допускается <code>npm ci</code>, но это отдельно от простого запуска готовой сборки. Точная версия Node фиксируется в <code>.nvmrc</code> и compatibility matrix после фактической проверки; фраза «последняя версия» не используется.</p>
+<p><strong>Отдельный release check артефакта:</strong> создать ZIP → убедиться в существовании по точному пути → проверить CRC → безопасно распаковать в новый каталог → сверить hashes → запустить сервер из распакованной копии → пройти health/API/UI smoke → перезапустить и проверить persistence → только затем публиковать ссылку на этот ZIP.</p>
+<p>Если навигация браузера к реальному origin заблокирована тестовой средой, <code>set_content</code>/HTTP bridge можно записать как отдельный ограниченный прогон, но нельзя объявить им real-origin/per-session storage проверенным. Неуспешная сборка или отсутствующий файл не компенсируются резервной старой версией под новым названием.</p>
+<p><strong>Текущая поставка этого ответа:</strong> новая спецификация HTML/Markdown и план приёмки. Это не архив приложения и не отчет о завершении реализации. Проверки самого документа — структура, ссылки, поиск, отображение и наличие файлов — фиксируются отдельно от TS-критериев приложения.</p>
+</section><section class="chapter" data-title="28. Решения, приоритет реализации и перенос в production"><h2 id="s28">28. Решения, приоритет реализации и перенос в production</h2>
+<h3>28.1 Зафиксированные решения</h3>
+<p>Одна React-оболочка; серверное авторитетное состояние; три роли; собственный мессенджер; пустой setup как основной вход; инфраструктура и installation разделены; Trial без CapabilityRelease; shared Workbench; knowledge как отдельный модуль; immutable snapshots; различимые workflow/team semantics; понятные recovery-paths и проверенный конечный архив.</p>
+<h3>28.2 Порядок реализации без урезания предметной модели</h3>
+<p>Сначала строится вертикальный путь: Team Space → ресурсы → установка → проект → Flow → Trial → input/review в треде. Затем добавляются Rework, knowledge и новая версия. После этого — evaluation/candidate/UAT/deployment. Затем тот же набор контрактов реализуется для команды ассистентов и собственной сборки, дополняется экономикой, outcome loop и отрицательными сценариями.</p>
+<p>Каждый этап расширяет работающий путь, а не количество пустых экранов. Техническая готовность отдельного модуля не дает основания объявить готовым все приложение. Требования этой спецификации не переносятся молча в «когда-нибудь потом»; любой невыполненный критерий должен остаться <code>planned</code>, <code>blocked</code> или <code>failed</code>.</p>
+<h3>28.3 Что уточняется только при реальной интеграции</h3>
+<p>Версия/commit и API HG SDLC, Fabro, Multica и других систем; реальные capabilities каждого adapter; IdP, KMS, cloud provider; runtime isolation; модель и условия обработки данных; регион/юрисдикция; SLO; промышленный event bus; статистический engine; независимые control-функции; реальные бюджеты. В эмуляторе имеются законченные интерфейсные пути с clearly mocked adapters, поэтому отсутствие этих решений не блокирует frontend/backend-прототип и не порождает выдуманных production-функций.</p>
+<h3>28.4 Люди и развитие инженерного суждения</h3>
+<p>Организационная гипотеза из A2 сохраняется без утверждения, что junior-профессии исчезают. Продукт-инженер работает с требованиями, oracle, review, контекстом и причиной ошибок. Платформенный инженер развивает безопасное воспроизводимое исполнение. Владелец продукта принимает цели и вложения.</p>
+<p>Для обучения полезны учебные Runs, разбор Rework, парное review и объяснение решения более опытным инженером. Уровень самостоятельности растет по проверенным типам задач, а не по количеству нажатых Approve. Система хранит проверяемую историю практики, но не присваивает автоматически человеку профессиональную квалификацию.</p>
+</section><section class="chapter" data-title="29. Внешние референсы и пределы заимствования"><h2 id="s29">29. Внешние референсы и пределы заимствования</h2>
+<p>Проверка внешних страниц выполнена 4 октября 2026 года. Ни один из источников не утверждает, что он реализует всю описанную банковскую платформу. Собственные API, UI, модель трех ролей и прикладные сценарии версии 6 — проектирование, а не функции, приписанные поставщикам.</p>
+<div class="source" id="source-W01"><h3>W01 · HG SDLC · публичный репозиторий</h3><p>Проверено наличие репозитория, release и документации. Семантика Flow/Run в этом ТЗ основана также на A1/A2. Совместимость проектного adapter с реальным API требует отдельного испытания.</p><a href="https://gitverse.ru/kakvsbere/hgsdlc" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W02"><h3>W02 · Anthropic · Claude Code sandboxing</h3><p>Публикация 20.10.2025 описывает OS-level filesystem и network isolation, внешний proxy и отделение sensitive credentials. Это референс слоев; не обещание неуязвимости нашего прототипа.</p><a href="https://www.anthropic.com/engineering/claude-code-sandboxing" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W03"><h3>W03 · Fabro · workflow graphs и human gates</h3><p>Официальная страница описывает графы с ветвлением, циклами и human gates, checkpoints, API/UI. В КОНТУР поставляется mock-профиль, не Fabro внутри архива.</p><a href="https://fabro.sh/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W04"><h3>W04 · Multica · humans and AI agents</h3><p>README описывает agents, squads, projects, skills и chat. Используется как референс связанной работы и agent routing; готовая корпоративная интеграция не заявляется.</p><a href="https://github.com/multica-ai/multica" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W05"><h3>W05 · OpenAI Frontier · enterprise platform</h3><p>Официальное описание выделяет business context, agent execution, evaluations, identities и observability. Из него не следует наличие локального установочного образа или требуемого нам универсального choreography API.</p><a href="https://openai.com/business/frontier/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W06"><h3>W06 · OpenAI Symphony · orchestration specification</h3><p>Описаны scheduler/runner, tracker, отдельные workspaces и WORKFLOW.md. В спецификации отдельно указаны non-goals: rich multi-tenant control plane и универсальный workflow engine. Профиль Symphony не получает выдуманных vendor-controls.</p><a href="https://openai.com/index/open-source-codex-orchestration-symphony/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W07"><h3>W07 · OpenClaw · security model</h3><p>Документация задает один trusted boundary на gateway и не считает его hostile multi-tenant границей. Поэтому в архитектуре выделены независимые scopes и среды; конкретная безопасная интеграция еще не испытана.</p><a href="https://docs.openclaw.ai/gateway/security" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W08"><h3>W08 · Backstage · Software Templates</h3><p>Templates создают компоненты из шаблонов и publish/actions. Это основание UX каталога и scaffolding, не механизм виртуализации или готовая cloud security.</p><a href="https://backstage.io/docs/features/software-templates/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W09"><h3>W09 · Temporal · Workflow</h3><p>Референс разделения workflow definition и execution. Возможная будущая реализация durable родительских процессов, а не обязательная зависимость mock-backend.</p><a href="https://docs.temporal.io/workflows" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W10"><h3>W10 · Spotify · команды, Honk, Fleetshift и Backstage</h3><p>Публикация 03.06.2026 описывает Fleetshift для управления изменениями, Honk для кода, взаимодействие через Slack и общий каталог Backstage. Заимствуется связка портала, исполнения и общения; показатели компании не переносятся на наше приложение.</p><a href="https://engineering.atspotify.com/2026/6/code-with-claude-coding-is-no-longer-the-constraint" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W11"><h3>W11 · Meta · tools и domain skills</h3><p>Публикация 16.04.2026 разделяет общие MCP tools и skills с предметным опытом, описывает подготовку исправлений и review. Референс переиспользования знаний, не независимая сертификация многоагентной команды.</p><a href="https://engineering.fb.com/2026/04/16/developer-tools/capacity-efficiency-at-meta-how-unified-ai-agents-optimize-performance-at-hyperscale/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W12"><h3>W12 · Google · Jules</h3><p>Публикация 20.05.2025 описывает работу с репозиторием в Cloud VM и предъявление плана/diff. Используется как референс отдельного исполнения и управляемого результата; актуальные тарифы и доступность не оцениваются.</p><a href="https://blog.google/innovation-and-ai/models-and-research/google-labs/jules/" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<div class="source" id="source-W13"><h3>W13 · Netflix · Kayenta, исторический canary-кейс</h3><p>Публикация 10.04.2018 описывает сравнение baseline/canary и влияние метрик на rollout. Это историческое основание product feedback loop, а не утверждение о нынешней AI-платформе Netflix.</p><a href="https://netflixtechblog.com/automated-canary-analysis-at-netflix-with-kayenta-3260bc7acc69" rel="noopener noreferrer" target="_blank">Официальный источник ↗</a></div>
+<p>UiPath и Hostinger, перечисленные в исходном запросе, не выбраны зависимостями runtime. В этой спецификации их роль ограничена исходным контекстом автоматизации и UX каталога; whitepaper и банковская защищенность из landing pages не выводятся. Не требуется подключать внешний аккаунт для демонстрации любого основного пути.</p>
+</section><section class="chapter" data-title="30. Происхождение вложений и итоговая граница"><h2 id="s30">30. Происхождение вложений и итоговая граница</h2>
+<div class="source" id="source-A1"><h3>A1 · financial_organization_future_platform_v2(2).html</h3><p>Team Space: глава 4; архитектура: 5–7; рабочая среда: C01; setup: C06; знания: C10/C11; допуск: C15/C16; gates: C17; outcome: C19; улучшение: C20.</p><p>Размер: 670,606 байт. SHA-256: <code>87739180983bb2f0b2d138a3855bb1418e35e38d53b38fa252651b513ce93166</code></p></div>
+<div class="source" id="source-A2"><h3>A2 · autonomous_software_development_v42_reordered(2).html</h3><p>Разделы об архитектурных осях, Capability/Trust, Knowledge Layer, проверке системы и кейсе HG SDLC. Слайды и notes являются авторским изложением.</p><p>Размер: 3,650,671 байт. SHA-256: <code>29030ac9f70c8df8acbc0adcb470a703ee9e67dc6b0923c111434aafd914e8c2</code></p></div>
+<div class="source" id="source-A3"><h3>A3 · autonomous-studio-v3(2).html</h3><p>Функции createState, navReason, START_RUN, manifestFor, admission, riskAssessment; страницы подготовки, Flow, истории, UAT и production.</p><p>Размер: 550,464 байт. SHA-256: <code>2ef902607f0b546b6d1b8d4c3deacdd56cbe1787d2686279d815f8da63ecadd0</code></p></div>
+<p>Текущие требования U имеют приоритет над прежними вариантами разделения на два приложения. A1 задает полноту системы, A2 — понятийную модель автономного исполнения, A3 — путь подготовки и допуска. Добавленная серверная эмуляция, работа в тредах, три роли и знание как отдельный модуль явно относятся к версии 6.</p>
+<p><strong>Контрольный образ готового результата:</strong> создать пустое пространство, получить подготовленные ресурсы, установить основу или собрать ее из кубиков, подключить проект, настроить Flow, запустить его до релиза, получить инженерный вопрос и review в чате, вернуть работу, сохранить правило как знание, испытать новую версию и разместить допущенный конвейер. Тот же путь должен работать для команды ассистентов, с видимыми дочерними поручениями и их связью с проектом.</p>
+</section><footer class="footer">КОНТУР Team Space · Specification 6.0 · Документ не является отчетом о готовой реализации. Источники и границы эмуляции указаны в разделах 1, 2 и 29–30.</footer></div></main><script>
+(() => {
+ const input=document.getElementById('search');
+ const sections=[...document.querySelectorAll('.chapter')];
+ const status=document.getElementById('search-status');
+ const nav=[...document.querySelectorAll('[data-nav]')];
+ const norm=s=>s.toLocaleLowerCase('ru').replace(/ё/g,'е');
+ function apply(){const terms=norm(input.value.trim()).split(/\s+/).filter(Boolean);let count=0;
+  sections.forEach(s=>{const txt=norm(s.textContent);const show=terms.every(t=>txt.includes(t));s.hidden=!show;if(show)count++;
+   const id=s.querySelector('h2').id;const a=nav.find(a=>a.dataset.nav===id);if(a)a.hidden=!show;
+  }); status.textContent=terms.length?`Найдено разделов: ${count} из ${sections.length}`:`${sections.length} разделов · 100 критериев приёмки`;
+  document.getElementById('empty-result').style.display=count?'none':'block';
+ }
+ input.addEventListener('input',apply);
+ input.addEventListener('keydown',e=>{if(e.key==='Escape'){input.value='';apply();}});
+ document.getElementById('clear').addEventListener('click',()=>{input.value='';apply();});
+ document.getElementById('print').addEventListener('click',()=>window.print());
+ document.getElementById('menu').addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');document.getElementById('menu').setAttribute('aria-expanded',String(open));});
+ document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const target=document.getElementById(a.getAttribute('href').slice(1));if(target){if(target.closest('section[hidden]')){input.value='';apply();}document.body.classList.remove('nav-open');document.getElementById('menu').setAttribute('aria-expanded','false');}});
+ function revealHash(){const el=document.getElementById(location.hash.slice(1));if(el?.closest('section[hidden]')){input.value='';apply();el.scrollIntoView();}}
+ window.addEventListener('hashchange',revealHash);apply();revealHash();
+})();
+</script></body></html>

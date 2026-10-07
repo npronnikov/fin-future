@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "notation": "kontur-flow",
+    "description": "Пробный SDLC без релиза"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "Start",
+      "label": "Постановка",
+      "x": 40,
+      "y": 70
+    },
+    {
+      "id": "clarify",
+      "type": "Input",
+      "label": "Уточнить поведение",
+      "reviewerRole": "engineer",
+      "x": 270,
+      "y": 70
+    },
+    {
+      "id": "implement",
+      "type": "AI",
+      "label": "Подготовить изменение",
+      "actor": "developer",
+      "instruction": "Разделить empty / unavailable / data",
+      "x": 500,
+      "y": 70
+    },
+    {
+      "id": "check",
+      "type": "Command",
+      "label": "Проверить контракт",
+      "command": "verify-ui",
+      "x": 730,
+      "y": 70
+    },
+    {
+      "id": "review",
+      "type": "Approval",
+      "label": "Инженерное ревью",
+      "reviewerRole": "engineer",
+      "protected": true,
+      "x": 960,
+      "y": 70
+    },
+    {
+      "id": "end",
+      "type": "Terminal",
+      "label": "Принято",
+      "outcome": "Accepted",
+      "x": 1190,
+      "y": 70
+    }
+  ],
+  "edges": [
+    {
+      "from": "start",
+      "to": "clarify",
+      "on": "success"
+    },
+    {
+      "from": "clarify",
+      "to": "implement",
+      "on": "success"
+    },
+    {
+      "from": "implement",
+      "to": "check",
+      "on": "success"
+    },
+    {
+      "from": "check",
+      "to": "review",
+      "on": "success"
+    },
+    {
+      "from": "review",
+      "to": "end",
+      "on": "approve"
+    },
+    {
+      "from": "review",
+      "to": "implement",
+      "on": "rework",
+      "maxVisits": 3
+    }
+  ]
+}

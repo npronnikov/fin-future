@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "КОНТУР command envelope",
+  "type": "object",
+  "required": [
+    "actionId",
+    "type"
+  ],
+  "properties": {
+    "actionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "type": {
+      "enum": [
+        "space.create",
+        "setup.save",
+        "plan.create",
+        "provision.start",
+        "job.cancel",
+        "job.retry",
+        "installation.create",
+        "installation.update",
+        "installation.conformance",
+        "environment.create",
+        "binding.create",
+        "tool.invoke",
+        "project.create",
+        "task.create",
+        "task.update",
+        "actor.create",
+        "actor.clone",
+        "definition.create",
+        "definition.save",
+        "definition.validate",
+        "definition.snapshot",
+        "run.startTrial",
+        "run.startReleased",
+        "gate.answer",
+        "gate.decide",
+        "gate.reassign",
+        "run.control",
+        "run.reconcile",
+        "run.budget",
+        "message.send",
+        "thread.create",
+        "message.edit",
+        "message.react",
+        "message.pin",
+        "notification.read",
+        "assistant.propose",
+        "assistant.confirm",
+        "simulator.configure",
+        "simulator.step",
+        "simulator.clock",
+        "knowledge.propose",
+        "knowledge.create",
+        "knowledge.save",
+        "knowledge.submit",
+        "knowledge.publish",
+        "knowledge.link",
+        "component.create",
+        "component.version",
+        "component.submit",
+        "component.publish",
+        "component.revoke",
+        "evaluation.create",
+        "arena.compare",
+        "candidate.create",
+        "candidate.technical",
+        "candidate.scope",
+        "uat.start",
+        "uat.accept",
+        "release.admit",
+        "deployment.create",
+        "deployment.control",
+        "productRelease.create",
+        "productRelease.approve",
+        "productRelease.deploy",
+        "platformRelease.create",
+        "outcome.observe",
+        "outcome.improve",
+        "outcome.scale",
+        "cost.record",
+        "incident.create",
+        "demo.import"
+      ]
+    },
+    "spaceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "targetId": {
+      "type": "string"
+    },
+    "expectedRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "role"
+        ]
+      },
+      {
+        "required": [
+          "userId"
+        ]
+      }
+    ]
+  },
+  "description": "Envelope schema. Domain-specific payload validation, role/scope/transition checks are implemented in server handlers. Most commands additionally require spaceId."
+}

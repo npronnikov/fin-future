@@ -1,0 +1,34 @@
+{
+  "coordinator": "bounded-coordinator@1",
+  "roles": {
+    "developer": "developer@1",
+    "accessibility": "accessibility@1",
+    "security": "scope-reviewer@1",
+    "writer": "writer@1",
+    "factChecker": "fact-checker@1"
+  },
+  "routing": {
+    "ui": [
+      "developer",
+      "accessibility",
+      "security"
+    ],
+    "docs": [
+      "writer",
+      "factChecker"
+    ]
+  },
+  "subflows": [],
+  "limits": {
+    "maxDepth": 2,
+    "maxDelegations": 8,
+    "concurrency": 2,
+    "budget": 50000
+  },
+  "aggregationPolicy": "all-required",
+  "memoryScope": "project",
+  "mandatoryGates": [
+    "Input",
+    "Approval"
+  ]
+}

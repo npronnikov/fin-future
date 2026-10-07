@@ -1,0 +1,33 @@
+# Границы сборки 6.0.0-prototype.1
+
+## Что здесь реально
+
+HTTP backend, серверные identities/roles/scope, gate challenges/revisions/digests, idempotency ledger, single-writer persistence с checksum/backup, immutable configuration snapshots, интерпретатор поддерживаемого графа, отдельные версии знаний, сценарные артефакты, ограничения общего root budget, workflow candidate/UAT/deployment и UI. Все доменные эффекты сохраняет сервер; закрытие вкладки не останавливает его scheduler.
+
+## Что эмулируется по заданию
+
+VM/PostgreSQL/broker/storage/CI/Git/PR, model inference, runtime vendor systems, внешние эффекты и rollout. Синтетические деньги обозначены d₽/DEMO; никакие реальные средства не расходуются. Mock-профили не доказывают совместимость с vendor API. Sandbox — логический namespace эмулятора, не изоляция произвольных процессов.
+
+## Невыполненные или ограниченные требования
+
+- **Не завершены все TS-001…TS-100.** Проверки имеют собственную область доказательства. API test не подтверждает весь пользовательский путь. Полная приёмка и production security не заявлены.
+- **Native-origin browser QA заблокирован стендом.** Видимые UI-сценарии выполнены через HTTP-мост. Не подтверждены native-cookie поведение в браузере, восстановление sessionStorage после reload, native EventSource reconnect/смена профиля, прямые URL после браузерной перезагрузки. HTTP sessions, SSE replay и server restart проверяются отдельно.
+- **PlatformRelease:** отдельный сохраняемый draft-пакет существует; независимый platform approval, UAT/rollout/rollback платформы не закончены.
+- **Assistant Team:** разные UI/Docs планы и bounded delegation исполняются. Кандидат закрепляет routing/coordinator/roles/limits, но evidence/UAT относятся к одному классу snapshot. Многоклассовый team admission не реализован; Released вне snapshot.taskClass запрещён.
+- **Собственная сборка:** выбираются controller/harness/store/human adapter, конфликт двух владельцев запрещён; Trial исполняется общим интерпретатором. Полный портовый редактор, произвольная bounded event choreography и автоматизированный набор conformance для каждой комбинации не реализованы. Непройденные conformance cases в UI остаются planned.
+- **Валидация графа:** поддерживаемые типы, Start/Terminal, reachability, reviewer, transitions, bounded loops, ссылки и запрет опасных путей проверяются. Нет полного статического доказательства совместимости всех schema/портов и доминирования обязательных gates. Runtime дополнительно запрещает Accepted без обязательных checks и решения текущей попытки.
+- **Evaluation:** структурированное поведение 200/204/503 и mutation проверяются детерминированным oracle. Scope/duplicate/cancel строки корзины — явно маркированные declared-policy-fixtures, не отдельные live integration runs. Отрицательные API-проверки находятся в тестах приложения, а не автоматически в evidence каждого кандидата. Статистических интервалов, защищённого holdout и полноценного слепого appeal workflow нет.
+- **Knowledge/Components:** публикация фиксирует текст/digest/автора/reviewer. Связь правила 503 с fixture — прозрачное детерминированное правило по содержимому, не универсальная проверка смысла знания. Нет полного retrieval freshness engine, автопоиска дубликатов, семантической модели и исполнения пользовательских helpers. Markdown сохраняется; preview не реализует все элементы Notion/таблиц/internal links. Reviewer конфликт сохраняет локальный текст, но автоматического merge нет.
+- **Каталог модели и harness:** профили/метаданные/limits демонстрационные. Полноценные редакторы GPU/weights/routing/fallback, обучение модели и внутренний inference отсутствуют. Не каждый произвольный текст instruction меняет fixtures; основные исполняемые параметры — граф, class, fixture, model fixture profile, Input, Rework и pinned knowledge.
+- **Messenger:** есть каналы, треды, mentions, реакции, pin, revision/tombstone и частный ассистент. Личные human-to-human DM, полноценные subscriptions, файловые uploads и вся unread/SLA-политика не завершены. Список сообщений выводит порциями, но bootstrap пока возвращает все разрешённые сущности.
+- **Права и identities:** четыре фиксированные человеческие demo identity и три роли. Проектные индивидуальные membership overrides, произвольные новые люди, enterprise IAM, credential vault, полная grant/delegation policy и независимый второй платформенный reviewer не реализованы. Приватность проверяется сервером внутри этого demo, но человек с доступом к data-directory читает JSON.
+- **Provisioning/operations:** сохраняются jobs/stages/retry/actual resources, но полный план удаления/изменения уже созданной инфраструктуры, lease expiry automation, production drain across installations и binding impact approvals не завершены.
+- **Экономика:** целые demo units, root reservations, deduplicated usage и append-only adjustments. Human time фиксируется как уже понесённый расход после решения, а не предварительный резерв; он может превысить оставшийся лимит, после чего новые платные шаги блокируются. Агрегатный budget всех независимых root runs проекта не заменяет их отдельные envelopes. Стоимость не является прогнозом реальных расходов.
+- **Outcome:** явно выбранные synthetic observations и guardrails; отдельное подтверждение создаёт задачу. Полноценного статистического assignment/exposure engine, клиентских данных и реального эксперимента нет.
+- **Import:** проверяются размер, checksum, namespace, типы и критические ссылки. Это не полный reference checker всех возможных связей. Импорт активной работы паузит Runs, supersedes gates и не восстанавливает выполнение автоматически. Full-session import UI отсутствует; API доступен.
+- **Нагрузочная приёмка:** набор 1000 сообщений / 100 задач / 30 Runs не измерен в этой поставке. Нет заявления о latency, throughput, production SLO или производительности большого bootstrap.
+- **Стек:** закреплены доступные локально React 16.0.0 / ReactDOM 16.0.1; функциональные TSX-компоненты используют class render bridge и собственный controller, не React hooks. Typecheck проверяет 20 исходных TS/TSX файлов, но динамические extensions сущностей используют `any`. Полные строго типизированные payload schemas каждого command family пока не построены; executable validation находится в handlers.
+
+## Эксплуатационные ограничения
+
+Один процесс, локальный диск, один писатель. Checksums — идентификаторы/проверка целостности, не цифровые подписи и не WORM. Содержимое state.json контролируется владельцем машины. Автоматических миграций со старых версий приложения нет; unknown schema не сбрасывается молча. Прототип не является банковской security boundary и не должен обрабатывать реальные данные клиентов.

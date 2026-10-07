@@ -1,0 +1,906 @@
+{
+  "specVersion": "6.0",
+  "status": "planned-not-executed",
+  "criteria": [
+    {
+      "id": "TS-001",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Пустой старт",
+      "given": "Новая data-directory",
+      "when": "Открыть приложение",
+      "then": "Нет созданных от имени пользователя команд, ресурсов или релизов",
+      "status": "planned"
+    },
+    {
+      "id": "TS-002",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Создание пространства",
+      "given": "Профиль платформенного инженера",
+      "when": "Создать Team Space и назначить три роли",
+      "then": "Сохранены space, memberships и базовые каналы",
+      "status": "planned"
+    },
+    {
+      "id": "TS-003",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Ролевая граница setup",
+      "given": "Профиль продукт-инженера",
+      "when": "Отправить прямую команду provision",
+      "then": "Сервер возвращает Forbidden без создания ресурса",
+      "status": "planned"
+    },
+    {
+      "id": "TS-004",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Возобновление setup",
+      "given": "Мастер заполнен наполовину",
+      "when": "Перезагрузить страницу и сервер",
+      "then": "Поля и последняя сохраненная стадия восстановлены",
+      "status": "planned"
+    },
+    {
+      "id": "TS-005",
+      "group": "Командное пространство и инфраструктура",
+      "title": "План до эффекта",
+      "given": "Выбран облачный шаблон",
+      "when": "Просмотреть план без подтверждения",
+      "then": "Видна смета; ресурсы еще не созданы",
+      "status": "planned"
+    },
+    {
+      "id": "TS-006",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Заказ ресурсов",
+      "given": "Валидный план в лимите",
+      "when": "Подтвердить provisioning",
+      "then": "Сервер создает job и выполняет этапы до Ready",
+      "status": "planned"
+    },
+    {
+      "id": "TS-007",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Сбой attestation",
+      "given": "Fixture неверной сети",
+      "when": "Завершить создание VM",
+      "then": "Среда не Ready; видна причина и recovery",
+      "status": "planned"
+    },
+    {
+      "id": "TS-008",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Идемпотентный provision",
+      "given": "Часть ресурсов готова",
+      "when": "Повторить запрос с прежним actionId",
+      "then": "Готовые ресурсы не дублируются",
+      "status": "planned"
+    },
+    {
+      "id": "TS-009",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Отмена подготовки",
+      "given": "Provisioning активен",
+      "when": "Отменить job",
+      "then": "Новые этапы остановлены; расходы и созданные ресурсы видны",
+      "status": "planned"
+    },
+    {
+      "id": "TS-010",
+      "group": "Командное пространство и инфраструктура",
+      "title": "Изоляция команды",
+      "given": "Два Team Space с разными участниками",
+      "when": "Запросить чужой resource или поиск",
+      "then": "Нет доступа и утечки названий",
+      "status": "planned"
+    },
+    {
+      "id": "TS-011",
+      "group": "Установленная основа и проект",
+      "title": "HG-профиль",
+      "given": "Sandbox Ready",
+      "when": "Установить mock HG SDLC",
+      "then": "Есть versioned Installation, health, controls и bindings",
+      "status": "planned"
+    },
+    {
+      "id": "TS-012",
+      "group": "Установленная основа и проект",
+      "title": "Agent-platform профиль",
+      "given": "Подготовленные ресурсы",
+      "when": "Установить mock-систему управления агентами",
+      "then": "Доступны identities, coordinator, routing и проектные поручения",
+      "status": "planned"
+    },
+    {
+      "id": "TS-013",
+      "group": "Установленная основа и проект",
+      "title": "Внешняя платформа",
+      "given": "Каталог Frontier",
+      "when": "Открыть подключение",
+      "then": "Показан mock-connection; не обещана локальная установка vendor-образа",
+      "status": "planned"
+    },
+    {
+      "id": "TS-014",
+      "group": "Установленная основа и проект",
+      "title": "Собственная сборка",
+      "given": "Пустой composition",
+      "when": "Выбрать контроллер, harness, store и human adapter",
+      "then": "Создается конфигурация и conformance-план",
+      "status": "planned"
+    },
+    {
+      "id": "TS-015",
+      "group": "Установленная основа и проект",
+      "title": "Конфликт владельцев",
+      "given": "Один Run state назначен двум контроллерам",
+      "when": "Проверить сборку",
+      "then": "Validation отклоняет неоднозначное управление",
+      "status": "planned"
+    },
+    {
+      "id": "TS-016",
+      "group": "Установленная основа и проект",
+      "title": "Unsupported control",
+      "given": "Adapter не поддерживает Takeover",
+      "when": "Запросить этот control",
+      "then": "Возвращается Unsupported без подделки состояния",
+      "status": "planned"
+    },
+    {
+      "id": "TS-017",
+      "group": "Установленная основа и проект",
+      "title": "Сбой установки",
+      "given": "Fixture connection failure",
+      "when": "Запустить installation job",
+      "then": "Есть ошибка и retry; проектный Run заблокирован",
+      "status": "planned"
+    },
+    {
+      "id": "TS-018",
+      "group": "Установленная основа и проект",
+      "title": "Смена runtime",
+      "given": "Есть активный Run старой версии",
+      "when": "Обновить Installation",
+      "then": "Run сохраняет binding либо контролируемо останавливается",
+      "status": "planned"
+    },
+    {
+      "id": "TS-019",
+      "group": "Установленная основа и проект",
+      "title": "Создание проекта",
+      "given": "Пространство с готовой основой",
+      "when": "Создать проект, цель, канал и repo binding",
+      "then": "Связи сохранены; task board принадлежит проекту",
+      "status": "planned"
+    },
+    {
+      "id": "TS-020",
+      "group": "Установленная основа и проект",
+      "title": "Scope инструмента",
+      "given": "Binding дает только чтение tracker",
+      "when": "Запросить изменение issue",
+      "then": "Сервер запрещает действие; отражает denied action",
+      "status": "planned"
+    },
+    {
+      "id": "TS-021",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Создание Actor",
+      "given": "Доступен утвержденный template",
+      "when": "Создать AI-сотрудника",
+      "then": "Есть собственная identity, owner и пустая частная память",
+      "status": "planned"
+    },
+    {
+      "id": "TS-022",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Клонирование",
+      "given": "Actor имеет память и grants",
+      "when": "Клонировать роль",
+      "then": "Новые identity и scope; память, secrets и approval не скопированы",
+      "status": "planned"
+    },
+    {
+      "id": "TS-023",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Flow из шаблона",
+      "given": "Настроен проект",
+      "when": "Добавить SDLC Flow",
+      "then": "Canvas и properties используют одну модель с human gates",
+      "status": "planned"
+    },
+    {
+      "id": "TS-024",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Редактирование графа",
+      "given": "Есть draft Flow",
+      "when": "Добавить узел, переход и поменять исполнителя",
+      "then": "Сохраняется новая draft revision с корректной семантикой",
+      "status": "planned"
+    },
+    {
+      "id": "TS-025",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Проверка графа",
+      "given": "Нет Terminal или есть недостижимый узел",
+      "when": "Запустить validation",
+      "then": "Показана ошибка с указанием узла",
+      "status": "planned"
+    },
+    {
+      "id": "TS-026",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Ограниченный цикл",
+      "given": "Rework-edge имеет maxVisits",
+      "when": "Достичь лимита",
+      "then": "Run останавливается с объяснением; бесконечный цикл невозможен",
+      "status": "planned"
+    },
+    {
+      "id": "TS-027",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "JSON round-trip",
+      "given": "Импортируемый поддерживаемый граф",
+      "when": "Импортировать, открыть и экспортировать",
+      "then": "Семантика и разрешенные metadata не потеряны",
+      "status": "planned"
+    },
+    {
+      "id": "TS-028",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Поврежденный импорт",
+      "given": "Есть несохраненный draft",
+      "when": "Импортировать неверный JSON",
+      "then": "Ошибка не уничтожает локальный draft",
+      "status": "planned"
+    },
+    {
+      "id": "TS-029",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Immutable snapshot",
+      "given": "Run уже стартовал",
+      "when": "Изменить draft и skill selection",
+      "then": "Текущий Run использует прежний configurationDigest",
+      "status": "planned"
+    },
+    {
+      "id": "TS-030",
+      "group": "Композиция, версии и AI-сотрудники",
+      "title": "Team plan",
+      "given": "Команда поддерживает UI и docs классы",
+      "when": "Запустить задачи обоих классов",
+      "then": "Планы и специалисты различаются; child tasks связаны с проектом",
+      "status": "planned"
+    },
+    {
+      "id": "TS-031",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Trial без релиза",
+      "given": "Sandbox и валидный draft, release отсутствует",
+      "when": "Нажать Пробный запуск",
+      "then": "Созданы snapshot, Run, задача и тред; нет требования выпуска",
+      "status": "planned"
+    },
+    {
+      "id": "TS-032",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Запрет production draft",
+      "given": "Есть только trial snapshot",
+      "when": "Запустить Released в Production",
+      "then": "Команда отклонена до внешнего действия",
+      "status": "planned"
+    },
+    {
+      "id": "TS-033",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Несуществующая среда",
+      "given": "Environment не Ready",
+      "when": "Отправить startTrial",
+      "then": "Возвращается EnvironmentNotReady",
+      "status": "planned"
+    },
+    {
+      "id": "TS-034",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "TaskClass boundary",
+      "given": "Задача касается защищенного auth",
+      "when": "Начать Run низкорискового класса",
+      "then": "Исполнение запрещено и создана объясняющая запись",
+      "status": "planned"
+    },
+    {
+      "id": "TS-035",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Неполный input",
+      "given": "Агент нашел неоднозначность",
+      "when": "Дойти до Input Gate",
+      "then": "Созданы InputRequest, HumanTask и card продукт-инженеру",
+      "status": "planned"
+    },
+    {
+      "id": "TS-036",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Продолжение ответа",
+      "given": "Открытый Input Gate",
+      "when": "Отправить валидный типизированный ответ",
+      "then": "Тот же Run продолжен; вопрос и ответ остаются в истории",
+      "status": "planned"
+    },
+    {
+      "id": "TS-037",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Невалидный ответ",
+      "given": "Вопрос требует enum и пояснение",
+      "when": "Отправить неподходящее значение",
+      "then": "Gate остается Pending; ошибка у соответствующего поля",
+      "status": "planned"
+    },
+    {
+      "id": "TS-038",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Разветвление",
+      "given": "Condition зависит от результата check",
+      "when": "Подать разные результаты fixtures",
+      "then": "Выполняются разные разрешенные ветви графа",
+      "status": "planned"
+    },
+    {
+      "id": "TS-039",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Закрытая вкладка",
+      "given": "Сервер выполняет Run",
+      "when": "Закрыть UI и открыть снова",
+      "then": "Работа и события сохранены; нет перезапуска с начала",
+      "status": "planned"
+    },
+    {
+      "id": "TS-040",
+      "group": "Запуски, вопросы и исполнение",
+      "title": "Параллельные поручения",
+      "given": "Есть независимые review-ветви",
+      "when": "Выполнить team plan в concurrency limit",
+      "then": "Join ждет требуемые результаты; budget общий",
+      "status": "planned"
+    },
+    {
+      "id": "TS-041",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Связный тред",
+      "given": "Run стартовал из проекта",
+      "when": "Открыть рабочую карточку",
+      "then": "Показаны task, snapshot, среда и одна корневая тема",
+      "status": "planned"
+    },
+    {
+      "id": "TS-042",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Ответы и mentions",
+      "given": "Канал проекта доступен человеку и AI",
+      "when": "Написать сообщение и ответить в треде",
+      "then": "Ответ связан с темой; mention создает уведомление",
+      "status": "planned"
+    },
+    {
+      "id": "TS-043",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Сообщение в задачу",
+      "given": "Есть обычное сообщение",
+      "when": "Создать задачу из сообщения дважды с одним actionId",
+      "then": "Одна задача с originMessageId",
+      "status": "planned"
+    },
+    {
+      "id": "TS-044",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Shared Workbench",
+      "given": "Один Gate доступен из чата и inbox",
+      "when": "Открыть оба представления",
+      "then": "Один gateId и одинаковый пакет review",
+      "status": "planned"
+    },
+    {
+      "id": "TS-045",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Возврат к работе",
+      "given": "Workbench открыт поверх треда",
+      "when": "Закрыть панель",
+      "then": "Сохранились scroll, фильтр и draft сообщения",
+      "status": "planned"
+    },
+    {
+      "id": "TS-046",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Emoji не approval",
+      "given": "Gate ожидает решения",
+      "when": "Отправить ок и реакцию одобрения",
+      "then": "Gate остается Pending",
+      "status": "planned"
+    },
+    {
+      "id": "TS-047",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Private assistant",
+      "given": "Личные диалоги двух пользователей",
+      "when": "Переключить identity и запросить историю",
+      "then": "Чужие сообщения и memory отсутствуют",
+      "status": "planned"
+    },
+    {
+      "id": "TS-048",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Ассистент с подтверждением",
+      "given": "Ассистент предложил создать задачу",
+      "when": "Отменить подтверждение",
+      "then": "Проектная задача не создана",
+      "status": "planned"
+    },
+    {
+      "id": "TS-049",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Сбой доставки",
+      "given": "Domain event сохранен, chat projection недоступна",
+      "when": "Восстановить доставку",
+      "then": "Одна карточка; Run не согласован автоматически",
+      "status": "planned"
+    },
+    {
+      "id": "TS-050",
+      "group": "Мессенджер и рабочий контекст",
+      "title": "Редактирование сообщения",
+      "given": "Автор меняет свой текст",
+      "when": "Редактировать или удалить обычное сообщение",
+      "then": "Есть revision или tombstone; Decision не изменяется",
+      "status": "planned"
+    },
+    {
+      "id": "TS-051",
+      "group": "Human Gates, Rework и управление",
+      "title": "Принятие работы",
+      "given": "Product engineer открыл актуальный пакет",
+      "when": "Подтвердить approval",
+      "then": "Decision связан с identity, revision и digest",
+      "status": "planned"
+    },
+    {
+      "id": "TS-052",
+      "group": "Human Gates, Rework и управление",
+      "title": "Неверная роль",
+      "given": "Gate требует продукт-инженера",
+      "when": "PO пытается принять через API",
+      "then": "Forbidden; gate и задача не изменены",
+      "status": "planned"
+    },
+    {
+      "id": "TS-053",
+      "group": "Human Gates, Rework и управление",
+      "title": "Stale review",
+      "given": "Открыт старый challenge",
+      "when": "Изменить пакет и подтвердить старый",
+      "then": "Conflict с предложением открыть актуальную версию",
+      "status": "planned"
+    },
+    {
+      "id": "TS-054",
+      "group": "Human Gates, Rework и управление",
+      "title": "Два reviewer",
+      "given": "Два окна открыли одну revision",
+      "when": "Оба отправляют разные решения",
+      "then": "Сохранено одно решение; второе получает conflict",
+      "status": "planned"
+    },
+    {
+      "id": "TS-055",
+      "group": "Human Gates, Rework и управление",
+      "title": "Истекший challenge",
+      "given": "Simulated clock прошел expiresAt",
+      "when": "Нажать Принять",
+      "then": "Решение отклонено; нет auto-approve",
+      "status": "planned"
+    },
+    {
+      "id": "TS-056",
+      "group": "Human Gates, Rework и управление",
+      "title": "Rework",
+      "given": "Есть diff и замечание",
+      "when": "Вернуть на целевой этап",
+      "then": "Создана новая попытка; прежние артефакты доступны",
+      "status": "planned"
+    },
+    {
+      "id": "TS-057",
+      "group": "Human Gates, Rework и управление",
+      "title": "Полная цена Rework",
+      "given": "У Run есть затраты и reservation",
+      "when": "Открыть форму доработки",
+      "then": "Видны факт, остаток, оценка следующего шага и время человека",
+      "status": "planned"
+    },
+    {
+      "id": "TS-058",
+      "group": "Human Gates, Rework и управление",
+      "title": "Takeover fence",
+      "given": "Агент владеет workspace",
+      "when": "Запросить Takeover",
+      "then": "Human writer появляется только после drain и checkpoint",
+      "status": "planned"
+    },
+    {
+      "id": "TS-059",
+      "group": "Human Gates, Rework и управление",
+      "title": "Неизвестный эффект",
+      "given": "Action имеет InDoubt",
+      "when": "Запросить Takeover или retry",
+      "then": "Запись/повтор заблокированы до reconciliation",
+      "status": "planned"
+    },
+    {
+      "id": "TS-060",
+      "group": "Human Gates, Rework и управление",
+      "title": "Возврат от человека",
+      "given": "HumanOwned с новым diff",
+      "when": "Вернуть управление",
+      "then": "Human lease закрыт; выполнены checks и выдан новый epoch",
+      "status": "planned"
+    },
+    {
+      "id": "TS-061",
+      "group": "Знания, память и компоненты",
+      "title": "Предложение знания",
+      "given": "Сохранен содержательный Rework",
+      "when": "Выбрать Сохранить знание",
+      "then": "Proposal содержит причину, применимость и sourceDecisionId",
+      "status": "planned"
+    },
+    {
+      "id": "TS-062",
+      "group": "Знания, память и компоненты",
+      "title": "Отказ от знания",
+      "given": "Появилось предложение заметки",
+      "when": "Выбрать Не сохранять",
+      "then": "Доработка продолжается без создания знания",
+      "status": "planned"
+    },
+    {
+      "id": "TS-063",
+      "group": "Знания, память и компоненты",
+      "title": "Редактор и иерархия",
+      "given": "Создана knowledge page",
+      "when": "Добавить дочернюю страницу, код и ссылку",
+      "then": "Контент и parent relationship сохраняются",
+      "status": "planned"
+    },
+    {
+      "id": "TS-064",
+      "group": "Знания, память и компоненты",
+      "title": "Атомарные заметки",
+      "given": "Есть правило и API contract",
+      "when": "Создать typed link",
+      "then": "Видны исходная ссылка и обратная ссылка",
+      "status": "planned"
+    },
+    {
+      "id": "TS-065",
+      "group": "Знания, память и компоненты",
+      "title": "Защищенные backlinks",
+      "given": "Закрытая страница связана с открытой",
+      "when": "Открыть граф чужим пользователем",
+      "then": "Нет текста или названия закрытого источника",
+      "status": "planned"
+    },
+    {
+      "id": "TS-066",
+      "group": "Знания, память и компоненты",
+      "title": "Публикация знания",
+      "given": "Proposal подготовлен автором",
+      "when": "Другой продукт-инженер проверяет и публикует",
+      "then": "Создана immutable KnowledgeVersion с reviewer и tests",
+      "status": "planned"
+    },
+    {
+      "id": "TS-067",
+      "group": "Знания, память и компоненты",
+      "title": "Знание влияет на новую версию",
+      "given": "Правило 503 опубликовано",
+      "when": "Подключить к новому snapshot и повторить regression",
+      "then": "Новый bundle содержит правило; fixture проверяет правильный исход",
+      "status": "planned"
+    },
+    {
+      "id": "TS-068",
+      "group": "Знания, память и компоненты",
+      "title": "Нет скрытого обновления",
+      "given": "Старый Run активен при публикации знания",
+      "when": "Продолжить Run",
+      "then": "Pinned skill не меняется; Rework input учтен отдельно",
+      "status": "planned"
+    },
+    {
+      "id": "TS-069",
+      "group": "Знания, память и компоненты",
+      "title": "Компонент и потребители",
+      "given": "Skill используется в двух releases",
+      "when": "Открыть карточку и версии",
+      "then": "Видны точные consumers и отдельные version digests",
+      "status": "planned"
+    },
+    {
+      "id": "TS-070",
+      "group": "Знания, память и компоненты",
+      "title": "Отзыв компонента",
+      "given": "Активный Run использует revoked skill",
+      "when": "Продолжить шаг и попробовать rollback",
+      "then": "Действия блокируются; небезопасный rollback запрещен",
+      "status": "planned"
+    },
+    {
+      "id": "TS-071",
+      "group": "Оценка, допуск и размещение",
+      "title": "Версионированная корзина",
+      "given": "Созданы class, snapshot и plan",
+      "when": "Запустить evaluation",
+      "then": "Все записи привязаны к одной объявленной конфигурации/track",
+      "status": "planned"
+    },
+    {
+      "id": "TS-072",
+      "group": "Оценка, допуск и размещение",
+      "title": "Проверка самого evaluator",
+      "given": "Fixture содержит намеренно неверный diff",
+      "when": "Запустить mutation test",
+      "then": "Verifier отклоняет неправильный результат",
+      "status": "planned"
+    },
+    {
+      "id": "TS-073",
+      "group": "Оценка, допуск и размещение",
+      "title": "Честный знаменатель",
+      "given": "В когорте есть failures и cancellations",
+      "when": "Открыть метрики",
+      "then": "Все started учтены; pending выделены и maturity видна",
+      "status": "planned"
+    },
+    {
+      "id": "TS-074",
+      "group": "Оценка, допуск и размещение",
+      "title": "Арена без автодопуска",
+      "given": "Кандидат показал лучший допустимый результат",
+      "when": "Завершить arena report",
+      "then": "Нет автоматического Admission/Deployment",
+      "status": "planned"
+    },
+    {
+      "id": "TS-075",
+      "group": "Оценка, допуск и размещение",
+      "title": "Workflow candidate",
+      "given": "Trial и evaluation завершены",
+      "when": "Зафиксировать кандидат",
+      "then": "Manifest закрепляет Flow и полный resolved lock",
+      "status": "planned"
+    },
+    {
+      "id": "TS-076",
+      "group": "Оценка, допуск и размещение",
+      "title": "Team candidate",
+      "given": "Проверена команда целиком",
+      "when": "Зафиксировать release команды",
+      "then": "Закреплены coordinator, routing, роли, subflows и limits",
+      "status": "planned"
+    },
+    {
+      "id": "TS-077",
+      "group": "Оценка, допуск и размещение",
+      "title": "Техническая независимость",
+      "given": "Кандидат подготовлен Иваном",
+      "when": "Попросить Ивана и затем Марию принять technical review",
+      "then": "Самосогласование отклонено; другой PE может решить",
+      "status": "planned"
+    },
+    {
+      "id": "TS-078",
+      "group": "Оценка, допуск и размещение",
+      "title": "UAT точного пакета",
+      "given": "Candidate согласован",
+      "when": "Запустить UAT и попытаться подменить snapshot",
+      "then": "Подмена отклонена; отчет связан с исходным digest",
+      "status": "planned"
+    },
+    {
+      "id": "TS-079",
+      "group": "Оценка, допуск и размещение",
+      "title": "Размещение",
+      "given": "Есть admitted release и valid bindings",
+      "when": "Платформенный инженер выполняет deploy",
+      "then": "Создан один Deployment и сообщение команды",
+      "status": "planned"
+    },
+    {
+      "id": "TS-080",
+      "group": "Оценка, допуск и размещение",
+      "title": "Три разных релиза",
+      "given": "Активен CapabilityRelease",
+      "when": "Открыть ProductRelease и PlatformRelease",
+      "then": "Отдельные пакеты и полномочия; нет общего выпуска всего",
+      "status": "planned"
+    },
+    {
+      "id": "TS-081",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Общий бюджет",
+      "given": "Команда породила child runs",
+      "when": "Зарезервировать несколько шагов",
+      "then": "Сумма не превышает root envelope; дочерний запуск не сбрасывает лимит",
+      "status": "planned"
+    },
+    {
+      "id": "TS-082",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Повтор usage",
+      "given": "CostEntry уже записан",
+      "when": "Повторить eventId",
+      "then": "Расход не удваивается",
+      "status": "planned"
+    },
+    {
+      "id": "TS-083",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Поздняя корректировка",
+      "given": "Есть принятый cost report",
+      "when": "Добавить adjustment",
+      "then": "Новая запись с originRef; старый ledger сохранен",
+      "status": "planned"
+    },
+    {
+      "id": "TS-084",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Недостаток средств",
+      "given": "Reservation превышает остаток",
+      "when": "Запустить следующий шаг",
+      "then": "Остановка и адресный запрос владельцу продукта",
+      "status": "planned"
+    },
+    {
+      "id": "TS-085",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Метрики продукта",
+      "given": "ProductRelease и synthetic observations готовы",
+      "when": "Запустить outcome job",
+      "then": "PO получает сигнал с contract, maturity и provenance",
+      "status": "planned"
+    },
+    {
+      "id": "TS-086",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Новый цикл улучшения",
+      "given": "PO видит цель не достигнута",
+      "when": "Подтвердить предложенное улучшение",
+      "then": "Новая задача связана с outcome; запуск в текущих границах",
+      "status": "planned"
+    },
+    {
+      "id": "TS-087",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Невалидный эксперимент",
+      "given": "Есть SRM или нарушенный guardrail",
+      "when": "Попробовать масштабирование",
+      "then": "Решение блокируется; причина видна",
+      "status": "planned"
+    },
+    {
+      "id": "TS-088",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Restart на gate",
+      "given": "Run ждет человека",
+      "when": "Перезапустить Node.js",
+      "then": "Gate, thread, challenge validity и pending job восстановлены",
+      "status": "planned"
+    },
+    {
+      "id": "TS-089",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "Idempotency conflict",
+      "given": "actionId использован с одним телом",
+      "when": "Повторить его с другим payload",
+      "then": "Conflict без второго эффекта",
+      "status": "planned"
+    },
+    {
+      "id": "TS-090",
+      "group": "Экономика, метрики и устойчивость",
+      "title": "SSE reconnect и scope",
+      "given": "Разрыв потока или смена identity",
+      "when": "Восстановить соединение",
+      "then": "Пропуски восполнены; нет дублей и чужих событий",
+      "status": "planned"
+    },
+    {
+      "id": "TS-091",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Мобильный input",
+      "given": "Viewport 390 px и ожидающий вопрос",
+      "when": "Ответить и вернуться в тред",
+      "then": "Поля, кнопки и результат доступны без page overflow",
+      "status": "planned"
+    },
+    {
+      "id": "TS-092",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Мобильный review",
+      "given": "Viewport 390 px и большой diff",
+      "when": "Открыть review и назначить Rework",
+      "then": "Нет скрытых controls и потери введенного текста",
+      "status": "planned"
+    },
+    {
+      "id": "TS-093",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Клавиатурный путь",
+      "given": "Без мыши",
+      "when": "Пройти форму, диалог и approval",
+      "then": "Фокус видим и возвращается; действия доступны",
+      "status": "planned"
+    },
+    {
+      "id": "TS-094",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Конфликт редакторов",
+      "given": "Два редактора знания смотрят одну revision",
+      "when": "Сохранить разные изменения",
+      "then": "Второй видит diff/conflict; локальный текст сохранен",
+      "status": "planned"
+    },
+    {
+      "id": "TS-095",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Offline approval",
+      "given": "Соединение с сервером потеряно",
+      "when": "Нажать решение",
+      "then": "Нет ложного успеха или скрытого offline-approval",
+      "status": "planned"
+    },
+    {
+      "id": "TS-096",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Безопасный контент",
+      "given": "В сообщение/импорт вставлен script или path traversal",
+      "when": "Открыть текст и выполнить import validate",
+      "then": "Код не исполняется; опасный путь отклонен",
+      "status": "planned"
+    },
+    {
+      "id": "TS-097",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Storage failure",
+      "given": "Mock storage возвращает ошибку записи",
+      "when": "Отправить команду",
+      "then": "Нет success event и незаписанного успешного состояния",
+      "status": "planned"
+    },
+    {
+      "id": "TS-098",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Поврежденный snapshot",
+      "given": "Основной state.json поврежден",
+      "when": "Запустить сервер",
+      "then": "Recovery mode и проверенный backup; нет тихого сброса",
+      "status": "planned"
+    },
+    {
+      "id": "TS-099",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Чистый дистрибутив",
+      "given": "Сформирован окончательный ZIP",
+      "when": "Проверить CRC, распаковать и выполнить npm start",
+      "then": "Сервер и UI работают из новой папки; hashes совпадают",
+      "status": "planned"
+    },
+    {
+      "id": "TS-100",
+      "group": "UX, хранение и конечная поставка",
+      "title": "Проверяемый отчет",
+      "given": "Выполнены тестовые команды",
+      "when": "Сформировать release report",
+      "then": "Есть raw results и ограничения; непроверенные пункты не отмечены passed",
+      "status": "planned"
+    }
+  ]
+}
