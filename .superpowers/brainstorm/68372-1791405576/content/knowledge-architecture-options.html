@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управление знаниями — варианты архитектуры</title>
+  <style>
+    :root{
+      --canvas:#f4f6f0;--surface:#fbfcf8;--raised:#ffffff;--inset:#eef2e9;
+      --ink:#223126;--secondary:#607064;--tertiary:#879187;--line:#dce3d8;
+      --moss:#57784d;--moss-soft:#e4eddc;--violet:#745f90;--violet-soft:#eee9f4;
+      --teal:#39766c;--teal-soft:#dfeeea;--amber:#a66b2b;--amber-soft:#f7ead8;
+      --red:#a04a46;--shadow:0 12px 32px rgba(43,61,46,.08);
+    }
+    *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+    button{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:214px minmax(0,1fr)}
+    .side{border-right:1px solid var(--line);padding:24px 16px;background:var(--canvas)}
+    .brand{font-weight:760;letter-spacing:.13em;font-size:15px;margin:0 10px 28px}.brand i{color:var(--moss);font-style:normal}
+    .nav-label{color:var(--tertiary);font-size:10px;text-transform:uppercase;letter-spacing:.13em;margin:18px 10px 8px}
+    .nav{display:flex;flex-direction:column;gap:4px}.nav div{padding:10px 11px;border-radius:7px;color:var(--secondary)}.nav .active{background:var(--moss-soft);color:#385433;font-weight:650}.nav span{float:right;font-size:11px;color:var(--tertiary)}
+    .main{padding:29px 34px 60px;max-width:1540px;width:100%;margin:auto}
+    .crumb{font-size:11px;color:var(--tertiary);letter-spacing:.03em;margin-bottom:13px}.head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:25px}
+    h1{font-size:29px;letter-spacing:-.035em;margin:0 0 6px}h2,h3,p{margin-top:0}.sub{color:var(--secondary);margin:0;line-height:1.55}.button{border:1px solid #486944;background:var(--moss);color:white;border-radius:7px;padding:10px 14px;font-weight:650}
+    .intent{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px;margin-bottom:20px}.intent>div{border-top:1px solid var(--line);padding:13px 4px 0}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--tertiary);margin-bottom:7px}.intent strong{font-size:13px}.intent p{font-size:12px;color:var(--secondary);line-height:1.5;margin-top:5px}
+    .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:12px}.choice{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:19px;cursor:pointer;transition:.16s ease;min-height:425px}.choice:hover{transform:translateY(-2px);box-shadow:var(--shadow)}.choice.selected{outline:2px solid var(--moss);outline-offset:2px}.choice.recommended{border-color:#a8bca0;background:#fff}.ribbon{position:absolute;right:13px;top:13px;background:var(--moss-soft);color:#466540;font-size:10px;font-weight:720;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:4px}
+    .choice-no{font:650 11px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--tertiary)}.choice h2{font-size:18px;margin:14px 0 5px}.choice>.desc{color:var(--secondary);font-size:12px;line-height:1.5;min-height:54px}
+    .architecture{margin:18px 0 20px;padding:14px;background:var(--inset);border-radius:8px;min-height:140px}.arch-line{display:flex;gap:7px;align-items:center;margin:8px 0}.node{background:var(--raised);border:1px solid #d7dfd4;border-radius:5px;padding:7px 8px;font-size:10px;line-height:1.2;flex:1;text-align:center}.arrow{color:#84927f}.graph{height:124px;position:relative}.dot{position:absolute;border:1px solid;padding:7px;border-radius:18px;background:#fff;font-size:9px}.dot.p{left:2px;top:15px;border-color:#9cb493}.dot.r{right:2px;top:8px;border-color:#aa9cbc}.dot.t{left:29%;bottom:4px;border-color:#78a99f}.dot.c{left:40%;top:42px;background:var(--moss-soft);border-color:#86a27d;font-weight:700}.edge{position:absolute;height:1px;background:#bac5b6;transform-origin:left center}.e1{width:122px;left:57px;top:35px;transform:rotate(12deg)}.e2{width:100px;left:153px;top:55px;transform:rotate(-20deg)}.e3{width:67px;left:97px;top:92px;transform:rotate(-40deg)}
+    .hybrid{display:grid;grid-template-columns:1fr 32px 1fr;align-items:center;gap:6px}.stack{display:grid;gap:6px}.store{background:#fff;border:1px solid #d7dfd4;border-radius:5px;padding:8px;font-size:10px}.store b{display:block;margin-bottom:3px}.resolver{display:grid;place-items:center;height:82px;border-radius:22px;background:var(--moss);color:white;font-size:9px;text-align:center;font-weight:700}.receipt{border-left:2px solid var(--amber);padding-left:8px;font-size:9px;color:var(--secondary);line-height:1.55}
+    .verdict{border-top:1px solid var(--line);padding-top:13px}.verdict strong{font-size:12px}.verdict ul{padding-left:17px;margin:9px 0 0;color:var(--secondary);font-size:11px;line-height:1.6}.danger{color:var(--red)}
+    .signature{margin-top:22px;border:1px solid #d8dfd3;background:var(--raised);border-radius:12px;overflow:hidden;display:grid;grid-template-columns:1.2fr 1fr}.sig-left{padding:20px 22px}.sig-left h2{font-size:17px;margin-bottom:7px}.sig-left p{font-size:12px;color:var(--secondary);line-height:1.6}.context-chain{display:flex;align-items:stretch;gap:0;margin-top:17px}.step{flex:1;padding:11px 9px;border:1px solid var(--line);border-right:0;background:var(--surface);font-size:10px}.step:first-child{border-radius:6px 0 0 6px}.step:last-child{border-right:1px solid var(--line);border-radius:0 6px 6px 0}.step b{display:block;margin-bottom:5px}.step span{color:var(--tertiary)}
+    .sig-right{padding:20px 22px;background:#f8f7f2;border-left:1px solid var(--line)}.receipt-head{display:flex;justify-content:space-between;font:650 10px ui-monospace,monospace;color:var(--secondary);padding-bottom:9px;border-bottom:1px dashed #cfd6ca}.row{padding:10px 0;border-bottom:1px solid #e5e8e0}.row:last-child{border:0}.row b{display:block;font-size:11px}.row span{display:block;color:var(--tertiary);font-size:10px;margin-top:4px}.tag{display:inline-block;padding:3px 6px;border-radius:4px;font-size:9px;margin:5px 4px 0 0}.product{background:var(--moss-soft);color:#45633f}.reg{background:var(--violet-soft);color:#65517f}.team{background:var(--teal-soft);color:#2f675e}.why{background:var(--amber-soft);color:#85531d}
+    .foot{margin-top:12px;color:var(--tertiary);font-size:11px;text-align:right}
+    @media(max-width:1050px){.app{grid-template-columns:1fr}.side{display:none}.choices{grid-template-columns:1fr}.choice{min-height:0}.signature{grid-template-columns:1fr}.sig-right{border-left:0;border-top:1px solid var(--line)}.intent{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand"><i>К</i>ОНТУР</div>
+      <div class="nav-label">Рабочее пространство</div>
+      <div class="nav"><div>Главная</div><div>Доски задач</div><div>Сообщения</div><div class="active">Управление знаниями <span>18</span></div><div>Окружение</div><div>Автономизация</div></div>
+      <div class="nav-label">Платформа</div>
+      <div class="nav"><div>Каталог</div><div>Регуляторы</div></div>
+    </aside>
+    <main class="main">
+      <div class="crumb">Копилка / Growth / Управление знаниями</div>
+      <header class="head">
+        <div><h1>Из чего собрать Knowledge Supply Chain?</h1><p class="sub">Три архитектурных варианта. Нажмите на тот, который ближе; ниже показана фирменная механика доставки.</p></div>
+        <button class="button">Предложить знание</button>
+      </header>
+
+      <section class="intent">
+        <div><div class="eyebrow">Domain</div><strong>Пакеты · применимость · provenance · delivery · release</strong><p>Здесь главное не «читать базу знаний», а доказуемо доставить нужное правило в нужный шаг Flow.</p></div>
+        <div><div class="eyebrow">Signature</div><strong>Квитанция контекста</strong><p>Каждый запуск показывает, какие знания получил, почему и в какой версии.</p></div>
+        <div><div class="eyebrow">Не делаем</div><strong>Три разрозненных каталога</strong><p>Слои различаются владельцем и governance, но публикуются и доставляются одним конвейером.</p></div>
+      </section>
+
+      <section class="choices">
+        <article class="choice" data-choice="documents" onclick="this.classList.toggle('selected')">
+          <span class="choice-no">A / DOCUMENTS</span><h2>Документы + фильтры</h2><p class="desc">Все знания — версионные записи с metadata. Доставка только по точным условиям применимости.</p>
+          <div class="architecture">
+            <div class="arch-line"><div class="node">Product docs</div><span class="arrow">→</span><div class="node">SQL / JSON</div></div>
+            <div class="arch-line"><div class="node">Regulatory</div><span class="arrow">→</span><div class="node">Filters</div></div>
+            <div class="arch-line"><div class="node">Project lessons</div><span class="arrow">→</span><div class="node">Context pack</div></div>
+          </div>
+          <div class="verdict"><strong>Хорошо для первой версии</strong><ul><li>Просто версионировать и аудировать</li><li>Надёжно для обязательных правил</li><li class="danger">Плохо находит знания, сформулированные иначе</li></ul></div>
+        </article>
+
+        <article class="choice" data-choice="graph" onclick="this.classList.toggle('selected')">
+          <span class="choice-no">B / GRAPH-FIRST</span><h2>Онтология и knowledge graph</h2><p class="desc">Знания, продукты, команды, компоненты и политики становятся узлами и типизированными связями.</p>
+          <div class="architecture graph">
+            <div class="edge e1"></div><div class="edge e2"></div><div class="edge e3"></div>
+            <span class="dot p">Product</span><span class="dot r">Policy</span><span class="dot t">Team</span><span class="dot c">Flow node</span>
+          </div>
+          <div class="verdict"><strong>Сильный impact analysis</strong><ul><li>Multi-hop связи и зависимости</li><li>Формальная семантика возможна</li><li class="danger">Дорогая модель и высокий риск «графового рака»</li></ul></div>
+        </article>
+
+        <article class="choice recommended" data-choice="hybrid" onclick="this.classList.toggle('selected')">
+          <span class="ribbon">Рекомендация</span><span class="choice-no">C / HYBRID</span><h2>Пакеты + связи + hybrid retrieval</h2><p class="desc">Source of truth — immutable документы. Metadata решает обязательность, связи дают impact, поиск находит релевантное.</p>
+          <div class="architecture hybrid">
+            <div class="stack"><div class="store"><b>Document store</b>текст · revision · hash</div><div class="store"><b>Relation index</b>appliesTo · supersedes</div><div class="store"><b>Search index</b>BM25 · vectors</div></div>
+            <div class="resolver">CONTEXT<br>RESOLVER</div>
+            <div class="receipt"><b>Context Pack</b><br>mandatory rules<br>relevant guidance<br>citations & reasons<br>token budget</div>
+          </div>
+          <div class="verdict"><strong>Один pipeline для трёх слоёв</strong><ul><li>Детерминированные правила не теряются</li><li>Семантический поиск добавляется без смены source of truth</li><li>Граф остаётся полезным индексом, а не центром вселенной</li></ul></div>
+        </article>
+      </section>
+
+      <section class="signature">
+        <div class="sig-left">
+          <div class="eyebrow">Signature interaction</div><h2>Knowledge Delivery Trace</h2><p>Вместо абстрактного «знания подключены» пользователь видит цепочку поставки контекста. Она одинакова для продуктового, регуляторного и проектного слоёв.</p>
+          <div class="context-chain"><div class="step"><b>01 · Publish</b><span>reviewed revisions</span></div><div class="step"><b>02 · Package</b><span>immutable manifest</span></div><div class="step"><b>03 · Resolve</b><span>scope + retrieval</span></div><div class="step"><b>04 · Deliver</b><span>per Flow node</span></div><div class="step"><b>05 · Trace</b><span>used + evidence</span></div></div>
+        </div>
+        <aside class="sig-right">
+          <div class="receipt-head"><span>CONTEXT RECEIPT</span><span>RUN-1042 / ANALYSIS</span></div>
+          <div class="row"><b>Клиентские выписки требуют Specification</b><span><i class="tag product">PRODUCT @7</i><i class="tag why">tag=statement-doc</i></span></div>
+          <div class="row"><b>Preserve API compatibility</b><span><i class="tag reg">REGULATORY @5</i><i class="tag why">segment=retail.backend</i></span></div>
+          <div class="row"><b>Не изменять retry logic</b><span><i class="tag team">PROJECT @12</i><i class="tag why">repo=savings-api</i></span></div>
+          <div class="row"><b>Контекст зафиксирован</b><span>3 mandatory · 4 retrieved · 2 840 tokens · manifest 6a02…d91</span></div>
+        </aside>
+      </section>
+      <div class="foot">Цвет кодирует только слой: product / regulatory / project. Янтарный — причина применимости.</div>
+    </main>
+  </div>
+</body>
+</html>
