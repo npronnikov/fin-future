@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7faf5">
+<title>КОНТУР · Архитектура доверенной автономности</title>
+<!--
+  Один автономный файл, без CDN и внешних библиотек.
+  Информационные подстраницы для встраивания:
+  #/regulator  — работа регулятора
+  #/flow       — применение политики во Flow
+  #/sandbox    — Sandbox и настройка среды
+  #/knowledge  — граф знаний и публикация
+  #/assistant  — контекстный ассистент и интеграция оркестратора
+  #/capability — Trusted Capability и доверенная автономность
+  Программная навигация: window.KonturInfoPages.open('regulator' | 'flow' | 'sandbox' | 'knowledge' | 'assistant' | 'capability')
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page:#f8faf7; --sidebar:#f5f8f2; --paper:#ffffff;
+  --ink:#293d30; --body:#506354; --muted:#7b8d7d; --faint:#9bac9b;
+  --line:#e0e9dd; --line-strong:#d2e0ce;
+  --forest:#2f6645; --forest-dark:#244e35; --green:#6e9a62;
+  --leaf:#e8f1e2; --lime:#dcebc9; --violet:#81759c; --blue:#698ea4;
+  --gold:#ad894a; --shadow:0 13px 38px rgba(29,57,37,.07);
+  --radius:14px;
+}
+* {box-sizing:border-box}
+html {scroll-behavior:smooth}
+body {margin:0;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--page);font-size:14px;-webkit-font-smoothing:antialiased}
+button {font:inherit;cursor:pointer;color:inherit}
+button:focus-visible, [tabindex]:focus-visible {outline:3px solid #a6c795;outline-offset:3px}
+button:disabled {cursor:not-allowed;opacity:.45}
+button,select {touch-action:manipulation}
+h1,h2,h3,h4,p {margin-top:0}
+h1 {font-size:clamp(31px,3.55vw,52px);font-weight:660;letter-spacing:-2.1px;line-height:1.13}
+h2 {font-size:24px;font-weight:640;letter-spacing:-.7px;line-height:1.3}
+h3 {font-size:16px;font-weight:640;letter-spacing:-.25px;line-height:1.4}
+p {line-height:1.75}
+strong {font-weight:650}
+code,.mono {font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code {font-size:.91em;overflow-wrap:anywhere}
+svg.ico {width:18px;height:18px;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;flex:none}
+.ico.sm {width:15px;height:15px}.ico.lg{width:24px;height:24px}.ico.xl{width:29px;height:29px}
+.eyebrow {font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#849481;font-weight:730;line-height:1.6}
+.pill {display:inline-flex;align-items:center;gap:6px;border:1px solid #d8e5d1;border-radius:6px;padding:5px 8px;color:#6d8763;background:#eef5e9;font-size:10px;font-weight:610;white-space:nowrap}
+.pill.muted{background:#f5f7f2;border-color:var(--line);color:#899689}
+.pill.blue{color:#6d8aa0;background:#eef4f8;border-color:#dfebf1}
+.pill.amber{color:#9a7c49;background:#fbf5e9;border-color:#eee4d2}
+.pill.ink{color:#3c6249;background:#e7f0e3;border-color:#d6e5d1}
+.btn {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:41px;padding:10px 16px;border:1px solid #dce6d7;border-radius:8px;background:#fff;color:#56705b;font-weight:610;font-size:12px;text-decoration:none;transition:background .17s,border-color .17s,transform .17s;white-space:nowrap}
+.btn:hover {border-color:#b4cba8;background:#f8fbf6;transform:translateY(-1px)}
+.btn.primary {background:var(--forest);border-color:var(--forest);color:#fff}
+.btn.primary:hover {background:var(--forest-dark);border-color:var(--forest-dark)}
+.btn.ghost {border-color:transparent;background:transparent;color:#748677}
+.btn.ghost:hover {background:#f0f4ef}
+.icon-btn {width:36px;height:36px;border:1px solid var(--line);border-radius:8px;display:inline-grid;place-items:center;background:#fff;color:#748a77}
+.icon-btn:hover{background:#f1f6ef}
+.main-shell {min-height:100vh;display:grid;grid-template-columns:225px minmax(0,1fr)}
+.sidebar {background:var(--sidebar);border-right:1px solid var(--line);padding:26px 15px 17px;display:flex;flex-direction:column;min-height:100vh}
+.brand {display:flex;align-items:center;gap:11px;padding:2px 9px 30px}
+.brand-mark {display:grid;grid-template-columns:repeat(2,12px);grid-template-rows:repeat(2,12px);gap:4px;transform:rotate(-8deg)}
+.brand-mark span {display:block;background:#527b59;border-radius:3px}
+.brand-mark span:nth-child(2){background:#87a86f}.brand-mark span:nth-child(3){background:#c4d9ae}.brand-mark span:nth-child(4){background:#345e42}
+.brand-text strong {font-size:24px;letter-spacing:-1.15px;line-height:1;display:block}
+.brand-text small {display:block;color:#889784;text-transform:uppercase;letter-spacing:1.5px;font-size:9px;margin-top:5px;font-weight:700}
+.side-label {padding:0 12px;margin:11px 0 12px;color:#9aa996;font-size:10px;letter-spacing:1.6px;font-weight:740}
+.side-item {display:flex;align-items:center;gap:10px;text-align:left;width:100%;border:1px solid transparent;background:transparent;padding:13px 10px;margin:3px 0;border-radius:8px;color:#6f8372;font-size:12px;line-height:1.4}
+.side-item:hover {background:#edf3e9;border-color:#dbe9d3;color:#355d42}
+.side-item.active{background:#e9f1e4;border-color:#d9e7d3;color:#386848;font-weight:700}
+.side-item .n {font-size:10px;opacity:.7;font-weight:700;margin-left:auto}
+.side-note {margin-top:auto;padding:18px 12px;border-top:1px solid var(--line);color:#899a89;font-size:11px;line-height:1.8}
+.side-status {margin:16px 0 0;display:flex;align-items:center;gap:7px;font-size:10px;color:#78916f}
+.status-dot {height:7px;width:7px;border-radius:50%;background:#83b26d;box-shadow:0 0 0 4px #e1efdc;display:inline-block;flex:none}
+.app-main {min-width:0}
+.topbar {height:68px;padding:0 clamp(24px,4.3vw,64px);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px}
+.crumb {display:flex;align-items:center;gap:11px;color:#9ca99a;font-size:11px}
+.crumb strong {color:#46604e;font-weight:650}
+.topbar-right {display:flex;gap:8px;align-items:center}
+.topbar-label {font-size:11px;color:#879889}
+.main-content {max-width:1390px;margin:0 auto;padding:clamp(30px,4vw,58px) clamp(24px,4.3vw,64px) 48px}
+.hero {position:relative;min-height:283px;border:1px solid #dce7d5;border-radius:18px;background:linear-gradient(112deg,#eff5e8 0%,#f0f5e9 50%,#e7f0e0 100%);padding:clamp(28px,3.6vw,50px);overflow:hidden;display:flex;align-items:center}
+.hero-copy {position:relative;z-index:2;max-width:680px}
+.hero-copy h1 {margin:15px 0 15px}
+.hero-copy>p {font-size:13px;line-height:1.8;max-width:580px;color:#748a73;margin:0}
+.hero-visual {position:absolute;right:-35px;top:-20px;width:390px;height:320px;opacity:.78;pointer-events:none}
+.hero-orbit {position:absolute;inset:28px 67px 24px 63px;border:1px dashed #a7c296;border-radius:50%;transform:rotate(18deg)}
+.hero-orbit.second {inset:1px 26px -8px 21px;border-style:solid;border-color:#cbdcbb;transform:rotate(-12deg)}
+.orbital {position:absolute;background:white;border:1px solid #d7e4d0;border-radius:12px;box-shadow:0 10px 25px #8daf7920;width:65px;height:65px;display:grid;place-items:center;color:#789f71}
+.orbital.main {width:109px;height:109px;left:143px;top:109px;border-radius:26px;background:#dceacb;box-shadow:0 0 0 13px #dae9c66b;color:#608959}
+.orbital.one {left:61px;top:54px;color:#8f89aa}
+.orbital.two {right:42px;top:73px;color:#7ea685}
+.orbital.three {right:80px;bottom:22px;color:#b59b73}
+.orbital.four {left:57px;bottom:40px;color:#7e9eb0}
+.intro-line {display:flex;align-items:center;justify-content:space-between;gap:15px;margin:31px 0 19px}
+.intro-line h2 {margin:0;font-size:21px}
+.intro-line p {margin:0;font-size:11px;color:#91a08c}
+.cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}
+.guide-card {border:1px solid var(--line);background:#fff;border-radius:14px;padding:23px;min-width:0;display:flex;flex-direction:column;box-shadow:0 3px 13px #35523805;transition:box-shadow .2s,border-color .2s,transform .2s}
+.guide-card:hover {border-color:#bbd2b2;box-shadow:var(--shadow);transform:translateY(-2px)}
+.card-top {display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card-index {font-size:11px;font-weight:750;letter-spacing:1.3px;color:#a2b3a1}
+.card-icon {width:42px;height:42px;display:grid;place-items:center;border-radius:10px;background:#edf4e9;color:#729568}
+.card-icon.blue {background:#eef4f7;color:#7296ab}
+.card-icon.violet {background:#f2eff8;color:#9487b0}
+.guide-card h3 {font-size:19px;margin:21px 0 8px;letter-spacing:-.55px}
+.guide-card>p {font-size:12px;color:#839483;line-height:1.8;min-height:64px;margin-bottom:21px}
+.preview-rail {border:1px solid #e5eee1;background:#f8fbf6;border-radius:8px;padding:13px 8px;display:flex;align-items:center;justify-content:center;gap:5px;min-height:69px;overflow:hidden}
+.preview-block {background:#fff;border:1px solid #dce8d8;border-radius:6px;padding:9px 7px;text-align:center;font-size:9px;font-weight:650;color:#719071;line-height:1.4;min-width:0}
+.preview-block.wide {flex:1}
+.preview-block.active {background:#e8f2e1;border-color:#bed5b1;color:#557d50}
+.preview-arrow {color:#a7bfa0;font-size:14px}
+.card-foot {display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:21px;gap:10px}
+.card-foot small {font-size:10px;color:#a1aea1}
+.card-foot .btn {padding:10px 12px;min-height:37px;font-size:11px}
+.under-note {margin-top:23px;display:flex;gap:11px;align-items:flex-start;color:#839383;font-size:11px;line-height:1.8;padding:17px 19px;background:#f4f8f1;border:1px solid #e1eadd;border-radius:10px}
+.under-note .ico {color:#77956e;margin-top:1px}
+.page-footer {margin-top:52px;padding-top:20px;display:flex;justify-content:space-between;gap:25px;border-top:1px solid var(--line);color:#a0aca0;font-size:10px}
+/* Article pages and reusable diagram styles */
+.article-frame {background:#fff;border:1px solid var(--line);border-radius:15px;overflow:clip;box-shadow:0 4px 24px rgba(28,56,34,.035)}
+.article-header {background:#fff;padding:23px 28px 19px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none}
+.article-heading {min-width:0}
+.article-heading .eyebrow {font-size:9px;margin:0 0 5px}
+.article-heading h2 {margin:0;font-size:24px;letter-spacing:-.7px}
+.article-heading h2 em{font-style:normal;color:#73946d}
+.article-head-right {display:flex;align-items:center;gap:12px;flex:none}
+.article-count {font-size:11px;white-space:nowrap;color:#9dad9b}
+.article-layout {display:grid;grid-template-columns:206px minmax(0,1fr);align-items:stretch;min-width:0}
+.article-nav {align-self:start;position:sticky;top:14px;max-height:calc(100vh - 28px);padding:25px 14px;background:#f8faf6;border-right:1px solid var(--line);overflow-y:auto;scrollbar-width:thin}
+.article-nav .eyebrow{padding:0 10px;margin:0 0 16px;font-size:9px}
+.article-nav button {display:flex;align-items:center;gap:9px;background:transparent;text-align:left;border:1px solid transparent;border-radius:7px;width:100%;padding:11px 9px;margin-bottom:5px;font-size:11px;color:#849684;line-height:1.4}
+.article-nav button:hover{background:#edf5e8;color:#547852}
+.article-nav button.selected {color:#416c48;background:#e8f1e3;border-color:#d7e7d0;font-weight:700}
+.article-nav .item-num {font-size:9px;color:#91a68e;font-weight:700;flex:none}
+.article-nav-note {margin:23px 9px 5px;font-size:10px;line-height:1.7;color:#9aaa98}
+.article-scroll {min-width:0;padding:32px clamp(24px,3.3vw,48px) 47px}
+.article-scroll h3{font-size:20px;letter-spacing:-.45px;margin:6px 0 11px}
+.article-scroll p {font-size:12px;color:#728573;line-height:1.83;margin-bottom:15px}
+.article-scroll p strong{color:#3f6448}
+.article-scroll section {scroll-margin-top:30px}
+.article-scroll section+section{margin-top:33px;padding-top:30px;border-top:1px solid #e8eee4}
+.article-lead {background:#eef5e9;border:1px solid #dcead6;border-radius:11px;padding:21px 23px;margin:0 0 28px}
+.article-lead .eyebrow{font-size:9px;color:#78946e;margin-bottom:6px}
+.article-lead h3{font-size:20px;margin:0 0 9px;color:#426647}
+.article-lead p {margin:0;color:#748b73}
+.section-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.section-no{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:#e9f2e4;color:#6d9564;font-size:10px;font-weight:760;flex:none;margin-top:3px}
+.section-head h3 {margin:0 0 4px}
+.section-head p{margin:0;font-size:11px}
+.pane {border:1px solid var(--line);border-radius:10px;background:#fff;padding:18px}
+.pane.soft {background:#f8fbf6;border-color:#e1ebdc}
+.pane.blue {background:#f5f9fc;border-color:#e0eaf1}
+.pane h4 {font-size:12px;line-height:1.5;margin:0 0 7px;color:#466a4e}
+.pane p{font-size:11px;line-height:1.78;margin:0}
+.note {margin-top:16px;display:flex;align-items:flex-start;gap:10px;background:#f4f8f1;border:1px solid #e2ecdd;border-radius:9px;padding:14px 15px;font-size:11px;line-height:1.76;color:#768e70}
+.note .ico{margin-top:1px;color:#779873}
+.note strong{color:#5b7957}
+.note.warning {background:#fcf8ee;border-color:#efe4cb;color:#a08e69}
+.note.warning .ico {color:#b49a62}
+.note.warning strong {color:#9e834e}
+.note.blue{background:#f3f8fb;border-color:#e1ecf2;color:#7791a0}
+.note.blue .ico{color:#7897aa}
+/* Segmentation */
+.segment-chain {display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1.18fr);align-items:stretch;gap:5px}
+.chain-box {border:1px solid #dde8d8;background:#fbfdf9;border-radius:9px;padding:17px 13px;min-width:0}
+.chain-box .eyebrow {font-size:8px;margin-bottom:9px}
+.chain-box>strong {display:block;font-size:12px;line-height:1.5;color:#3e6144;overflow-wrap:anywhere}
+.chain-box>small {display:block;font-size:10px;margin-top:6px;line-height:1.55;color:#91a28e}
+.chain-box.final{background:#e8f3e2;border-color:#bad5ae}
+.chain-box.final>strong{color:#417745;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+.chain-arr {display:grid;place-items:center;color:#8fae88}
+.meta-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.meta-tags span {font-size:9px;background:#fff;padding:4px 7px;border:1px solid #dce8d4;border-radius:5px;color:#779274}
+.segment-picks {display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px;font-size:10px;color:#8d9e8d}
+.segment-picks code {font-size:10px;border:1px solid #e1eadd;border-radius:5px;padding:4px 6px;background:#fbfcfa;color:#718972}
+.direction-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.direction-card {border:1px solid #dfe8dc;background:#fff;padding:15px;border-radius:10px;min-width:0}
+.direction-card .ico {color:#86a27d}
+.direction-card strong {display:block;font-size:11px;color:#4d6f51;margin:10px 0 5px}
+.direction-card code{font-size:9px;color:#839780;overflow-wrap:anywhere}
+.work-steps {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.work-step {display:flex;align-items:flex-start;gap:12px;border:1px solid #e3ebdf;border-radius:9px;padding:13px;background:#fff}
+.work-step .num {width:24px;height:24px;flex:none;border-radius:7px;background:#edf5e7;color:#749467;font-size:10px;font-weight:730;display:grid;place-items:center}
+.work-step strong{display:block;font-size:11px;color:#59755b;margin-bottom:5px}
+.work-step p {font-size:10px;margin:0;line-height:1.7}
+.package-box {border:1px solid #d9e8d5;border-radius:11px;overflow:hidden;background:#fff}
+.package-head {display:flex;justify-content:space-between;gap:15px;align-items:center;background:#f1f7ed;padding:17px 20px;border-bottom:1px solid #e0eadb}
+.package-head small{display:block;color:#879e80;font-size:9px;letter-spacing:1.1px;margin-bottom:5px}
+.package-head strong {font-size:14px;color:#4b744f}
+.package-parts{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:15px}
+.package-part {border:1px solid #e4ece2;background:#fbfcfa;border-radius:8px;padding:15px;min-width:0}
+.package-part .part-title{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:11px;font-weight:740;color:#54745a}
+.package-part .part-title .ico{color:#8aa986}
+.package-part p{font-size:10.5px;margin:0 0 9px}
+.package-part code{font-size:9.5px;color:#638461}
+.attachments {display:flex;align-items:flex-start;gap:10px;margin:0 15px 15px;border:1px dashed #cfdecc;border-radius:8px;padding:13px 15px;background:#f7faf5}
+.attachments .ico {color:#8d9e82}
+.attachments strong{display:block;color:#607b5e;font-size:11px;margin-bottom:5px}
+.attachments p{margin:0;font-size:10px}
+.lifecycle {display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:12px}
+.lifecycle .pill{font-size:9px}
+/* Flow */
+.pipeline-scroll {overflow:auto;padding-bottom:4px}
+.pipeline {display:flex;align-items:stretch;min-width:680px;gap:0}
+.pipeline-node {flex:1;border:1px solid #e0e9dd;border-radius:8px;padding:14px 10px;background:#fbfdfa;min-width:0;text-align:center;position:relative}
+.pipeline-node.system {background:#e9f3e5;border-color:#cce1c6}
+.pipeline-node.dark{background:#385e43;border-color:#385e43;color:white}
+.pipeline-node .eyebrow {font-size:8px;letter-spacing:1px;color:#93a48e;margin-bottom:7px}
+.pipeline-node.system .eyebrow {color:#7a9977}
+.pipeline-node.dark .eyebrow {color:#cae2ca}
+.pipeline-node strong{display:block;font-size:11px;color:#527054;line-height:1.45}
+.pipeline-node.dark strong{color:#fff}
+.pipeline-node small{display:block;margin-top:6px;font-size:9px;color:#91a58f;line-height:1.5}
+.pipeline-node.dark small{color:#d9e8d9}
+.pipeline-arrow {width:21px;flex:none;display:grid;place-items:center;color:#99b696}
+.context-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.context-group {border:1px solid #e1e9dd;border-radius:9px;padding:16px;background:#fff}
+.context-group .eyebrow{font-size:9px;margin-bottom:10px}
+.context-list {display:flex;flex-wrap:wrap;gap:6px}
+.context-list span {background:#f3f8ef;border:1px solid #e1ebdc;color:#69836a;font-size:10px;padding:6px 8px;border-radius:5px}
+.split-2 {display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.plan-card {border:1px solid #dfe8db;border-radius:10px;padding:18px;background:#fff}
+.plan-card .pill{margin-bottom:10px}
+.plan-card>h4{font-size:13px;color:#4c724f;margin:0 0 10px}
+.plan-card p{font-size:10.5px;margin:0 0 8px}
+.plan-card .tiny-line{display:flex;gap:7px;align-items:flex-start;font-size:10px;color:#7e9280;margin:7px 0;line-height:1.6}
+.plan-card .tiny-line .ico{color:#8eac87}
+.mini-code {margin:0;font:10px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;padding:15px 17px;background:#f5f9f2;border:1px solid #dfeadb;border-radius:9px;color:#577359;white-space:pre-wrap;overflow-wrap:anywhere}
+.mini-code b {font-weight:650;color:#345e43}
+.inject-flow {display:flex;align-items:center;gap:10px;margin:16px 0}
+.inject-node {border:1px solid #dfe9dc;border-radius:8px;background:#f9fcf7;padding:14px;flex:1;min-width:0}
+.inject-node strong{display:block;font-size:12px;margin-bottom:5px;color:#5a7958}
+.inject-node small{font-size:10px;color:#899b89;line-height:1.6;display:block}
+.inject-node.active {background:#eaf4e5;border-color:#b7d5ac}
+.inject-bridge {display:grid;place-items:center;flex:none;color:#a4bba0}
+.verdicts {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.verdict {padding:15px 12px;border-radius:9px;border:1px solid #e1e9db;background:#fff}
+.verdict strong{font-size:12px;display:block;color:#5a7658;margin-bottom:6px}
+.verdict p{font-size:10px;margin:0}
+.verdict.pass {background:#f3f9ef;border-color:#dcead7}.verdict.fail{background:#fdf5ef;border-color:#f0dfd5}.verdict.inc {background:#faf7ee;border-color:#ece4d0}
+.verdict.fail strong {color:#ad775e}.verdict.inc strong{color:#a58a54}
+/* Sandbox */
+.boundary-map {border:1px solid #d9e5d5;border-radius:13px;background:radial-gradient(circle at 18% 20%,#f5f9f0,#fbfdfa 65%);padding:18px;position:relative;overflow:hidden}
+.arch-label {font-size:9px;letter-spacing:1.35px;color:#9bad99;font-weight:740;text-transform:uppercase;margin-bottom:13px}
+.arch-cols {display:grid;grid-template-columns:minmax(0,1.65fr) minmax(170px,.78fr);gap:12px;align-items:stretch}
+.vm {border:2px dashed #a8c59c;border-radius:12px;padding:15px;background:rgba(236,245,230,.62)}
+.vm-head {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.vm-head strong{font-size:13px;color:#497646;display:flex;align-items:center;gap:7px}
+.vm-head small{font-size:9px;color:#90a68d}
+.process-sandbox {border:1px solid #c9ddc2;border-radius:10px;padding:13px;background:#fff}
+.process-head {display:flex;align-items:center;gap:8px;font-size:11px;color:#5d805a;font-weight:730;margin-bottom:12px}
+.process-head .ico {color:#779d70}
+.runtime-pods {display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.runtime-pod {border:1px solid #e0e9dc;background:#f8fbf6;border-radius:8px;padding:13px;min-height:91px}
+.runtime-pod .ico{color:#789873}
+.runtime-pod strong{font-size:11px;display:block;margin:8px 0 4px;color:#567256}
+.runtime-pod small{font-size:9px;display:block;line-height:1.6;color:#90a08d}
+.runtime-limits {font-size:9.5px;color:#729072;margin-top:12px;padding:9px 10px;border:1px solid #e3eddd;background:#f4f8f0;border-radius:6px}
+.vm-foot {font-size:9.5px;display:flex;align-items:center;gap:8px;color:#879e7f;margin:12px 2px 0;line-height:1.5}
+.ext-list{border:1px solid #e4e9e1;border-radius:10px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:9px}
+.ext-list>strong {font-size:10px;color:#899989;margin-bottom:3px;letter-spacing:.65px;text-transform:uppercase}
+.ext-item {display:flex;align-items:center;gap:8px;border:1px solid #e3eae0;border-radius:7px;padding:11px 10px;background:#fafcfa;color:#617863;font-size:10px;line-height:1.4}
+.ext-item .ico{color:#7f9b7a}
+.ext-item small{display:block;color:#9aab98;font-size:8px;margin-top:4px}
+.arch-caption {margin:14px 2px 0;color:#8a9d8a;font-size:9.5px;line-height:1.7}
+.boundary-columns {display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.boundary-columns .pane h4 {display:flex;align-items:center;gap:8px}
+.boundary-columns .pane h4 .ico {color:#85a37e}
+.boundary-columns .pane.restrict h4 .ico {color:#b69870}
+.plain-list {list-style:none;padding:0;margin:13px 0 0}
+.plain-list li {position:relative;padding:0 0 10px 16px;font-size:11px;line-height:1.7;color:#788b7a}
+.plain-list li:last-child {padding-bottom:0}
+.plain-list li:before {content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:#8cae80}
+.pane.restrict .plain-list li:before{background:#c9b18f}
+.wizard {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.wizard-step {border:1px solid #e0e9dc;border-radius:11px;padding:17px 15px;background:#fff;min-width:0}
+.wizard-step:last-child {border-color:#bdd9b4;background:#f6fbf3}
+.wizard-top {display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:13px}
+.wizard-step .num {width:27px;height:27px;display:grid;place-items:center;border-radius:7px;background:#eaf3e5;font-size:10px;font-weight:720;color:#6d9867}
+.wizard-step h4{font-size:13px;color:#537654;margin:0 0 7px}
+.wizard-step p{font-size:10px;color:#849584;line-height:1.76;margin:0 0 10px}
+.wizard-pills {display:flex;flex-wrap:wrap;gap:5px}
+.wizard-pills span{font-size:9px;color:#718a6d;background:#f6faf3;border:1px solid #e1eadc;padding:5px 6px;border-radius:5px}
+.wizard-step:last-child .wizard-pills span{background:#fff;border-color:#d9e9d1}
+.provision {display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}
+.provision span{font-size:10px;padding:8px 10px;border:1px solid #e2eadd;border-radius:6px;color:#7c9176;background:#f8fbf6;display:flex;align-items:center;gap:7px}
+.provision .ico{width:12px;height:12px;color:#84a37b}
+.ready-line {display:flex;align-items:center;gap:12px;padding:15px;background:#eaf4e4;border-radius:9px;border:1px solid #d3e6ca;color:#537c4f;margin-top:15px}
+.ready-line strong{display:block;font-size:12px}
+.ready-line small{display:block;margin-top:5px;font-size:10px;color:#849e7e}
+/* Footer and transitions */
+.article-foot {padding:15px 26px;border-top:1px solid #e2e9df;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:15px;flex:none}
+.article-foot small{font-size:10px;color:#96a596;line-height:1.6}
+.article-foot-actions {display:flex;gap:9px;align-items:center}
+.article-foot .btn{font-size:11px;min-height:38px;padding:9px 13px}
+.dot-pagination{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;margin-right:8px}
+.dot-pagination span{height:5px;width:5px;border-radius:50%;background:#d4dfd1}
+.dot-pagination span.current{width:16px;border-radius:4px;background:#8eae81}
+@media (max-width:1250px) {.hero-visual{opacity:.35;right:-90px}.hero-copy{max-width:670px}}
+@media (max-width:1040px) {.main-shell{grid-template-columns:180px 1fr}.main-content{padding-left:30px;padding-right:30px}.topbar{padding:0 30px}.cards{gap:12px}.guide-card{padding:18px}.guide-card h3{font-size:17px}.card-foot{align-items:flex-start;flex-direction:column}.card-foot .btn{width:100%}}
+@media (max-width:780px) {
+  .main-shell{display:block}.sidebar{display:none}.topbar{height:58px;padding:0 18px}.topbar-label{display:none}.main-content{padding:26px 18px 35px}
+  .hero{min-height:245px;padding:26px}.hero-copy h1{letter-spacing:-1.35px;font-size:33px}.hero-visual{opacity:.18;right:-165px}
+  .intro-line{margin-top:26px}.cards{grid-template-columns:1fr}.guide-card{padding:19px}.guide-card>p{min-height:0;margin-bottom:15px}.card-foot{flex-direction:row;align-items:center}.card-foot .btn{width:auto}
+  .article-frame {border-radius:11px}.article-header{padding:17px 17px 14px}.article-heading h2{font-size:19px}.article-count{display:none}
+  .article-layout{display:flex;flex-direction:column}.article-nav{position:sticky;top:0;z-index:5;max-height:none;padding:7px 10px;border-right:0;border-bottom:1px solid var(--line);display:flex;gap:4px;flex:none;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.article-nav .eyebrow,.article-nav-note{display:none}.article-nav button{width:auto;flex:none;font-size:10px;margin:0;padding:9px 10px}.article-nav button .item-num{font-size:9px}
+  .article-scroll{padding:22px 18px 32px}.article-lead{padding:17px}.article-scroll h3{font-size:19px}.article-foot{padding:11px 13px}.article-foot small{display:none}
+  .segment-chain{grid-template-columns:1fr;gap:7px}.chain-arr{transform:rotate(90deg);height:18px}.chain-box{padding:14px}.direction-grid{grid-template-columns:1fr}.direction-card{display:flex;align-items:center;gap:11px;padding:12px}.direction-card strong{margin:0}.direction-card code{margin-left:auto}
+  .work-steps,.package-parts,.split-2,.context-grid,.boundary-columns{grid-template-columns:1fr}.verdicts{grid-template-columns:1fr}.wizard{grid-template-columns:1fr}.wizard-step{padding:15px}.wizard-step p{margin-bottom:8px}.arch-cols{grid-template-columns:1fr}.ext-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.ext-list>strong{grid-column:1/-1}.ext-item{display:block;text-align:center;padding:10px 5px;font-size:9px}.ext-item .ico{display:block;margin:0 auto 5px}.ext-item small{font-size:8px}
+}
+@media (max-width:480px) {
+  .hero-copy h1{font-size:29px}.hero-copy>p{font-size:12px}.topbar .pill{display:none}
+  .article-heading h2{font-size:17px;line-height:1.35}.article-scroll{padding:19px 14px 28px}.article-head-right .icon-btn{width:33px;height:33px}
+  .article-foot-actions .btn{padding:8px 10px;font-size:10px;min-height:35px}.inject-flow{flex-wrap:wrap}.inject-node{flex-basis:100%}.inject-bridge{transform:rotate(90deg);width:100%}.runtime-pods{grid-template-columns:1fr}.section-head{gap:9px}.section-no{width:27px;height:27px}.package-head{padding:14px}
+}
+@media (prefers-reduced-motion:reduce) {*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<style>
+/* Full-size subpages. No overlays and no constrained modal scrolling. */
+[hidden]{display:none!important}
+a.side-item {text-decoration:none}
+.page-crumbline {display:flex;align-items:center;gap:10px;margin:0 0 21px;color:#869786;font-size:11px}
+.page-crumbline .back-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#547a59;font-weight:650;padding:7px 0}
+.page-crumbline .back-link:hover{text-decoration:underline}
+.back-arrow{transform:rotate(180deg)}
+.crumb-split{color:#c0cfc0}
+.chapter-count{margin-left:auto;color:#a0b19c;letter-spacing:1.25px;font-size:10px;font-weight:690}
+.info-page .article-header{padding:30px clamp(24px,3.3vw,48px);background:linear-gradient(110deg,#f4f9f0,#fff 80%)}
+.info-page .article-header h2{font-size:clamp(24px,2.45vw,34px);letter-spacing:-1.05px}
+.info-page .article-head-right .icon-btn{border-color:#dfe9d9;background:#fff}
+.info-page .article-foot{padding:19px clamp(22px,3vw,44px);background:#f9fbf7}
+.info-page .article-nav button.selected{box-shadow:inset 2px 0 0 #83aa72}
+.info-page .article-scroll{font-size:13px}
+.info-page .article-scroll section{scroll-margin-top:30px}
+.info-page .article-scroll .article-lead{margin-bottom:34px}
+.info-page .article-frame {margin-bottom:35px}
+.mobile-pages{display:none}
+@media(max-width:780px){
+  .mobile-pages{display:flex;gap:5px;padding:10px 12px;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--line);background:#f8faf6;white-space:nowrap}
+  .mobile-pages a{padding:9px 11px;white-space:nowrap;border:1px solid transparent;border-radius:7px;font-size:11px;text-decoration:none;color:#809180}
+  .mobile-pages a.active{background:#e7f1e2;color:#3c6d48;border-color:#d5e6cc;font-weight:670}
+  .info-page .article-header {padding:20px 18px}
+  .info-page .article-header h2{font-size:clamp(21px,4.6vw,26px);letter-spacing:-.5px}
+  .info-page .article-nav{position:sticky;top:0;box-shadow:0 4px 10px #3155330c}
+  .info-page .article-scroll section{scroll-margin-top:88px}
+  .page-crumbline{font-size:10px;margin-bottom:15px}
+  .info-page .article-foot{flex-wrap:wrap;padding:15px 17px}
+  .info-page .article-foot-actions{width:100%;justify-content:flex-end;flex-wrap:wrap}
+}
+@media(max-width:480px){
+  .mobile-pages{gap:1px;padding:8px 7px}
+  .mobile-pages a{font-size:10px;padding:8px 10px}
+  .page-crumbline .chapter-count{font-size:9px}
+  .info-page .article-head-right .icon-btn{width:33px;height:33px}
+  .info-page .article-scroll{padding:20px 15px 32px}
+}
+@media (max-width:780px) {
+  .info-page .article-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:10px;white-space:normal;overflow:visible}
+  .info-page .article-nav button{width:100%;min-width:0;padding:9px 8px;display:flex;align-items:center;white-space:normal;font-size:10px;line-height:1.35;margin:0}
+  .info-page .article-scroll section{scroll-margin-top:145px}
+}
+@media print {
+  .sidebar,.topbar,.mobile-pages,.page-crumbline,.article-nav,.article-foot,.home-route{display:none!important}
+  .main-shell{display:block}
+  .main-content{max-width:none!important;padding:0!important}
+  .info-page .article-frame{box-shadow:none;border:0}
+  .info-page .article-scroll{padding:0}
+}
+
+/* 04–06 · Knowledge, Assistant, Trusted Capability */
+.card-icon.gold {background:#faf3e9;color:#b29360}
+.knowledge-network {position:relative;display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr);gap:0;align-items:stretch;margin:16px 0}
+.knowledge-entity {border-radius:11px;background:#fff;border:1px solid #dee8db;padding:17px 13px;min-height:144px;display:flex;flex-direction:column;justify-content:center;min-width:0;text-align:center;box-shadow:0 4px 13px #31583209}
+.knowledge-entity .ico {margin:0 auto 10px;color:#799c72}
+.knowledge-entity .eyebrow {font-size:8px;margin-bottom:6px}
+.knowledge-entity strong {font-size:12px;line-height:1.5;color:#496e4b;overflow-wrap:anywhere}
+.knowledge-entity small {font-size:10px;line-height:1.55;margin-top:6px;color:#879b85}
+.knowledge-entity.core {background:#eaf4e5;border-color:#b9d5b1}
+.knowledge-entity.core .ico {color:#5f8e57}
+.knowledge-edge {display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-width:0;color:#8ba784}
+.knowledge-edge small {font-size:9px;color:#95a88f;text-align:center;line-height:1.3;overflow-wrap:anywhere}
+.knowledge-relations {display:flex;flex-wrap:wrap;gap:8px;margin:13px 0 0}
+.knowledge-relations span {padding:8px 10px;background:#f7faf5;border:1px solid #e1e9db;border-radius:6px;font:10px/1.5 ui-monospace,Consolas,monospace;color:#708970}
+.knowledge-layers {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.knowledge-layer {min-width:0;border:1px solid #e0eade;border-radius:10px;padding:17px;background:#fff}
+.knowledge-layer:nth-child(1){background:#eef7e9;border-color:#d6e9cb}
+.knowledge-layer:nth-child(2){background:#f4f7fa;border-color:#e2eaf0}
+.knowledge-layer:nth-child(3){background:#faf8f4;border-color:#ede7d9}
+.knowledge-layer .ico {color:#80a076}
+.knowledge-layer h4 {color:#4c7054;margin:9px 0 7px;font-size:12px}
+.knowledge-layer p {font-size:10.5px;line-height:1.72;margin:0}
+.knowledge-layer .pill {margin-top:12px;font-size:9px}
+.lifecycle-wide {display:flex;align-items:stretch;gap:5px;overflow:auto;padding:2px 0 6px}
+.lifecycle-wide .stage {min-width:119px;flex:1;border:1px solid #e0e9db;border-radius:8px;background:#fbfdf9;padding:13px 10px;text-align:center}
+.lifecycle-wide .stage.emph {background:#eaf4e6;border-color:#cce1c5}
+.lifecycle-wide .stage strong {display:block;font-size:11px;color:#577558;line-height:1.45}
+.lifecycle-wide .stage small {font-size:9px;color:#8ba18b;display:block;margin-top:5px;line-height:1.45}
+.lifecycle-wide .arrow {width:14px;display:grid;place-items:center;flex:none;color:#a5b9a2}
+.choices-3 {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.choice-card {border-radius:10px;border:1px solid #e0eade;padding:17px;background:#fff;min-width:0}
+.choice-card.recommended {background:#eff7eb;border-color:#bcd7b2}
+.choice-card h4 {font-size:13px;color:#4e7151;margin-bottom:9px}
+.choice-card p {font-size:10.5px;margin-bottom:9px}
+.choice-card .pill{margin-bottom:12px}
+.supply-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}
+.supply-box {padding:14px;background:#f2f7ee;border:1px solid #dce9d8;border-radius:9px;text-align:center;min-width:0}
+.supply-box strong {font-size:11px;color:#5c7b5b;display:block}
+.supply-box small {font-size:9px;color:#90a28b;display:block;margin-top:5px}
+.assistant-chat {max-width:720px;border:1px solid #dae6d8;border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 8px 24px #315b3610;margin:16px 0}
+.chat-top {padding:13px 17px;background:#f5f9f2;border-bottom:1px solid #e0ebdc;display:flex;gap:10px;align-items:center}
+.chat-avatar {height:32px;width:32px;border-radius:9px;background:#e3efdb;display:grid;place-items:center;color:#5e8959;flex:none}
+.chat-top strong {font-size:12px;color:#537255;display:block}
+.chat-top small {font-size:9px;color:#8a9d87;display:block;margin-top:3px}
+.chat-thread {padding:19px;display:grid;gap:13px}
+.chat-bubble {padding:12px 14px;border:1px solid #e2ebde;background:#f8faf7;border-radius:11px;max-width:88%;font-size:11px;line-height:1.8;color:#667d69}
+.chat-bubble.user {background:#eaf4e4;border-color:#cce0c4;justify-self:end;color:#497349}
+.chat-bubble .source {display:block;font-size:9px;margin-top:10px;color:#879c89;border-top:1px solid #dde9db;padding-top:8px}
+.chat-action {padding:12px 19px;border-top:1px solid #edf2e9;background:#fafcf9;display:flex;align-items:center;gap:9px;font-size:10px;color:#8d9e8a}
+.chat-action .ico {color:#6d936d}
+.contract {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.contract .pane{padding:18px}
+.contract .pane h4{display:flex;align-items:center;gap:8px;font-size:13px}
+.delegation-diagram {display:flex;align-items:stretch;gap:5px;margin:15px 0}
+.delegation-block {flex:1;min-width:0;padding:16px 11px;border-radius:9px;border:1px solid #e0e9db;background:#fff;text-align:center}
+.delegation-block.main {background:#eaf4e6;border-color:#cbe1c2}
+.delegation-block .eyebrow{font-size:8px;margin-bottom:7px}
+.delegation-block strong{font-size:11px;display:block;color:#587659;line-height:1.5}
+.delegation-block small{font-size:9px;color:#8a9d88;display:block;margin-top:7px;line-height:1.5}
+.delegation-next {color:#9bb699;flex:none;align-self:center}
+.snapshot-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.snapshot-item {background:#f8fbf6;border:1px solid #e0e9dd;border-radius:7px;padding:12px 10px;display:flex;align-items:center;gap:9px;font-size:10.5px;color:#688369;min-width:0;line-height:1.5}
+.snapshot-item .ico {color:#89a982;flex:none}
+.trust-meter {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.trust-metric {border:1px solid #e1e9db;border-radius:10px;padding:15px;background:#fff}
+.trust-metric strong{display:block;font-size:18px;color:#4f7451;line-height:1.3}
+.trust-metric span{display:block;font-size:10px;color:#829881;margin-top:8px;line-height:1.5}
+.trust-metric small{display:block;font-size:9px;color:#a3b29d;margin-top:4px}
+.status-rail{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.status-rail span{padding:8px 10px;background:#f7faf4;border:1px solid #e1eadb;border-radius:7px;font-size:10px;color:#728c72}
+.status-rail span.active{background:#e6f2e0;border-color:#c8dfbd;color:#4d7f4c;font-weight:700}
+@media(max-width:1040px){.choices-3{grid-template-columns:1fr}.knowledge-layers{grid-template-columns:1fr}.trust-meter{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){.knowledge-network{grid-template-columns:1fr;gap:4px}.knowledge-edge{transform:none;min-height:36px}.knowledge-edge .ico{transform:rotate(90deg)}.knowledge-entity{min-height:100px;padding:14px}.delegation-diagram{display:grid;grid-template-columns:1fr;gap:6px}.delegation-next{justify-self:center;transform:rotate(90deg)}.snapshot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.contract,.supply-grid{grid-template-columns:1fr}.lifecycle-wide .stage{min-width:110px}}
+@media(max-width:480px){.knowledge-relations span{font-size:9px}.snapshot-grid,.trust-meter{grid-template-columns:1fr 1fr}.snapshot-item{padding:10px 9px;font-size:9.5px}.knowledge-layer p{font-size:10px}.chat-thread{padding:13px}.chat-bubble{font-size:10.5px;max-width:96%}.article-nav{scrollbar-width:thin}.info-page .article-scroll section{scroll-margin-top:188px}}
+
+/* Unified hierarchical navigation. All sections live in the global left sidebar. */
+.main-shell{grid-template-columns:260px minmax(0,1fr)}
+.sidebar{position:sticky;top:0;height:100dvh;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 11px 17px;scrollbar-width:thin;scrollbar-color:#d5e1d0 transparent;z-index:30}
+.sidebar-menu{display:flex;flex-direction:column;gap:1px}
+.sidebar .brand{padding:2px 10px 24px}
+.sidebar-menu>.side-label{margin:10px 9px 8px}
+.sidebar-menu .side-home{margin:0 2px 4px;width:calc(100% - 4px)}
+.side-row{display:flex;align-items:center;gap:2px;border-radius:8px}
+.side-row>.side-item{min-width:0;flex:1;margin:2px 0 2px 2px;padding:10px 7px;gap:8px;font-size:11.5px}
+.side-title{flex:1;min-width:0}
+.side-row>.side-item .n{margin-left:3px;color:#91a28e}
+.side-toggle{flex:0 0 28px;width:28px;height:34px;display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:#8da18d}
+.side-toggle:hover{background:#e9f1e5;color:#3e6d45;border-color:#dbe8d4}
+.side-toggle .ico{transform:rotate(90deg);transition:transform .18s ease}
+.side-group.expanded .side-toggle{color:#547b56}
+.side-group.expanded .side-toggle .ico{transform:rotate(-90deg)}
+.side-subnav{margin:1px 5px 8px 29px;padding:3px 0 3px 9px;border-left:1px solid #d7e3d2;display:flex;flex-direction:column;gap:1px;min-width:0}
+.side-subnav[hidden]{display:none!important}
+.side-subitem{display:flex;align-items:baseline;gap:8px;text-decoration:none;color:#829584;border:1px solid transparent;border-radius:6px;padding:8px 7px;font-size:10.5px;line-height:1.42;min-width:0;overflow-wrap:anywhere;transition:background .16s,color .16s}
+.side-subitem:hover{background:#eef5e9;color:#456f4a}
+.side-subitem.active{background:#e6f1df;color:#345f3f;border-color:#d9e8d2;font-weight:680}
+.side-subnum{flex:0 0 17px;color:#9bad99;font-size:9px;font-weight:690;font-variant-numeric:tabular-nums}
+.side-subitem.active .side-subnum{color:#73986d}
+.side-note{font-size:10px;line-height:1.65;margin-top:auto;padding:19px 11px 2px}
+.topbar-leading{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-leading .crumb{min-width:0}
+.topbar-leading .crumb strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mobile-menu-btn{display:none;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#56765a;padding:7px 10px;white-space:nowrap;font-size:11px;font-weight:680}
+.mobile-menu-btn .ico{width:17px;height:17px}
+.nav-backdrop{display:none}
+.article-layout{display:block;min-width:0}
+.article-scroll{max-width:none}
+@media(max-width:1040px) and (min-width:781px){.main-shell{grid-template-columns:238px minmax(0,1fr)}.sidebar{padding-left:8px;padding-right:8px}}
+@media(max-width:780px){
+  .main-shell{display:block}
+  .sidebar{display:flex!important;position:fixed;top:0;bottom:0;left:0;width:min(304px,88vw);height:100dvh;min-height:0;transform:translateX(-105%);visibility:hidden;transition:transform .2s ease,visibility .2s ease;z-index:70;background:var(--sidebar);box-shadow:12px 0 32px #1d3a2633;padding:22px 11px}
+  .nav-open{overflow:hidden}
+  .nav-open .sidebar{visibility:visible;transform:translateX(0)}
+  .nav-backdrop{display:block;position:fixed;inset:0;background:#192d2260;z-index:65;opacity:0;pointer-events:none;transition:opacity .2s ease;cursor:pointer;border:0;width:100%;height:100%;padding:0}
+  .nav-backdrop[hidden]{display:none!important}
+  .nav-open .nav-backdrop{opacity:1;pointer-events:auto}
+  .mobile-menu-btn{display:inline-flex}
+  .topbar{padding:0 15px;gap:10px}
+  .topbar-leading{gap:9px;min-width:0}
+  .topbar-leading .crumb{font-size:10px;gap:7px;min-width:0}
+  .topbar-leading .crumb span:first-child,.topbar-leading .crumb>.ico{display:none}
+  .mobile-pages{display:none!important}
+  .article-layout{display:block}
+  .info-page .article-scroll section{scroll-margin-top:20px}
+}
+@media(max-width:480px){
+  .mobile-menu-btn{padding:7px 8px;font-size:10px}
+  .topbar-right .topbar-label{display:none}
+  .topbar-right .pill{display:none}
+}
+@media print{
+  .sidebar,.nav-backdrop,.mobile-menu-btn{display:none!important}
+  .main-shell{display:block}
+}
+
+/* Match the documentation navigation to the main КОНТУР application. */
+.sidebar{
+  background:#121d31;
+  border-right-color:#2b374e;
+  scrollbar-color:#3a4963 transparent;
+}
+.brand-mark span{background:#6291ff}
+.brand-mark span:nth-child(2){background:#83a6ff}
+.brand-mark span:nth-child(3){background:#adbeed}
+.brand-mark span:nth-child(4){background:#4777e8}
+.brand-text strong{color:#fff}
+.brand-text small,.side-label{color:#7c8caa}
+.side-item{color:#bbc7da}
+.side-item:hover{background:#1b2940;border-color:#30405a;color:#fff}
+.side-item.active{background:#23304b;border-color:#3a4e70;color:#fff}
+.side-row>.side-item .n,.side-item .n{color:#7f93b3}
+.side-toggle{color:#7c8caa}
+.side-toggle:hover{background:#1b2940;border-color:#30405a;color:#fff}
+.side-group.expanded .side-toggle{color:#91afff}
+.side-subnav{border-left-color:#34435d}
+.side-subitem{color:#91a2be}
+.side-subitem:hover{background:#1b2940;color:#fff}
+.side-subitem.active{background:#23304b;border-color:#3a4e70;color:#fff}
+.side-subnum,.side-subitem.active .side-subnum{color:#7185a7}
+.side-note{border-top-color:#273750;color:#8194b4}
+.side-status{color:#8ea2c1}
+.status-dot{background:#66c98b;box-shadow:0 0 0 4px #28433a}
+.docs-app-back{margin:0 0 15px;padding:11px 10px;border-color:#30405a;background:#1b2940;color:#dce6f7;text-decoration:none}
+.docs-app-back:hover{background:#23304b;border-color:#3a4e70;color:#fff}
+.docs-app-back .ico{transform:rotate(180deg)}
+@media(max-width:780px){.sidebar{background:#121d31;box-shadow:12px 0 32px #0b132499}}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden">
+  <symbol id="ic-shield" viewBox="0 0 24 24"><path d="m12 2 8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3Z"/><path d="m8.5 12 2.3 2.4 4.8-5"/></symbol>
+  <symbol id="ic-network" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M12 8v4M5 16v-4h14v4"/></symbol>
+  <symbol id="ic-flow" viewBox="0 0 24 24"><rect x="2" y="3" width="8" height="6" rx="1"/><rect x="14" y="15" width="8" height="6" rx="1"/><path d="M10 6h6a2 2 0 0 1 2 2v7M18 12l-3-3M18 12l3-3"/></symbol>
+  <symbol id="ic-box" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7l9-5Z"/><path d="m3 7 9 5 9-5M12 12v10"/></symbol>
+  <symbol id="ic-git" viewBox="0 0 24 24"><circle cx="6" cy="3" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="17" cy="20" r="2"/><path d="M6 5v10a5 5 0 0 0 5 5h4M18 8v2c0 3-3 5-7 5H6"/></symbol>
+  <symbol id="ic-server" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="14" width="18" height="7" rx="1"/><path d="M7 7h.01M7 17h.01M12 7h6M12 17h6"/></symbol>
+  <symbol id="ic-clipboard" viewBox="0 0 24 24"><path d="M9 3H5v19h14V3h-4M9 2h6v4H9zM8 12h8M8 16h5"/></symbol>
+  <symbol id="ic-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-2-13-4 16"/></symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v3"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  <symbol id="ic-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/></symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24"><path d="m12 2 10 6-10 6L2 8l10-6ZM2 12l10 6 10-6M2 16l10 6 10-6"/></symbol>
+  <symbol id="ic-file" viewBox="0 0 24 24"><path d="M14 2H5v20h14V7l-5-5ZM14 2v5h5M8 12h8M8 16h8"/></symbol>
+  <symbol id="ic-bot" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="3"/><path d="M12 3v4m-4 6h.01M16 13h.01M8 17h8"/></symbol>
+  <symbol id="ic-sliders" viewBox="0 0 24 24"><path d="M4 3v18M12 3v18M20 3v18M1 9h6M9 15h6m2-9h6"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="ic-history" viewBox="0 0 24 24"><path d="M3 3v6h6M3 9a9 9 0 1 1 0 6M12 7v5l4 2"/></symbol>
+  <symbol id="ic-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/></symbol>
+  <symbol id="ic-brain" viewBox="0 0 24 24"><path d="M9 3a4 4 0 0 0-5 5 4 4 0 0 0 0 8 4 4 0 0 0 5 5c1.3 0 3-1 3-3V6c0-2-1.7-3-3-3ZM15 3a4 4 0 0 1 5 5 4 4 0 0 1 0 8 4 4 0 0 1-5 5c-1.3 0-3-1-3-3V6c0-2 1.7-3 3-3ZM9 8c-2 .2-2.4 2.4-1.4 3.5M15 8c2 .2 2.4 2.4 1.4 3.5M7 16c1.7-1 3-.5 3.5 1M17 16c-1.7-1-3-.5-3.5 1"/></symbol>
+  <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.1a9 9 0 1 1 16.1-4.4ZM8 11h8M8 15h5"/></symbol>
+  <symbol id="ic-rocket" viewBox="0 0 24 24"><path d="M14 4c3-2.5 7-2 7-2s.6 4-2 7l-9.5 9.5-4-4L14 4ZM14 4l-7-1-3 6 5.5.5M18.5 9.5l.5 5.5-6 3-1-6M5 19l-2 3 3-1M16 7h.01"/></symbol>
+</svg>
+
+<div class="main-shell">
+  <aside class="sidebar" id="kontur-sidebar" aria-label="Навигация по архитектуре">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="brand-text"><strong>КОНТУР</strong><small>документация</small></div>
+    </div>
+    <nav class="sidebar-menu" aria-label="Разделы и подразделы">
+      <div class="side-label">НАВИГАЦИЯ</div>
+      <a class="side-item side-home" href="#/" data-page-link="home"><svg class="ico"><use href="#ic-layers"/></svg><span class="side-title">Обзор</span><span class="n">00</span></a>
+      <div class="side-label" style="margin-top:19px">РАЗДЕЛЫ АРХИТЕКТУРЫ</div>
+    <div class="side-group" data-group="regulator">
+      <div class="side-row">
+        <a class="side-item" href="#/regulator" data-page-link="regulator"><svg class="ico"><use href="#ic-shield"/></svg><span class="side-title">Процесс регулятора</span><span class="n">01</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="regulator" aria-label="Показать подразделы: Процесс регулятора" aria-controls="side-sections-regulator" aria-expanded="false" title="4 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-regulator" aria-label="Процесс регулятора: подразделы" hidden>
+        <a class="side-subitem" href="#/regulator/reg-seg" data-section-page="regulator" data-section-link="reg-seg"><span class="side-subnum">01</span><span>Сегментация</span></a>
+        <a class="side-subitem" href="#/regulator/reg-process" data-section-page="regulator" data-section-link="reg-process"><span class="side-subnum">02</span><span>Работа регулятора</span></a>
+        <a class="side-subitem" href="#/regulator/reg-package" data-section-page="regulator" data-section-link="reg-package"><span class="side-subnum">03</span><span>Состав Policy Package</span></a>
+        <a class="side-subitem" href="#/regulator/reg-lifecycle" data-section-page="regulator" data-section-link="reg-lifecycle"><span class="side-subnum">04</span><span>Версии и влияние</span></a>
+      </nav>
+    </div>
+    <div class="side-group" data-group="flow">
+      <div class="side-row">
+        <a class="side-item" href="#/flow" data-page-link="flow"><svg class="ico"><use href="#ic-flow"/></svg><span class="side-title">Политика во Flow</span><span class="n">02</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="flow" aria-label="Показать подразделы: Политика во Flow" aria-controls="side-sections-flow" aria-expanded="false" title="5 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-flow" aria-label="Политика во Flow: подразделы" hidden>
+        <a class="side-subitem" href="#/flow/flow-source" data-section-page="flow" data-section-link="flow-source"><span class="side-subnum">01</span><span>Источник и snapshot</span></a>
+        <a class="side-subitem" href="#/flow/flow-before" data-section-page="flow" data-section-link="flow-before"><span class="side-subnum">02</span><span>Before Run / Plan</span></a>
+        <a class="side-subitem" href="#/flow/flow-inject" data-section-page="flow" data-section-link="flow-inject"><span class="side-subnum">03</span><span>Инъекция в узлы</span></a>
+        <a class="side-subitem" href="#/flow/flow-after" data-section-page="flow" data-section-link="flow-after"><span class="side-subnum">04</span><span>After Run / Evidence</span></a>
+        <a class="side-subitem" href="#/flow/flow-scope" data-section-page="flow" data-section-link="flow-scope"><span class="side-subnum">05</span><span>Новый scope и версии</span></a>
+      </nav>
+    </div>
+    <div class="side-group" data-group="sandbox">
+      <div class="side-row">
+        <a class="side-item" href="#/sandbox" data-page-link="sandbox"><svg class="ico"><use href="#ic-box"/></svg><span class="side-title">Sandbox и setup</span><span class="n">03</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="sandbox" aria-label="Показать подразделы: Sandbox и setup" aria-controls="side-sections-sandbox" aria-expanded="false" title="4 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-sandbox" aria-label="Sandbox и setup: подразделы" hidden>
+        <a class="side-subitem" href="#/sandbox/sandbox-arch" data-section-page="sandbox" data-section-link="sandbox-arch"><span class="side-subnum">01</span><span>Архитектура</span></a>
+        <a class="side-subitem" href="#/sandbox/sandbox-security" data-section-page="sandbox" data-section-link="sandbox-security"><span class="side-subnum">02</span><span>Границы доступа</span></a>
+        <a class="side-subitem" href="#/sandbox/sandbox-wizard" data-section-page="sandbox" data-section-link="sandbox-wizard"><span class="side-subnum">03</span><span>Setup Wizard</span></a>
+        <a class="side-subitem" href="#/sandbox/sandbox-provision" data-section-page="sandbox" data-section-link="sandbox-provision"><span class="side-subnum">04</span><span>Provisioning и Run</span></a>
+      </nav>
+    </div>
+    <div class="side-group" data-group="knowledge">
+      <div class="side-row">
+        <a class="side-item" href="#/knowledge" data-page-link="knowledge"><svg class="ico"><use href="#ic-network"/></svg><span class="side-title">Управление знаниями</span><span class="n">04</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="knowledge" aria-label="Показать подразделы: Управление знаниями" aria-controls="side-sections-knowledge" aria-expanded="false" title="5 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-knowledge" aria-label="Управление знаниями: подразделы" hidden>
+        <a class="side-subitem" href="#/knowledge/know-ontology" data-section-page="knowledge" data-section-link="know-ontology"><span class="side-subnum">01</span><span>Онтология и граф</span></a>
+        <a class="side-subitem" href="#/knowledge/know-layers" data-section-page="knowledge" data-section-link="know-layers"><span class="side-subnum">02</span><span>Три слоя контекста</span></a>
+        <a class="side-subitem" href="#/knowledge/know-curation" data-section-page="knowledge" data-section-link="know-curation"><span class="side-subnum">03</span><span>Публикация знаний</span></a>
+        <a class="side-subitem" href="#/knowledge/know-architecture" data-section-page="knowledge" data-section-link="know-architecture"><span class="side-subnum">04</span><span>Варианты архитектуры</span></a>
+        <a class="side-subitem" href="#/knowledge/know-delivery" data-section-page="knowledge" data-section-link="know-delivery"><span class="side-subnum">05</span><span>Доставка в контекст</span></a>
+      </nav>
+    </div>
+    <div class="side-group" data-group="assistant">
+      <div class="side-row">
+        <a class="side-item" href="#/assistant" data-page-link="assistant"><svg class="ico"><use href="#ic-chat"/></svg><span class="side-title">Контекстный ассистент</span><span class="n">05</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="assistant" aria-label="Показать подразделы: Контекстный ассистент" aria-controls="side-sections-assistant" aria-expanded="false" title="5 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-assistant" aria-label="Контекстный ассистент: подразделы" hidden>
+        <a class="side-subitem" href="#/assistant/asst-surface" data-section-page="assistant" data-section-link="asst-surface"><span class="side-subnum">01</span><span>Чат на текущем экране</span></a>
+        <a class="side-subitem" href="#/assistant/asst-context" data-section-page="assistant" data-section-link="asst-context"><span class="side-subnum">02</span><span>Сбор контекста</span></a>
+        <a class="side-subitem" href="#/assistant/asst-delegation" data-section-page="assistant" data-section-link="asst-delegation"><span class="side-subnum">03</span><span>Skills и делегирование</span></a>
+        <a class="side-subitem" href="#/assistant/asst-example" data-section-page="assistant" data-section-link="asst-example"><span class="side-subnum">04</span><span>Пример по Approval</span></a>
+        <a class="side-subitem" href="#/assistant/asst-contract" data-section-page="assistant" data-section-link="asst-contract"><span class="side-subnum">05</span><span>Integration Contract</span></a>
+      </nav>
+    </div>
+    <div class="side-group" data-group="capability">
+      <div class="side-row">
+        <a class="side-item" href="#/capability" data-page-link="capability"><svg class="ico"><use href="#ic-rocket"/></svg><span class="side-title">Trusted Capability</span><span class="n">06</span></a>
+        <button class="side-toggle" type="button" data-toggle-group="capability" aria-label="Показать подразделы: Trusted Capability" aria-controls="side-sections-capability" aria-expanded="false" title="6 подразделов"><svg class="ico sm" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
+      </div>
+      <nav class="side-subnav" id="side-sections-capability" aria-label="Trusted Capability: подразделы" hidden>
+        <a class="side-subitem" href="#/capability/cap-meaning" data-section-page="capability" data-section-link="cap-meaning"><span class="side-subnum">01</span><span>Объект доверия</span></a>
+        <a class="side-subitem" href="#/capability/cap-development" data-section-page="capability" data-section-link="cap-development"><span class="side-subnum">02</span><span>Supervised и история</span></a>
+        <a class="side-subitem" href="#/capability/cap-snapshot" data-section-page="capability" data-section-link="cap-snapshot"><span class="side-subnum">03</span><span>Что фиксирует релиз</span></a>
+        <a class="side-subitem" href="#/capability/cap-release" data-section-page="capability" data-section-link="cap-release"><span class="side-subnum">04</span><span>UAT и риски</span></a>
+        <a class="side-subitem" href="#/capability/cap-production" data-section-page="capability" data-section-link="cap-production"><span class="side-subnum">05</span><span>Автономный production</span></a>
+        <a class="side-subitem" href="#/capability/cap-migration" data-section-page="capability" data-section-link="cap-migration"><span class="side-subnum">06</span><span>Версии и миграция</span></a>
+      </nav>
+    </div>
+    </nav>
+    <div class="side-note">
+      <a class="side-item docs-app-back" href="/#/home" target="_top"><svg class="ico"><use href="#ic-arrow"/></svg><span class="side-title">Вернуться в приложение</span></a>
+      Шесть самостоятельных страниц с подробными схемами и примерами для последующего встраивания в КОНТУР.
+      <div class="side-status"><span class="status-dot"></span> Работает без внешних библиотек</div>
+    </div>
+  </aside>
+  <button class="nav-backdrop" type="button" id="kontur-nav-backdrop" aria-label="Закрыть меню" tabindex="-1" hidden></button>
+  <div class="app-main">
+    <header class="topbar">
+      <div class="topbar-leading">
+        <button type="button" class="mobile-menu-btn" id="kontur-menu-btn" aria-controls="kontur-sidebar" aria-expanded="false" aria-label="Открыть боковое меню">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Меню</span>
+        </button>
+        <div class="crumb"><span>КОНТУР</span><svg class="ico sm"><use href="#ic-arrow"/></svg><strong id="page-breadcrumb">Как устроена платформа</strong></div>
+      </div>
+      <div class="topbar-right"><span class="topbar-label">Информационные материалы</span><span class="pill"><svg class="ico sm"><use href="#ic-file"/></svg> 6 страниц</span></div>
+    </header>
+<main class="main-content home-route" id="kontur-home" data-page="home">
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="pill ink">REGULATION · KNOWLEDGE · EXECUTION · TRUST</span>
+          <h1>Как КОНТУР управляет<br>автономной разработкой</h1>
+          <p>Шесть связанных тем: регулирование и применение политик, изолированная среда исполнения, граф знаний, контекстный ассистент и жизненный цикл Trusted Capability — от настройки до автономного релиза.</p>
+        </div>
+        <div class="hero-visual" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-orbit second"></div><div class="orbital main"><svg class="ico xl"><use href="#ic-shield"/></svg></div><div class="orbital one"><svg class="ico xl"><use href="#ic-file"/></svg></div><div class="orbital two"><svg class="ico xl"><use href="#ic-flow"/></svg></div><div class="orbital three"><svg class="ico xl"><use href="#ic-box"/></svg></div><div class="orbital four"><svg class="ico xl"><use href="#ic-code"/></svg></div></div>
+      </div>
+      <div class="intro-line"><h2>Шесть разделов архитектуры</h2><p>Выберите тему и изучайте её на отдельной странице</p></div>
+      <div class="cards">
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon"><svg class="ico lg"><use href="#ic-shield"/></svg></div><span class="card-index">01 / REGULATION</span></div>
+          <h3>Процесс работы регулятора</h3>
+          <p>Сегментация репозиториев и систем, выбор направления, состав Policy Package, публикация и версии.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block">Repository</div><span class="preview-arrow">→</span><div class="preview-block">Segment</div><span class="preview-arrow">→</span><div class="preview-block active">Policy</div></div>
+          <div class="card-foot"><small>4 раздела · пример retail.backend</small><a class="btn primary" href="#/regulator">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon blue"><svg class="ico lg"><use href="#ic-flow"/></svg></div><span class="card-index">02 / ORCHESTRATION</span></div>
+          <h3>Как политика попадает во Flow</h3>
+          <p>Execution Snapshot, Regulatory Evaluator, Before Run, инъекция обязательств и After Run Evidence.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block active">Before Run</div><span class="preview-arrow">→</span><div class="preview-block">Flow</div><span class="preview-arrow">→</span><div class="preview-block active">After Run</div></div>
+          <div class="card-foot"><small>5 разделов · тот же snapshot</small><a class="btn primary" href="#/flow">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon violet"><svg class="ico lg"><use href="#ic-box"/></svg></div><span class="card-index">03 / SANDBOX</span></div>
+          <h3>Sandbox и его настройка</h3>
+          <p>Уровни изоляции microVM и Anthropic Sandbox, границы доступа, мастер подключения и Provisioning.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block wide">microVM <div class="preview-block active" style="margin-top:5px">Anthropic Sandbox · Agent</div></div><span class="preview-arrow">↔</span><div class="preview-block">Git / CI / Tracker</div></div>
+          <div class="card-foot"><small>4 раздела · Environment setup</small><a class="btn primary" href="#/sandbox">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon"><svg class="ico lg"><use href="#ic-network"/></svg></div><span class="card-index">04 / KNOWLEDGE</span></div>
+          <h3>Управление знаниями</h3>
+          <p>Единый Product Knowledge Graph, командный слой, предложение онтологии, публикация и Context Supply Chain.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block">Документы</div><span class="preview-arrow">+</span><div class="preview-block active">Граф</div><span class="preview-arrow">→</span><div class="preview-block">Контекст</div></div>
+          <div class="card-foot"><small>5 разделов · граф + источники</small><a class="btn primary" href="#/knowledge">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon blue"><svg class="ico lg"><use href="#ic-chat"/></svg></div><span class="card-index">05 / ASSISTANT</span></div>
+          <h3>Контекстный ассистент</h3>
+          <p>Чат в рабочем пространстве, контекст пользователя, Skills и глубокая интеграция с выбранным оркестратором.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block">Контекст</div><span class="preview-arrow">→</span><div class="preview-block active">Assistant</div><span class="preview-arrow">↔</span><div class="preview-block">HG SDLC</div></div>
+          <div class="card-foot"><small>5 разделов · provider delegation</small><a class="btn primary" href="#/assistant">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+        <article class="guide-card">
+          <div class="card-top"><div class="card-icon violet"><svg class="ico lg"><use href="#ic-rocket"/></svg></div><span class="card-index">06 / TRUSTED AUTONOMY</span></div>
+          <h3>Trusted Capability</h3>
+          <p>Что именно выпускается, как накапливается доверие, замораживается snapshot и работает автономный production.</p>
+          <div class="preview-rail" aria-hidden="true"><div class="preview-block">Supervised</div><span class="preview-arrow">→</span><div class="preview-block active">UAT</div><span class="preview-arrow">→</span><div class="preview-block">Production</div></div>
+          <div class="card-foot"><small>6 разделов · жизненный цикл</small><a class="btn primary" href="#/capability">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div>
+        </article>
+      </div>
+      <div class="under-note"><svg class="ico"><use href="#ic-info"/></svg><span>Это <strong>справочная визуализация целевой архитектуры</strong>. Каждая тема открывается отдельной подстраницей. Существующие требования сохранены; рекомендуемые архитектурные решения помечены как предложения. Реальные политики, интеграции, агенты и microVM в этом HTML не исполняются.</span></div>
+      <footer class="page-footer"><span>КОНТУР · Архитектура платформы</span><span>Автономный HTML · CSS и JavaScript внутри файла</span></footer>
+    </main>
+
+
+<main class="main-content info-page" id="kontur-page-regulator" data-page="regulator" aria-labelledby="reg-title" hidden>
+      <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Процесс регулятора</span><span class="chapter-count">01 / 06</span></nav>
+      <div class="article-frame">
+    <header class="article-header">
+      <div class="article-heading"><div class="eyebrow">01 / REGULATION · REGULATOR WORKSPACE</div><h2 id="reg-title">Как регулятор <em>создаёт политику</em></h2></div>
+      <div class="article-head-right"><span class="article-count">01 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div>
+    </header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">КЛЮЧЕВАЯ ИДЕЯ</div><h3>Сначала сегмент, затем правила для сегмента</h3><p>Политика не прикрепляется вручную к каждой задаче или ноде. ИТ-ландшафт сначала классифицируется через системы и репозитории. Регулятор выбирает сегмент, публикует для него требования, а оркестратор находит их при работе с конкретным репозиторием.</p></div>
+        <section id="reg-seg" aria-labelledby="reg-seg-title">
+          <div class="section-head"><span class="section-no">01</span><div><h3 id="reg-seg-title">Сегментация ИТ-ландшафта</h3><p>Repository связан с System; System содержит Business Domain и Platform Type.</p></div></div>
+          <div class="segment-chain">
+            <div class="chain-box"><div class="eyebrow">GIT REPOSITORY</div><strong>bank/savings-api</strong><small>Репозиторий технической системы</small></div>
+            <div class="chain-arr"><svg class="ico"><use href="#ic-arrow"/></svg></div>
+            <div class="chain-box"><div class="eyebrow">SYSTEM</div><strong>Savings Core</strong><div class="meta-tags"><span>Domain: Retail</span><span>Type: Backend</span></div></div>
+            <div class="chain-arr"><svg class="ico"><use href="#ic-arrow"/></svg></div>
+            <div class="chain-box final"><div class="eyebrow">INHERITED SEGMENT</div><strong>retail.backend</strong><small>Автоматически следует из метаданных System</small></div>
+          </div>
+          <div class="segment-picks">Другие сегменты: <code>retail.frontend</code><code>retail.data</code><code>corporate.backend</code><code>corporate.data</code></div>
+          <div class="note"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Сегмент нельзя подменить настройкой команды.</strong> При подключении Git-репозитория Platform Engineer видит унаследованный Segment; он не должен произвольно понижать его или менять. Команда получает права на ресурс отдельно от классификации системы.</span></div>
+        </section>
+        <section id="reg-process" aria-labelledby="reg-process-title">
+          <div class="section-head"><span class="section-no">02</span><div><h3 id="reg-process-title">Что делает регулятор</h3><p>Отдельное пространство <code>Regulation / Segments &amp; Policies</code>.</p></div></div>
+          <div class="pane soft" style="margin-bottom:12px"><div class="eyebrow">ВЫБРАННЫЙ СЕГМЕНТ</div><h4 style="font-size:16px;margin-top:5px">Retail / Backend <span class="pill" style="margin-left:5px">retail.backend</span></h4><p>Три контрольных направления независимо задают требования к одной и той же категории систем.</p></div>
+          <div class="direction-grid">
+            <div class="direction-card"><svg class="ico"><use href="#ic-shield"/></svg><strong>Information Security</strong><code>IS-retail-backend@7</code></div>
+            <div class="direction-card"><svg class="ico"><use href="#ic-server"/></svg><strong>Reliability</strong><code>REL-retail-backend@4</code></div>
+            <div class="direction-card"><svg class="ico"><use href="#ic-sliders"/></svg><strong>Risk</strong><code>RISK-retail-backend@3</code></div>
+          </div>
+          <div class="work-steps">
+            <div class="work-step"><span class="num">1</span><div><strong>Выбирает сегмент и направление</strong><p>Например, <code>retail.backend</code> и Information Security.</p></div></div>
+            <div class="work-step"><span class="num">2</span><div><strong>Формулирует текстовые Requirements</strong><p>Каждое правило имеет стабильный ID, редакцию, владельца и дату действия.</p></div></div>
+            <div class="work-step"><span class="num">3</span><div><strong>Задаёт применимость и проверку</strong><p>Когда правило относится к работе, какие Skills выполнять и каким Evidence подтвердить.</p></div></div>
+            <div class="work-step"><span class="num">4</span><div><strong>Подключает версии и публикует</strong><p>Выбирает Regulatory Skills и при необходимости Subagents из каталога, выпускает версию пакета.</p></div></div>
+          </div>
+        </section>
+        <section id="reg-package" aria-labelledby="reg-package-title">
+          <div class="section-head"><span class="section-no">03</span><div><h3 id="reg-package-title">Из чего состоит Policy Package</h3><p>Набор текстовых правил, условий применимости, исполняемых процедур и ожидаемых доказательств.</p></div></div>
+          <div class="package-box">
+            <div class="package-head"><div><small>VERSIONED REGULATORY PACKAGE</small><strong>IS-retail-backend@7</strong></div><span class="pill ink"><svg class="ico sm"><use href="#ic-check"/></svg> Current</span></div>
+            <div class="package-parts">
+              <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-file"/></svg>01 · Requirements</div><p><code>SEC-DEP-014@3</code><br>«При обновлении библиотек разрешено использовать только сертифицированные версии».</p><code>ID · version · owner · segment · effective date</code></div>
+              <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-search"/></svg>02 · Applicability Rules</div><p>Правило включается, когда работа относится к <code>dependency_change</code> и затрагивает репозиторий сегмента <code>retail.backend</code>.</p><code>Task tag · segment · code change · work type</code></div>
+              <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-code"/></svg>03 · Regulatory Skills</div><p><code>certified-dependency-selection@5</code> — определяет зависимость, сверяется с разрешённым реестром, возвращает допустимые версии и guidance.</p><code>Подключается конкретная версия Skill</code></div>
+              <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-shield"/></svg>04 · Evidence Rules</div><p>Для <code>SEC-DEP-014@3</code>: итоговый dependency manifest и запись Approved Component Registry. Проверка — <code>dependency-evidence-check@3</code>.</p><code>Требуемые артефакты · verification Skill</code></div>
+            </div>
+            <div class="attachments"><svg class="ico"><use href="#ic-bot"/></svg><div><strong>Дополнительно: Subagents из каталога</strong><p>Для специализированного анализа или проверки в конфигурации пакета могут быть закреплены версии Subagents. Они выполняют порученную работу, но не заменяют Requirements и Evidence Rules.</p></div></div>
+          </div>
+          <div class="note warning"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Policy Package не содержит принудительных Enforced Controls.</strong> Реальные запреты и доступы обеспечиваются платформенными средствами: IAM, gateway, network policy, Sandbox и правами внешних систем.</span></div>
+        </section>
+        <section id="reg-lifecycle" aria-labelledby="reg-lifecycle-title">
+          <div class="section-head"><span class="section-no">04</span><div><h3 id="reg-lifecycle-title">Публикация, версии и воздействие на capability</h3><p>Новая редакция требования не подменяет старую в существующем релизе.</p></div></div>
+          <div class="pane"><div class="eyebrow">LIFECYCLE ПАКЕТА</div><div class="lifecycle"><span class="pill muted">Draft</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill ink">Current</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill amber">Deprecating</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill muted">Withdrawn / Superseded</span><span class="pill amber">Revoked — отдельное критическое состояние</span></div></div>
+          <div class="split-2" style="margin-top:12px"><div class="pane soft"><h4>Релиз закрепляет версию</h4><p>Если Trusted Capability выпущена с <code>IS-retail-backend@7</code>, каждый её production Run использует именно этот snapshot. Переход на <code>@8</code> требует новой конфигурации и переоценки.</p></div><div class="pane soft"><h4>Изменение запускает impact analysis</h4><p>Платформа находит репозитории сегмента, команды и зависящие Capabilities. При отзыве политики новые автономные Runs блокируются согласно её статусу.</p></div></div>
+        </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span class="current"></span><span></span><span></span><span></span><span></span><span></span></span>Регулятор формирует и публикует требования по сегменту.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn primary" href="#/flow">Как попадает во Flow <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+    </main>
+
+<main class="main-content info-page" id="kontur-page-flow" data-page="flow" aria-labelledby="flow-title" hidden>
+      <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Политика во Flow</span><span class="chapter-count">02 / 06</span></nav>
+      <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">02 / ORCHESTRATION · REGULATORY LIFECYCLE</div><h2 id="flow-title">Как политика <em>попадает во Flow</em></h2></div><div class="article-head-right"><span class="article-count">02 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">ГЛАВНЫЙ ПРИНЦИП</div><h3>Оркестратор сам находит нужные требования</h3><p>Он получает задачу и её репозитории, определяет сегменты, загружает закреплённые Policy Packages и составляет Regulatory Plan. Во время исполнения подаёт в конкретный узел только применимые обязательства. После выполнения проверяет результат и формирует Evidence Report.</p></div>
+        <section id="flow-source" aria-labelledby="flow-source-title">
+          <div class="section-head"><span class="section-no">01</span><div><h3 id="flow-source-title">Откуда берутся политики</h3><p>Цепочка запуска проходит через техническую систему и её Segment.</p></div></div>
+          <div class="pipeline-scroll"><div class="pipeline">
+            <div class="pipeline-node"><div class="eyebrow">TASK</div><strong>BANK-1842</strong><small>tag: dep-update</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node"><div class="eyebrow">REPOSITORY</div><strong>bank/savings-api</strong><small>System: Savings Core</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node system"><div class="eyebrow">SEGMENT</div><strong>retail.backend</strong><small>унаследован от System</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node dark"><div class="eyebrow">POLICY SNAPSHOT</div><strong>IS@7 · REL@4 · RISK@3</strong><small>зафиксированные версии</small></div>
+          </div></div>
+          <div class="context-grid" style="margin-top:14px"><div class="context-group"><div class="eyebrow">WORK CONTEXT</div><div class="context-list"><span>Task и тег</span><span>Product / Team</span><span>Repository / revision</span><span>System / Segment</span><span>тип изменения</span></div></div><div class="context-group"><div class="eyebrow">EXECUTION SNAPSHOT</div><div class="context-list"><span>версия Flow</span><span>Policy Packages</span><span>Skills / Subagents</span><span>Model / Runtime</span><span>Knowledge</span><span>Environment</span></div></div></div>
+          <div class="note"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Snapshot создаёт HG SDLC или AI Manager в момент Run.</strong> КОНТУР отображает и хранит его. Последующее редактирование конфигурации не меняет активный Run.</span></div>
+        </section>
+        <section id="flow-before" aria-labelledby="flow-before-title">
+          <div class="section-head"><span class="section-no">02</span><div><h3 id="flow-before-title">Before Run: Regulatory Evaluator</h3><p>Применимость оценивается до исполнения пользовательских узлов.</p></div></div>
+          <div class="pipeline-scroll"><div class="pipeline">
+            <div class="pipeline-node system"><div class="eyebrow">SYSTEM STAGE</div><strong>Before Run</strong><small>загрузка context</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node"><div class="eyebrow">EVALUATOR</div><strong>Filter + Skills / LLM</strong><small>применимость требований</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node dark"><div class="eyebrow">IMMUTABLE</div><strong>Regulatory Plan</strong><small>Applicable / Not applicable</small></div>
+          </div></div>
+          <div class="split-2" style="margin-top:14px"><div class="plan-card"><span class="pill">Applicable</span><h4>SEC-DEP-014@3</h4><p>Причина: задача обновляет стороннюю зависимость в <code>retail.backend</code>.</p><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Apply: implementation</div><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Skill: certified-dependency-selection@5</div><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Evidence: final dependency manifest</div></div><div class="plan-card"><span class="pill blue">План содержит причины</span><h4>REL-COMPAT-004@5</h4><p>Причина: обновление может изменить совместимость интерфейсов.</p><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Apply: implementation + verification</div><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Evidence: compatibility report</div><div class="tiny-line"><svg class="ico sm"><use href="#ic-check"/></svg>Отдельно хранятся рассмотренные, но неприменимые правила</div></div></div>
+          <div class="note blue"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Regulatory Plan — самостоятельный артефакт Run.</strong> Он содержит ссылки на точные версии требований, причины применимости, ожидаемые Evidence и инструкции, когда применять правило.</span></div>
+        </section>
+        <section id="flow-inject" aria-labelledby="flow-inject-title">
+          <div class="section-head"><span class="section-no">03</span><div><h3 id="flow-inject-title">Инъекция в середине Flow</h3><p>В агент попадает не огромный Policy Package, а только resolved obligations.</p></div></div>
+          <div class="inject-flow"><div class="inject-node"><strong>Analysis</strong><small>Задача, знание продукта, план работы</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Implementation</strong><small>Получает SEC-DEP-014 и конкретные разрешённые версии</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Checks</strong><small>Получает verification instructions и критерии Evidence</small></div></div>
+          <pre class="mini-code"><b>REGULATORY CONTEXT · resolved obligations</b>
+SEC-DEP-014@3  →  Use certified dependency version
+Allowed: 2.17.3, 2.17.4
+REL-COMPAT-004@5  →  Preserve API compatibility
+Required: compatibility suite report</pre>
+          <div class="split-2" style="margin-top:13px"><div class="pane soft"><h4>HG SDLC · fixed workflow</h4><p>Поскольку граф известен заранее, Regulatory Plan сопоставляется с фазами: Specification, Implementation, Tests, Result. Перед каждым узлом оркестратор передаёт его часть плана.</p></div><div class="pane soft"><h4>AI Manager · agent directed</h4><p>Полный граф заранее не задан. При выборе следующего <code>Work Intent</code> Manager сопоставляет его с условиями Regulatory Plan и подключает нужные obligations.</p></div></div>
+          <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>Оркестратор отвечает за инъекцию.</strong> Системные Before Run / After Run выполняются независимо от того, какие рабочие узлы добавила или переименовала команда.</span></div>
+        </section>
+        <section id="flow-after" aria-labelledby="flow-after-title">
+          <div class="section-head"><span class="section-no">04</span><div><h3 id="flow-after-title">After Run: Regulatory Evidence Report</h3><p>Проверяется фактическая работа, а не только текст ответа агента.</p></div></div>
+          <div class="pane soft" style="margin-bottom:12px"><div class="eyebrow">INPUT ДЛЯ VERIFIER</div><div class="context-list" style="margin-top:10px"><span>Regulatory Plan</span><span>история попыток</span><span>diff и code</span><span>артефакты</span><span>логи</span><span>тестовые отчёты</span><span>Evidence Rules</span><span>verification Skills</span></div></div>
+          <div class="verdicts"><div class="verdict pass"><strong>PASS</strong><p>Требование соблюдено; есть проверяемые подтверждения.</p></div><div class="verdict fail"><strong>FAIL</strong><p>Найдено несоблюдение требования.</p></div><div class="verdict inc"><strong>INCONCLUSIVE</strong><p>Доказательств недостаточно для вывода.</p></div></div>
+          <div class="pane" style="margin-top:12px"><div class="eyebrow">EXAMPLE · REGULATORY EVIDENCE</div><div class="split-2" style="margin-top:10px"><div><h4><span class="pill ink">PASS</span> &nbsp;SEC-DEP-014@3</h4><p>Observed: <code>jackson-databind 2.17.4</code><br>Evidence: <code>pom.xml</code>, approved registry snapshot.</p></div><div><h4><span class="pill ink">PASS</span> &nbsp;REL-COMPAT-004@5</h4><p>Evidence: compatibility-suite #12991<br>Result: 148 / 148 passed.</p></div></div></div>
+          <div class="note"><svg class="ico"><use href="#ic-file"/></svg><span>Regulatory Plan и Regulatory Evidence Report сохраняются под конкретным <strong>Task → Run</strong>. История остаётся проверяемой после Rework, Takeover и будущих изменений политики.</span></div>
+        </section>
+        <section id="flow-scope" aria-labelledby="flow-scope-title">
+          <div class="section-head"><span class="section-no">05</span><div><h3 id="flow-scope-title">Если изменился scope или версия политики</h3><p>Новый репозиторий или сегмент нельзя игнорировать.</p></div></div>
+          <div class="pane soft"><div class="eyebrow">SCOPE CHANGE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Regulatory Plan v1</strong><small>bank/savings-api</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Новый repository</strong><small>обнаружена затронутая система</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Regulatory Plan v2</strong><small>пересчитана применимость</small></div></div></div>
+          <div class="split-2" style="margin-top:12px"><div class="pane"><h4>Изменение scope внутри Run</h4><p>При новом репозитории, сегменте или значимом work type оркестратор пересчитывает план и сохраняет обе версии в trace. Это не происходит после каждого обычного шага.</p></div><div class="pane"><h4>Новая версия Policy Package</h4><p>Published <code>IS@8</code> не подменяет <code>IS@7</code> внутри released capability. Требуется новая конфигурация, переоценка и выпуск.</p></div></div>
+        </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span class="current"></span><span></span><span></span><span></span><span></span></span>План, инъекция и Evidence принадлежат runtime.</small><div class="article-foot-actions"><a class="btn" href="#/regulator"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg> Назад</a><a class="btn primary" href="#/sandbox">Как устроен Sandbox <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+    </main>
+
+<main class="main-content info-page" id="kontur-page-sandbox" data-page="sandbox" aria-labelledby="sandbox-title" hidden>
+      <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Sandbox и setup</span><span class="chapter-count">03 / 06</span></nav>
+      <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">03 / ENVIRONMENT · RUNTIME ISOLATION</div><h2 id="sandbox-title">Что такое <em>Sandbox</em> и как он создаётся</h2></div><div class="article-head-right"><span class="article-count">03 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">ДВА УРОВНЯ ИЗОЛЯЦИИ</div><h3>MicroVM защищает хост. Anthropic Sandbox ограничивает процессы агента.</h3><p>Кодинг-агент работает в гостевой среде с выделенным workspace. Внутри неё процессный Sandbox ограничивает файловые операции и сетевые обращения. Внешние Git, Task Tracker и Jenkins CI доступны только через настроенные Resource Bindings.</p></div>
+        <section id="sandbox-arch" aria-labelledby="sandbox-arch-title">
+          <div class="section-head"><span class="section-no">01</span><div><h3 id="sandbox-arch-title">Из чего состоит Sandbox</h3><p>Платформа задаёт физическую границу исполнения и внутренние правила для запущенного кода.</p></div></div>
+          <div class="boundary-map">
+            <div class="arch-label">HOST INFRASTRUCTURE · ВНЕ РАБОЧЕГО ПРОЦЕССА АГЕНТА</div>
+            <div class="arch-cols">
+              <div class="vm">
+                <div class="vm-head"><strong><svg class="ico"><use href="#ic-box"/></svg> microVM · Isolated guest</strong><small>изоляция от хост-машины</small></div>
+                <div class="process-sandbox">
+                  <div class="process-head"><svg class="ico"><use href="#ic-lock"/></svg> Anthropic Sandbox Runtime</div>
+                  <div class="runtime-pods"><div class="runtime-pod"><svg class="ico"><use href="#ic-bot"/></svg><strong>Coding agent</strong><small>Исполняет шаги, команды и инструменты</small></div><div class="runtime-pod"><svg class="ico"><use href="#ic-git"/></svg><strong>Run Workspace</strong><small>Checkout ревизии, файлы, diff и тесты</small></div></div>
+                  <div class="runtime-limits">File restrictions · Network restrictions · Process/tool limits</div>
+                </div>
+                <div class="vm-foot"><svg class="ico sm"><use href="#ic-sliders"/></svg> CPU · RAM · Disk · TTL · max parallel Runs</div>
+              </div>
+              <div class="ext-list">
+                <strong>ВНЕ microVM · ПО ГРАНТАМ</strong>
+                <div class="ext-item"><svg class="ico"><use href="#ic-git"/></svg><div>Git Repository<small>Read / Write / Create PR</small></div></div>
+                <div class="ext-item"><svg class="ico"><use href="#ic-clipboard"/></svg><div>Task Tracker<small>Project scope</small></div></div>
+                <div class="ext-item"><svg class="ico"><use href="#ic-server"/></svg><div>Jenkins CI<small>Job / pipeline scope</small></div></div>
+              </div>
+            </div>
+            <p class="arch-caption">Стрелки доступа здесь подразумевают проверяемые разрешения. Сетевое соединение само по себе не выдаёт право выполнять все операции во внешней системе.</p>
+          </div>
+          <div class="split-2" style="margin-top:13px"><div class="pane soft"><h4>microVM · граница хоста</h4><p>Отделяет выполнение кода проекта, сборку, тесты и сторонние зависимости от хостовой ОС и других рабочих сред. Ограничивает объём выделенных вычислительных ресурсов.</p></div><div class="pane soft"><h4>Anthropic Sandbox · граница процесса</h4><p>Ограничивает доступ агента и охваченных Sandbox процессов к файлам и сети внутри microVM. Не заменяет виртуализацию и требует явно заданной области действия инструментов.</p></div></div>
+        </section>
+        <section id="sandbox-security" aria-labelledby="sandbox-security-title">
+          <div class="section-head"><span class="section-no">02</span><div><h3 id="sandbox-security-title">Для чего нужны ограничения</h3><p>Безопасная рабочая среда не наследует права сотрудника и не расширяет их автоматически.</p></div></div>
+          <div class="boundary-columns"><div class="pane soft"><h4><svg class="ico"><use href="#ic-check"/></svg> Можно в разрешённом scope</h4><ul class="plain-list"><li>Читать и изменять рабочую копию проекта в выделенном workspace.</li><li>Запускать разрешённые команды, проверки и тесты.</li><li>Создавать ветку и pull request при наличии Git Permission.</li><li>Работать с подключённым Project Task Tracker и разрешённой Jenkins job.</li></ul></div><div class="pane restrict"><h4><svg class="ico"><use href="#ic-lock"/></svg> Не выдаётся автоматически</h4><ul class="plain-list"><li>Произвольная запись на хост-машину и в другие рабочие среды.</li><li>Личные доступы сотрудника и production credentials.</li><li>Произвольный запуск CI jobs или изменение защищённой конфигурации.</li><li>Самостоятельное расширение агентом scope или Permissions.</li></ul></div></div>
+          <div class="note warning"><svg class="ico"><use href="#ic-shield"/></svg><span><strong>Изоляция и доступы — разные уровни.</strong> MicroVM удерживает процессы внутри гостевой среды; Anthropic Sandbox ограничивает их файловые и сетевые операции; права внешних систем определяют разрешённые действия в конкретном Git, Task Tracker или Jenkins CI.</span></div>
+        </section>
+        <section id="sandbox-wizard" aria-labelledby="sandbox-wizard-title">
+          <div class="section-head"><span class="section-no">03</span><div><h3 id="sandbox-wizard-title">Как Platform Engineer настраивает Environment</h3><p>Последовательный мастер: Resources → Workflow Platform → Finish.</p></div></div>
+          <div class="wizard">
+            <div class="wizard-step"><div class="wizard-top"><span class="num">01</span><span class="pill muted">Resources</span></div><h4>Подключить ресурсы</h4><p>Выбрать конкретный Git-репозиторий и операции, Project Task Tracker, Jenkins CI и нужный job/pipeline scope. Сохранить Resource Bindings.</p><div class="wizard-pills"><span>Git · Read / Write / Create PR / Admin</span><span>Task Tracker · Project</span><span>Jenkins CI · Job</span></div></div>
+            <div class="wizard-step"><div class="wizard-top"><span class="num">02</span><span class="pill muted">Workflow Platform</span></div><h4>Выбрать оркестратор</h4><p>Один из двух execution approaches. Это выбор того, кто управляет порядком работы, а не дополнительных прав для агента.</p><div class="wizard-pills"><span>HG SDLC · Externally orchestrated</span><span>AI Manager · Agent directed</span></div></div>
+            <div class="wizard-step"><div class="wizard-top"><span class="num">03</span><span class="pill ink">Finish</span></div><h4>Preview и Provisioning</h4><p>Просмотреть топологию Sandbox, параметры изоляции, сеть, лимиты и связи с ресурсами. Сохранить конфигурацию и выполнить Provisioning.</p><div class="wizard-pills"><span>MicroVM / isolation</span><span>CPU / RAM / Disk</span><span>TTL / parallel Runs</span><span>Network policy</span></div></div>
+          </div>
+          <div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Responsibility и Resource Bindings не равны.</strong> Product Owner задаёт ответственность команды за часть продукта; Platform Engineer даёт технический доступ к конкретным репозиториям и системам. Наличие ресурса в списке не выдаёт доступ ко всем его операциям.</span></div>
+        </section>
+        <section id="sandbox-provision" aria-labelledby="sandbox-provision-title">
+          <div class="section-head"><span class="section-no">04</span><div><h3 id="sandbox-provision-title">Что делает Provisioning и что происходит в Run</h3><p>Provisioning подготавливает среду, но не выпускает автономную capability.</p></div></div>
+          <div class="pane soft"><div class="eyebrow">PROVISIONING PIPELINE</div><div class="provision"><span><svg class="ico"><use href="#ic-check"/></svg>Validate configuration</span><span><svg class="ico"><use href="#ic-check"/></svg>Reserve resources</span><span><svg class="ico"><use href="#ic-check"/></svg>Create microVM / sandbox</span><span><svg class="ico"><use href="#ic-check"/></svg>Install runtime</span><span><svg class="ico"><use href="#ic-check"/></svg>Connect Git / CI / Task Tracker</span><span><svg class="ico"><use href="#ic-check"/></svg>Apply network and grants</span><span><svg class="ico"><use href="#ic-check"/></svg>Verify access</span></div><div class="ready-line"><svg class="ico lg"><use href="#ic-shield"/></svg><div><strong>Environment Ready · Automation Ready</strong><small>Можно создавать/настраивать Flow и запускать supervised задачи. Автономный Release — отдельный процесс.</small></div></div></div>
+          <div class="work-steps" style="margin-top:13px"><div class="work-step"><span class="num">1</span><div><strong>Получить Task и snapshot</strong><p>Оркестратор фиксирует конфигурацию, policy versions и исходную ревизию репозитория.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Создать Run Workspace</strong><p>Подготовить checkout/ветку, рабочие файлы и доступные инструменты в microVM.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Выполнить Flow в границах</strong><p>Coding agent, применимые политики, разрешённые интеграции и проверки работают в заданном scope.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Зафиксировать результат</strong><p>Сохранить diff, logs, тестовые отчёты, Regulatory Plan и Evidence; завершить workspace по TTL.</p></div></div></div>
+          <div class="note warning"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Это схема целевого исполнения.</strong> Данный HTML показывает информационные страницы. Он не создаёт microVM, не устанавливает Anthropic Sandbox Runtime и не подключается к Git, Task Tracker или Jenkins CI.</span></div>
+        </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span class="current"></span><span></span><span></span><span></span></span>Sandbox обеспечивает исполнение в явных границах.</small><div class="article-foot-actions"><a class="btn" href="#/flow">Назад к Flow</a><a class="btn primary" href="#/knowledge">К управлению знаниями <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+    </main>
+
+<main class="main-content info-page" id="kontur-page-knowledge" data-page="knowledge" aria-labelledby="knowledge-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Управление знаниями</span><span class="chapter-count">04 / 06</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">04 / KNOWLEDGE · ONTOLOGY · CONTEXT</div><h2 id="knowledge-title">Как КОНТУР <em>управляет знаниями</em></h2></div><div class="article-head-right"><span class="article-count">04 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">ЕДИНАЯ ПРОДУКТОВАЯ ИСТИНА</div><h3>Граф связывает факты, документы объясняют их</h3><p>У каждого продукта один Product Knowledge Graph с контролируемой публикацией. Командные знания дополняют его, а Regulatory Context хранится в отдельном контуре. Для реализации предлагается гибрид: версия документа + маленькая онтология + граф связей + retrieval с правами доступа.</p></div>
+        <section id="know-ontology" aria-labelledby="know-ontology-title">
+      <div class="section-head"><span class="section-no">01</span><div><h3 id="know-ontology-title">Единая онтология и Product Knowledge Graph</h3><p>Онтология задаёт типы объектов и связей; граф связывает знания с реальными системами.</p></div></div>
+      
+    <div class="pane soft"><div class="eyebrow">ПРИМЕР · КОПИЛКА / ACTIVATION</div>
+      <div class="knowledge-network" aria-label="Пример графа знаний: продукт Копилка связан с бизнес-функцией Activation, которая реализована сервисом savings-api">
+        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-layers"/></svg><span class="eyebrow">PRODUCT</span><strong>Копилка</strong><small>Канонические продуктовые правила</small></div>
+        <div class="knowledge-edge"><small>HAS_FEATURE</small><svg class="ico"><use href="#ic-arrow"/></svg></div>
+        <div class="knowledge-entity core"><svg class="ico lg"><use href="#ic-network"/></svg><span class="eyebrow">FEATURE</span><strong>Activation</strong><small>Условия первого пополнения</small></div>
+        <div class="knowledge-edge"><small>IMPLEMENTED_BY</small><svg class="ico"><use href="#ic-arrow"/></svg></div>
+        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-code"/></svg><span class="eyebrow">SYSTEM / REPOSITORY</span><strong>Savings Core</strong><small>bank/savings-api</small></div>
+      </div>
+      <div class="eyebrow">ТИПИЗИРОВАННЫЕ СВЯЗИ · ПРЕДЛОЖЕНИЕ</div>
+      <div class="knowledge-relations"><span>Product → HAS_FEATURE → Feature</span><span>Feature → IMPLEMENTED_BY → System</span><span>System → HAS_REPOSITORY → Repository</span><span>Team → RESPONSIBLE_FOR → Feature</span><span>Decision → GOVERNS → Feature</span></div>
+    </div>
+    <div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Предлагаемая модель.</strong> Для графа достаточно небольшой версионированной онтологии: Product, Feature, System, Repository, API, Decision, Team и связей между ними. Источником истины остаются утверждённые документы и записи с автором, версией и ссылкой на источник. Не нужно превращать каждое предложение в отдельную вершину.</span></div>
+    </section><section id="know-layers" aria-labelledby="know-layers-title">
+      <div class="section-head"><span class="section-no">02</span><div><h3 id="know-layers-title">Три слоя Context Supply Chain</h3><p>Product Knowledge, Regulatory Context и Team Knowledge отделены друг от друга.</p></div></div>
+      
+    <div class="knowledge-layers">
+      <div class="knowledge-layer"><svg class="ico lg"><use href="#ic-network"/></svg><h4>1. Product Knowledge</h4><p>Общий для продукта утверждённый Knowledge Graph: бизнес-правила, функциональность, API, решения и связи. Все команды продукта читают разрешённое; публикация контролируется.</p><span class="pill">Broad read · Controlled publication</span></div>
+      <div class="knowledge-layer"><svg class="ico lg"><use href="#ic-shield"/></svg><h4>2. Regulatory Context</h4><p>Требования соответствующих сегментов берутся из версионированных Policy Packages. Они принадлежат регулятору, не копируются в Team Knowledge и применяются оркестратором.</p><span class="pill blue">Policies · Plan · Evidence</span></div>
+      <div class="knowledge-layer"><svg class="ico lg"><use href="#ic-file"/></svg><h4>3. Team Knowledge</h4><p>Командные conventions, patterns и подтверждённые lessons learned. Они помогают команде, но не подменяют канонические продуктовые правила.</p><span class="pill amber">Team-scoped · Reviewed</span></div>
+    </div>
+    <div class="note blue"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Task, Run State, текущий diff, артефакты и состояние Flow — operational context.</strong> Runtime добавляет их автоматически, но они не являются четвёртым слоем базы знаний. Run History является Evidence, а не автоматически опубликованным Knowledge.</span></div>
+    </section><section id="know-curation" aria-labelledby="know-curation-title">
+      <div class="section-head"><span class="section-no">03</span><div><h3 id="know-curation-title">Как знания появляются и обновляются</h3><p>Новые сведения проходят управляемую публикацию, а не попадают в граф из чата или Run напрямую.</p></div></div>
+      
+    <div class="lifecycle-wide" aria-label="Процесс публикации знания">
+      <div class="stage"><strong>Source / Discovery</strong><small>Документ, решение, инженерное наблюдение</small></div><span class="arrow">→</span>
+      <div class="stage"><strong>Knowledge Proposal</strong><small>Автор, текст, тип сущности, связи, источник</small></div><span class="arrow">→</span>
+      <div class="stage"><strong>Review</strong><small>Проверка владельцем и разрешений</small></div><span class="arrow">→</span>
+      <div class="stage emph"><strong>Approved / Published</strong><small>Версия и provenance закреплены</small></div><span class="arrow">→</span>
+      <div class="stage"><strong>Superseded</strong><small>Изменения без потери истории</small></div>
+    </div>
+    <div class="work-steps" style="margin-top:14px"><div class="work-step"><span class="num">1</span><div><strong>Предложение</strong><p>Участник команды добавляет утверждение и подтверждающий документ; отмечает, к чему оно относится.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Проверка и конфликт</strong><p>Рецензент проверяет точность, устаревшие версии и противоречия текущему Product Knowledge.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Публикация</strong><p>Создаётся новая версия записи и при необходимости связи графа. Владелец и provenance сохраняются.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Использование</strong><p>Assistant и Flow извлекают только разрешённые знания из одобренной версии или допустимого team scope.</p></div></div></div>
+    <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Run History ≠ Knowledge.</strong> Агент может подготовить draft/Proposal по результату работы, но его вывод не становится каноническим автоматически. Права <code>knowledge.contribute</code> и <code>knowledge.review</code> отделены.</span></div>
+    </section><section id="know-architecture" aria-labelledby="know-architecture-title">
+      <div class="section-head"><span class="section-no">04</span><div><h3 id="know-architecture-title">Как лучше устроить хранилище и поиск</h3><p>Практическая рекомендация: сочетать документы, онтологию и граф, а не выбирать что-то одно.</p></div></div>
+      
+    <div class="choices-3">
+      <div class="choice-card"><span class="pill muted">Вариант A</span><h4>Только документы + RAG</h4><p>Быстро запускается, хорошо ищет текст и фрагменты. Но трудно надёжно объяснять зависимости Product → Feature → System → Repository.</p><p><strong>Подходит:</strong> для простого справочника без сложной навигации по связям.</p></div>
+      <div class="choice-card"><span class="pill muted">Вариант B</span><h4>Только knowledge graph</h4><p>Явные связи и impact analysis, но дорого описывать каждый факт графовой схемой. Теряется богатый контекст документов.</p><p><strong>Подходит:</strong> для структурированного реестра систем и зависимостей.</p></div>
+      <div class="choice-card recommended"><span class="pill ink">Рекомендуется</span><h4>Гибрид: RAG + Graph</h4><p>Утверждённые тексты хранятся с версиями и provenance, небольшой типизированный граф задаёт связи; поиск сочетает атрибуты, граф и текст.</p><p><strong>Плюс:</strong> ответы со ссылками на источники и объяснимыми зависимостями.</p></div>
+    </div>
+    <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>Это архитектурная рекомендация, а не обязательный пункт исходного задания.</strong> Не нужно вводить отдельную «истину» для каждой Team: общий Product Graph дополняется разрешённым Team Knowledge и ссылками на регулирующие политики.</span></div>
+    </section><section id="know-delivery" aria-labelledby="know-delivery-title">
+      <div class="section-head"><span class="section-no">05</span><div><h3 id="know-delivery-title">Как знания попадают в Agent / Flow / Assistant</h3><p>Context Supply Chain отдаёт нужные версии и источники, учитывая пользователя, продукт и выполняемую задачу.</p></div></div>
+      
+    <div class="pipeline-scroll"><div class="pipeline">
+      <div class="pipeline-node"><div class="eyebrow">REQUEST</div><strong>Task / user query</strong><small>product · team · scope</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+      <div class="pipeline-node system"><div class="eyebrow">RESOLVE</div><strong>Identity + Retrieval</strong><small>graph + documents + permissions</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+      <div class="pipeline-node dark"><div class="eyebrow">CONTEXT</div><strong>Relevant facts</strong><small>source · version · provenance</small></div>
+    </div></div>
+    <div class="supply-grid"><div class="supply-box"><strong>Product Knowledge</strong><small>Approved facts / graph</small></div><div class="supply-box"><strong>Regulatory Context</strong><small>Plan / obligations</small></div><div class="supply-box"><strong>Team Knowledge</strong><small>Reviewed conventions</small></div></div>
+    <div class="pane soft"><h4>Пример — обновление зависимости</h4><p>Для <code>BANK-1842</code> runtime находит связанную с репозиторием систему и соглашения команды, разрешённую ревизию знаний продукта, а также Regulatory Plan по сегменту <code>retail.backend</code>. Исполнитель получает только релевантные выдержки и ссылки на версии; исходные корпоративные документы целиком не инжектируются без необходимости.</p></div>
+    <div class="note blue"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Scope сохраняется при извлечении.</strong> Наличие записи в графе не означает права читать её текст. Поиск и построение контекста фильтруют источники по доступам; источники ответов должны быть прослеживаемыми.</span></div>
+    </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span></span><span class="current"></span><span></span><span></span></span>Knowledge — управляемые данные и связи, не необработанный лог Runs.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn" href="#/sandbox">Предыдущая тема</a><a class="btn primary" href="#/assistant">Следующая тема <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+
+<main class="main-content info-page" id="kontur-page-assistant" data-page="assistant" aria-labelledby="assistant-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Контекстный ассистент</span><span class="chapter-count">05 / 06</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">05 / ASSISTANT · SKILLS · PROVIDER INTEGRATION</div><h2 id="assistant-title">Как работает <em>контекстный ассистент</em></h2></div><div class="article-head-right"><span class="article-count">05 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">КОНТЕКСТ И ПРОИСХОЖДЕНИЕ</div><h3>Один чат — два уровня понимания</h3><p>КОНТУР предоставляет контекстный чат и общие Skills. Если вопрос требует понимания внутренних узлов, логов и состояния Run, чат передаёт запрос Deep Run Assistant выбранного оркестратора, а не выдумывает ответ. Все запросы и результаты ограничиваются эффективными Permissions пользователя.</p></div>
+        <section id="asst-surface" aria-labelledby="asst-surface-title">
+      <div class="section-head"><span class="section-no">01</span><div><h3 id="asst-surface-title">Ассистент — полноценный контекстный чат</h3><p>Всплывающий bubble открывает переписку, связанную с текущим экраном и ролью пользователя.</p></div></div>
+      
+    <div class="assistant-chat" aria-label="Пример интерфейса контекстного ассистента">
+      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>КОНТУР Assistant</strong><small>Product: Копилка · Team: Growth · Automation / Run</small></div><span class="pill ink" style="margin-left:auto">Контекст учтён</span></div>
+      <div class="chat-thread"><div class="chat-bubble user">Что мне делать дальше с этой capability?</div><div class="chat-bubble">Вы на экране настройки <strong>Dependency Update v1.3</strong>. Environment готов, Flow связан с тегом <code>dep-update</code>, но история этой версии ещё не собрана. Следующий шаг — запустить задачи в <strong>Supervised</strong> режиме и изучить результаты.<span class="source">Контекст: Product / Team / Capability / Environment / текущий экран</span></div></div>
+      <div class="chat-action"><svg class="ico sm"><use href="#ic-chat"/></svg>Это информационный пример. Ответ не меняет статус и не запускает Flow.</div>
+    </div>
+    <div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Чат не просто tooltip.</strong> В нём можно задавать новые вопросы, уточнять рекомендации и обсуждать текущий Run. Ассистент не должен выдавать несуществующую информацию о runtime или создавать формальные решения от имени пользователя.</span></div>
+    </section><section id="asst-context" aria-labelledby="asst-context-title">
+      <div class="section-head"><span class="section-no">02</span><div><h3 id="asst-context-title">Как собирается контекст для ответа</h3><p>Ассистент видит только данные, доступные этому пользователю и релевантные открытому месту работы.</p></div></div>
+      
+    <div class="context-grid">
+      <div class="context-group"><div class="eyebrow">IDENTITY + SURFACE</div><div class="context-list"><span>user / role / Permissions</span><span>Product / Team / Responsibility</span><span>current screen</span><span>selected Task / tag</span><span>Capability / Run / Gate ID</span></div></div>
+      <div class="context-group"><div class="eyebrow">AVAILABLE CONTEXT</div><div class="context-list"><span>Product Knowledge</span><span>Regulatory Context</span><span>Team Knowledge</span><span>Run events / artifacts</span><span>Environment status</span><span>Catalog Skills</span></div></div>
+    </div>
+    <div class="lifecycle-wide" style="margin-top:15px"><div class="stage"><strong>Открытый экран</strong><small>Определяет вопрос и рамку</small></div><span class="arrow">→</span><div class="stage"><strong>Permissions</strong><small>Ограничивают поиск</small></div><span class="arrow">→</span><div class="stage emph"><strong>Context Builder</strong><small>Знания + Operational Context</small></div><span class="arrow">→</span><div class="stage"><strong>Assistant</strong><small>Рекомендация и ссылки</small></div></div>
+    <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Доступ не наследуется из диалога.</strong> Чат может объяснить требуемый Permission или подготовить draft формы, но команды «выдай доступ», «одобри gate» и «выпусти» не становятся authoritative действиями.</span></div>
+    </section><section id="asst-delegation" aria-labelledby="asst-delegation-title">
+      <div class="section-head"><span class="section-no">03</span><div><h3 id="asst-delegation-title">Skills и интеграция с выбранным оркестратором</h3><p>Глубокая диагностика Run должна поступать от HG SDLC или AI Manager, если они предоставляют такую возможность.</p></div></div>
+      
+    <div class="delegation-diagram" aria-label="Маршрут запроса: чат КОНТУРа передаёт глубокий запрос провайдеру оркестратора">
+      <div class="delegation-block"><div class="eyebrow">UI / IDENTITY</div><strong>КОНТУР Assistant</strong><small>Пользователь, экран, права</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
+      <div class="delegation-block"><div class="eyebrow">ROUTER</div><strong>Выбор Skills</strong><small>Общие knowledge/task навыки или Run диагностика</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
+      <div class="delegation-block main"><div class="eyebrow">PROVIDER CONTRACT</div><strong>HG SDLC / AI Manager</strong><small>Deep Run Assistant · provider-specific tools</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
+      <div class="delegation-block"><div class="eyebrow">RESPONSE</div><strong>Объяснение с evidence</strong><small>Run logs / diff / Plan / Evidence</small></div>
+    </div>
+    <div class="split-2">
+      <div class="pane soft"><h4>Общие Skills КОНТУРа</h4><p>Поиск в Knowledge, объяснение lifecycle, анализ задач по тегам, рекомендации по Flow, подготовка Knowledge Proposal. Skills имеют версии и работают в пределах контекста и прав пользователя.</p></div>
+      <div class="pane blue"><h4>Deep Run Assistant провайдера</h4><p>Например, <code>hg-sdlc-run-diagnostics@version</code> и инструменты <code>get_run_state</code>, <code>get_node_logs</code>, <code>read_git_diff</code>, <code>get_regulatory_plan</code>, <code>get_evidence_report</code>.</p></div>
+    </div>
+    <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>Deep Assistant принадлежит orchestration provider.</strong> КОНТУР предоставляет единый чат, identity и контекст, но не притворяется, что знает внутреннюю структуру любого Flow. Интеграция провайдера подключается только при наличии реального соответствующего контракта.</span></div>
+    </section><section id="asst-example" aria-labelledby="asst-example-title">
+      <div class="section-head"><span class="section-no">04</span><div><h3 id="asst-example-title">Пример: вопрос по Approval Gate</h3><p>Узнать причину можно в чате, но formal approval остаётся отдельным действием в Automation.</p></div></div>
+      
+    <div class="assistant-chat" aria-label="Пример объяснения approval gate">
+      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>Run diagnostics · HG SDLC</strong><small>RUN-912 · BANK-1842 · Approval required</small></div><span class="pill blue" style="margin-left:auto">Provider data</span></div>
+      <div class="chat-thread"><div class="chat-bubble user">Почему мне пришло согласование? Что изменилось после Rework?</div><div class="chat-bubble">По истории RUN-912 первая попытка была возвращена на Rework из-за лишних изменений. Во второй изменён только <code>pom.xml</code>. Требование <code>SEC-DEP-014@3</code> выполнено, compatibility suite прошла 148/148 тестов. Решение остаётся за вами.<span class="source">Пример на синтетических данных: Run events · Git diff · Regulatory Evidence Report</span></div></div>
+      <div class="chat-action"><svg class="ico sm"><use href="#ic-lock"/></svg>Approve, Request Rework и Takeover выполняются в Automation / Run с проверкой identity, Gate и ревизии.</div>
+    </div>
+    <div class="note blue"><svg class="ico"><use href="#ic-info"/></svg><span>Если оркестратор не предоставляет нужный диагностический инструмент или данные закрыты правами, ассистент сообщает об ограничении. Он не должен додумывать журналы, проверки, diff или основания решения.</span></div>
+    </section><section id="asst-contract" aria-labelledby="asst-contract-title">
+      <div class="section-head"><span class="section-no">05</span><div><h3 id="asst-contract-title">Кто за что отвечает и как передаётся запрос</h3><p>Контекстный роутинг должен сохранять права пользователя и прозрачное происхождение ответа.</p></div></div>
+      
+    <div class="contract">
+      <div class="pane soft"><h4><svg class="ico sm"><use href="#ic-layers"/></svg> КОНТУР</h4><ul class="plain-list"><li>Единый UI bubble-чата, переписка и навигация.</li><li>Identity, Product, Team, текущий экран, ссылки на Task / Run / Gate.</li><li>Контроль доступа при сборке Context Supply Chain.</li><li>Общие Skills, рекомендации и открытие профильных экранов.</li></ul></div>
+      <div class="pane blue"><h4><svg class="ico sm"><use href="#ic-flow"/></svg> Оркестратор / Provider</h4><ul class="plain-list"><li>Собственная модель внутреннего Run и workflow states.</li><li>Provider-specific Skills, MCP/tools, чтение workspace.</li><li>Диагностика node logs, artifacts, checkpoints и regulatory evidence.</li><li>Ответ с provenance без изменения Gate decision из свободного текста.</li></ul></div>
+    </div>
+    <pre class="mini-code" style="margin-top:13px"><b>ASSISTANT INTEGRATION CONTEXT</b>
+user_identity: current user / effective permissions
+surface: capability.configuration | automation.run
+product_id, team_id, run_id, gate_id
+provider: HG SDLC | AI Manager
+requested_capability: run_diagnostics
+response: message + source references + available actions</pre>
+    <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Чат не authoritative API.</strong> Свободное сообщение «согласен» не равно Approval. Любое формальное действие проходит специальный UI-control и сервис Gate/Run с проверкой владельца, версии и разрешённого scope.</span></div>
+    </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span></span><span></span><span class="current"></span><span></span></span>Общий Assistant в КОНТУРе; глубокая диагностика — у выбранного orchestration provider.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn" href="#/knowledge">Предыдущая тема</a><a class="btn primary" href="#/capability">Следующая тема <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+
+<main class="main-content info-page" id="kontur-page-capability" data-page="capability" aria-labelledby="capability-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Trusted Capability</span><span class="chapter-count">06 / 06</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">06 / TRUSTED AUTONOMY · RELEASE · PRODUCTION</div><h2 id="capability-title">Что такое <em>Trusted Capability</em></h2></div><div class="article-head-right"><span class="article-count">06 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout">
+<div class="article-scroll">
+        <div class="article-lead"><div class="eyebrow">ГЛАВНЫЙ ОБЪЕКТ ДОВЕРИЯ</div><h3>Выпускается не агент, а проверенный способ работы</h3><p>Trusted Capability — релиз конкретной версии Flow или manager-конфигурации для определённого тега задач и заданных технических границ. Сначала команда работает в Supervised режиме, затем фиксирует snapshot, проверяет его в UAT и явно принимает риск. Production исполняет только опубликованный snapshot.</p></div>
+        <section id="cap-meaning" aria-labelledby="cap-meaning-title">
+      <div class="section-head"><span class="section-no">01</span><div><h3 id="cap-meaning-title">Что такое Trusted Capability</h3><p>Объект доверия — конкретная способность решать определённый вид задач в ограниченном scope.</p></div></div>
+      
+    <div class="pane soft" style="padding:23px"><div class="eyebrow">НЕ АГЕНТ И НЕ ВЕСЬ TEAM SPACE</div><h4 style="font-size:18px;margin-top:9px">Dependency Update · <code>dep-update</code></h4><p>Логическая Capability связывает <strong>Product</strong>, тег класса задач, рабочий Flow и историю качества. Доверенной автономностью обладает не «любой coding agent», а <strong>зафиксированный релиз этой Capability</strong> с точными версиями и границами.</p>
+      <div class="context-list" style="margin-top:13px"><span>Product: Копилка</span><span>Tag: dep-update</span><span>Flow: Dependency Update v1.4</span><span>Runtime: HG SDLC</span><span>Scope: approved repositories</span></div></div>
+    <div class="split-2" style="margin-top:13px"><div class="pane"><h4>Capability — развиваемая сущность</h4><p>Существует в командном рабочем пространстве, имеет конфигурацию, историю запусков, статистику, версии и ссылку на опубликованные релизы.</p></div><div class="pane"><h4>Trusted Capability Release — неизменяемый пакет</h4><p>Фиксирует проверенный способ исполнения. Production использует именно Release Snapshot, а не текущий Draft и не произвольно выбранные новые Skills.</p></div></div>
+    <div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Тег сам по себе не даёт автономности.</strong> Одинаковый тег может встречаться на разных Task Boards продукта; маршрутизация возможна только если существует активный доверенный релиз и задача находится в разрешённом scope.</span></div>
+    </section><section id="cap-development" aria-labelledby="cap-development-title">
+      <div class="section-head"><span class="section-no">02</span><div><h3 id="cap-development-title">Как накапливается доверие</h3><p>Product Engineer настраивает Flow и сначала запускает реальные задачи под наблюдением человека.</p></div></div>
+      
+    <div class="lifecycle-wide"><div class="stage"><strong>Task tag</strong><small>Повторяющийся вид работы</small></div><span class="arrow">→</span><div class="stage"><strong>Выбор Flow</strong><small>Копия шаблона из каталога</small></div><span class="arrow">→</span><div class="stage"><strong>Configuration</strong><small>Узлы · Skills · Subagents</small></div><span class="arrow">→</span><div class="stage emph"><strong>Supervised Runs</strong><small>Input · Approval · Rework · Takeover</small></div><span class="arrow">→</span><div class="stage"><strong>Run History</strong><small>Evidence для версии</small></div></div>
+    <div class="trust-meter" style="margin-top:14px"><div class="trust-metric"><strong>42</strong><span>Started Runs</span><small>текущая версия</small></div><div class="trust-metric"><strong>38</strong><span>Accepted</span><small>проверенные задачи</small></div><div class="trust-metric"><strong>3</strong><span>Rework</span><small>повторные попытки</small></div><div class="trust-metric"><strong>1</strong><span>Takeover</span><small>передача человеку</small></div></div>
+    <div class="note warning"><svg class="ico"><use href="#ic-info"/></svg><span>Показатели выше — иллюстрация, не реальные данные. При изменении Flow, модели, Skills или Policies прошлые Runs сохраняются, но статистика предыдущей конфигурации не считается статистикой новой версии.</span></div>
+    </section><section id="cap-snapshot" aria-labelledby="cap-snapshot-title">
+      <div class="section-head"><span class="section-no">03</span><div><h3 id="cap-snapshot-title">Что именно релизится</h3><p>Release Snapshot сохраняет точный набор зависимостей, scope и доказательств.</p></div></div>
+      
+    <div class="package-box"><div class="package-head"><div><small>IMMUTABLE TRUSTED CAPABILITY RELEASE</small><strong>Dependency Update · Release v1.4</strong></div><span class="pill ink"><svg class="ico sm"><use href="#ic-lock"/></svg>Frozen snapshot</span></div>
+      <div class="snapshot-grid" style="padding:16px"><div class="snapshot-item"><svg class="ico sm"><use href="#ic-layers"/></svg>Product + Task tag</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-flow"/></svg>Flow + nodes revision</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-bot"/></svg>Agents + Skills + Subagents</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-sliders"/></svg>Model + token limits</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-network"/></svg>Knowledge versions</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-shield"/></svg>Policy Packages</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-server"/></svg>Runtime + Environment</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-git"/></svg>Resource bindings / scope</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-history"/></svg>Run History evidence</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-clipboard"/></svg>Optional Benchmark</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-check"/></svg>UAT results</div><div class="snapshot-item"><svg class="ico sm"><use href="#ic-file"/></svg>Risk decision</div></div></div>
+    <div class="note blue"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Неизменяемость — принцип доверия.</strong> Каждый production Run получает версии из выпущенного snapshot. Замена модели, Requirement, Skill или runtime не происходит незаметно; для значимого изменения нужен новый кандидат на выпуск.</span></div>
+    </section><section id="cap-release" aria-labelledby="cap-release-title">
+      <div class="section-head"><span class="section-no">04</span><div><h3 id="cap-release-title">Путь к автономному выпуску: UAT и принятие риска</h3><p>Benchmark необязателен, а UAT исполняет ровно тот snapshot, который затем попадёт в production.</p></div></div>
+      
+    <div class="lifecycle-wide"><div class="stage"><strong>Run History</strong><small>Evidence текущей версии</small></div><span class="arrow">→</span><div class="stage"><strong>Freeze</strong><small>Release Snapshot</small></div><span class="arrow">→</span><div class="stage emph"><strong>UAT</strong><small>Тесты / корзина · без Gates</small></div><span class="arrow">→</span><div class="stage"><strong>Risk Decision</strong><small>Ответственный принимает риски</small></div><span class="arrow">→</span><div class="stage"><strong>Production</strong><small>Promotion того же snapshot</small></div></div>
+    <div class="split-2" style="margin-top:15px"><div class="pane soft"><h4>UAT без Human Gates</h4><p>Автоматически эмулируются тестовые сценарии и тестовая корзина, если она существует. Проверки фиксируются для той же версии Release Snapshot. Не тестируется один пакет с последующим выпуском другого.</p></div><div class="pane blue"><h4>Явное принятие риска</h4><p>Принимающий субъект видит UAT, историю, Regulatory Evidence, scope, необязательный Benchmark и ставит явную отметку с комментарием. <strong>Нет корзины — «тестовой корзины нет».</strong> Менее 100 завершённых прогонов — высокий риск из-за малой статистики.</p></div></div>
+    <div class="note warning"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Benchmark optional.</strong> Успешный Benchmark не выпускает capability автоматически. Требуются freeze, UAT и явная фаза Risk Acceptance; в текущей демонстрации они моделируются, а не выполняются на реальных внешних системах.</span></div>
+    </section><section id="cap-production" aria-labelledby="cap-production-title">
+      <div class="section-head"><span class="section-no">05</span><div><h3 id="cap-production-title">Как работает доверенная автономность в Production</h3><p>Released capability получает подходящие задачи и исполняет их без штатных Human Gates.</p></div></div>
+      
+    <div class="pipeline-scroll"><div class="pipeline"><div class="pipeline-node"><div class="eyebrow">TASK BOARDS</div><strong>Разные команды / доски</strong><small>Задачи одного Product</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div><div class="pipeline-node system"><div class="eyebrow">MATCH</div><strong>tag: dep-update</strong><small>active release + allowed scope</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div><div class="pipeline-node dark"><div class="eyebrow">PRODUCTION RUN</div><strong>Released Snapshot</strong><small>Автоматически · без Gates</small></div></div></div>
+    <div class="split-2" style="margin-top:14px"><div class="pane"><h4>Роутинг задач</h4><p>Задачи с тегом <code>dep-update</code> могут приходить из разных Task Boards одного продукта. Это не расширяет видимость: люди видят только свои командные доски и Runs, а исполняемый scope релиза остаётся неизменным.</p></div><div class="pane"><h4>Мониторинг и реакция на исключения</h4><p>Платформа отслеживает accepted/failed, latency, cost, token use, Policy Verification и здоровье зависимостей. Ошибки, отзыв политик и нарушения границ приводят к оповещениям, остановке новых Runs или приостановке capability.</p></div></div>
+    <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>«Эмулировать продакшн»</strong> — действие демонстрационной версии. Оно показывает автономное прохождение подходящих задач без Input/Approval, но не означает фактического исполнения инженерных изменений в Git и CI.</span></div>
+    </section><section id="cap-migration" aria-labelledby="cap-migration-title">
+      <div class="section-head"><span class="section-no">06</span><div><h3 id="cap-migration-title">Версии, миграция политик и отзыв доверия</h3><p>Один релиз не переписывается. Для изменившегося поведения создаётся новая версия capability.</p></div></div>
+      
+    <div class="pane soft"><div class="eyebrow">EXAMPLE · POLICY UPDATE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Release v1.4</strong><small>IS-retail-backend@7 · active</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Impact analysis</strong><small>Новая политика @8 затрагивает capability</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Release v1.5</strong><small>Новая оценка · UAT · риск</small></div></div></div>
+    <div class="status-rail"><span class="active">ACTIVE</span><span>MIGRATION REQUIRED</span><span>SUSPENDED</span><span>REVOKED</span><span>SUPERSEDED</span></div>
+    <div class="work-steps"><div class="work-step"><span class="num">1</span><div><strong>Изменился Policy Package</strong><p>КОНТУР находит затронутые репозитории, команды и релизы по dependency graph.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Создаётся новая версия</strong><p>Копируется выпущенная конфигурация; Policy @7 → @8 без изменения предыдущего snapshot.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Переоценка</strong><p>Применимые тесты, optional Benchmark, UAT того же snapshot и Risk Decision.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Замена или приостановка</strong><p>После нового релиза прежний становится Superseded. При Withdrawn/Revoked приём новых автономных задач может блокироваться.</p></div></div></div>
+    <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Хорошая статистика старой версии не доказывает новую.</strong> Она остаётся контекстом для решения, но изменение политики, модели или runtime должно быть проверено отдельно. Новое поведение никогда не подменяет опубликованный snapshot.</span></div>
+    </section>
+      </div>
+    </div>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span></span><span></span><span></span><span class="current"></span></span>Автономность ограничена тегом, Product, Permissions и immutable Release Snapshot.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn" href="#/assistant">Предыдущая тема</a><a class="btn primary" href="#/">Все материалы <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  const titles={home:'Как устроена платформа',regulator:'Процесс регулятора',flow:'Политика во Flow',sandbox:'Sandbox и setup',knowledge:'Управление знаниями',assistant:'Контекстный ассистент',capability:'Trusted Capability'};
+  const routes=Object.keys(titles);
+  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const pages=[...document.querySelectorAll('[data-page]')];
+  const topLinks=[...document.querySelectorAll('[data-page-link]')];
+  const subsectionLinks=[...document.querySelectorAll('[data-section-link]')];
+  const groups=[...document.querySelectorAll('.side-group')];
+  const crumb=document.getElementById('page-breadcrumb');
+  const menuButton=document.getElementById('kontur-menu-btn');
+  const backdrop=document.getElementById('kontur-nav-backdrop');
+  const side=document.getElementById('kontur-sidebar');
+  let active='';
+
+  function routeFromHash(){
+    const parts=location.hash.replace(/^#\/?/,'').split(/[/?#]/).filter(Boolean);
+    const route=routes.includes(parts[0])?parts[0]:'home';
+    return {route,section:route==='home'?'':parts[1]||''};
+  }
+  function showGroup(group,show){
+    const target=group?.querySelector('.side-subnav');
+    const toggle=group?.querySelector('.side-toggle');
+    if(!target||!toggle)return;
+    target.hidden=!show;
+    group.classList.toggle('expanded',show);
+    toggle.setAttribute('aria-expanded',String(show));
+    const label=group.querySelector('.side-title')?.textContent||'раздел';
+    toggle.setAttribute('aria-label',(show?'Скрыть подразделы: ':'Показать подразделы: ')+label);
+  }
+  function closeMenu(restoreFocus=false){
+    if(!document.body.classList.contains('nav-open'))return;
+    document.body.classList.remove('nav-open');
+    backdrop.hidden=true;
+    menuButton?.setAttribute('aria-expanded','false');
+    menuButton?.setAttribute('aria-label','Открыть боковое меню');
+    if(restoreFocus) menuButton?.focus();
+  }
+  function openMenu(){
+    document.body.classList.add('nav-open');
+    backdrop.hidden=false;
+    menuButton?.setAttribute('aria-expanded','true');
+    menuButton?.setAttribute('aria-label','Закрыть боковое меню');
+    side?.querySelector('.side-item.active')?.scrollIntoView({block:'nearest'});
+    side?.querySelector('.side-item.active')?.focus({preventScroll:true});
+  }
+  function setSubsectionSelected(route,id){
+    subsectionLinks.forEach(link=>{
+      const selected=link.dataset.sectionPage===route && link.dataset.sectionLink===id;
+      link.classList.toggle('active',selected);
+      if(selected)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');
+    });
+  }
+  function activeSection(page){
+    const sections=[...page.querySelectorAll('.article-scroll section[id]')];
+    if(!sections.length)return null;
+    let closest=sections[0];
+    for(const section of sections){if(section.getBoundingClientRect().top<=window.innerHeight*.38)closest=section;}
+    if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-12)closest=sections[sections.length-1];
+    return closest.id;
+  }
+  function syncSection(){
+    if(active==='home')return;
+    const page=document.querySelector('[data-page="'+active+'"]');
+    if(!page||page.hidden)return;
+    const id=activeSection(page);
+    if(id)setSubsectionSelected(active,id);
+  }
+  function sectionIsValid(route,id){
+    if(!id)return false;
+    return subsectionLinks.some(link=>link.dataset.sectionPage===route && link.dataset.sectionLink===id);
+  }
+  function scrollToSection(route,id){
+    const page=document.querySelector('[data-page="'+route+'"]');
+    if(!page||page.hidden||!sectionIsValid(route,id))return false;
+    const target=page.querySelector('[id="'+id+'"]');
+    if(!target)return false;
+    target.scrollIntoView({behavior:'instant',block:'start'});
+    setSubsectionSelected(route,id);
+    return true;
+  }
+  function display(force=false){
+    const {route,section}=routeFromHash();
+    const changed=route!==active;
+    active=route;
+    pages.forEach(page=>{page.hidden=page.dataset.page!==route;});
+    topLinks.forEach(link=>{
+      const selected=link.dataset.pageLink===route;
+      link.classList.toggle('active',selected);
+      if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+    });
+    if(changed){groups.forEach(group=>showGroup(group,group.dataset.group===route));}
+    if(crumb)crumb.textContent=titles[route];
+    document.title='КОНТУР · '+titles[route];
+    closeMenu();
+    if(section && sectionIsValid(route,section)){
+      setSubsectionSelected(route,section);
+      // Run after hidden pages are revealed and their layouts are computed.
+      requestAnimationFrame(()=>{scrollToSection(route,section);});
+    }else{
+      if(changed||force)window.scrollTo({top:0,behavior:'instant'});
+      if(route==='home')setSubsectionSelected('',null);else syncSection();
+    }
+  }
+  menuButton?.addEventListener('click',()=>{
+    document.body.classList.contains('nav-open')?closeMenu(true):openMenu();
+  });
+  backdrop?.addEventListener('click',()=>closeMenu(true));
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMenu(true);});
+  document.querySelectorAll('[data-toggle-group]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const group=button.closest('.side-group');
+      showGroup(group,!group.classList.contains('expanded'));
+    });
+  });
+  document.addEventListener('click',event=>{
+    const link=event.target.closest('.side-subitem, .side-item');
+    if(!link)return;
+    const dest=link.getAttribute('href');
+    if(dest===location.hash){
+      event.preventDefault();
+      if(link.classList.contains('side-subitem'))scrollToSection(link.dataset.sectionPage,link.dataset.sectionLink);
+      else display(true);
+      closeMenu();
+    }
+  });
+  window.addEventListener('hashchange',()=>display());
+  let scrollPending=false;
+  window.addEventListener('scroll',()=>{
+    if(scrollPending)return;
+    scrollPending=true;
+    requestAnimationFrame(()=>{scrollPending=false;syncSection();});
+  },{passive:true});
+  window.addEventListener('resize',()=>{if(window.innerWidth>780)closeMenu();},{passive:true});
+  window.KonturInfoPages=Object.freeze({
+    open(name,subsection){
+      if(!titles[name])return false;
+      const path='#/'+(name==='home'?'':name+(subsection&&sectionIsValid(name,subsection)?'/'+subsection:''));
+      if(location.hash===path)display(true);else location.hash=path;
+      return true;
+    },
+    current(){return active;},
+    home(){location.hash='#/';},
+    sections(name){return subsectionLinks.filter(link=>link.dataset.sectionPage===name).map(link=>({id:link.dataset.sectionLink,title:link.textContent.trim()}));}
+  });
+  display(true);
+})();
+</script>
+</body>
+</html>
