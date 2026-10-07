@@ -1,1 +1,37 @@
-{"name":"kontur-teamspace","version":"6.0.0-prototype.1","private":true,"type":"module","description":"КОНТУР Team Space: автономный локальный React + Node.js mock-прототип","engines":{"node":">=22.16.0"},"scripts":{"start":"node dist/server.mjs","dev":"node apps/server/src/http/server.mjs","build":"node scripts/build.mjs","typecheck":"node scripts/typecheck.mjs","test":"node --test tests/*.test.mjs","verify":"node scripts/verify.mjs"}}
+{
+  "name": "kontur-react-node",
+  "version": "1.5.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env server/dev.mjs",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/runtime.test.mjs tests/domain.test.mjs tests/api.test.mjs tests/setup.test.mjs tests/watch.test.mjs && node tests/render.cjs"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "lucide-react": "1.31.0",
+    "radix-ui": "1.6.7",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.6.0",
+    "sonner": "2.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.2.1",
+    "tailwindcss": "4.2.1",
+    "tw-animate-css": "1.4.0",
+    "@vitejs/plugin-react": "6.0.2",
+    "vite": "8.0.13",
+    "typescript": "5.9.3",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3"
+  }
+}

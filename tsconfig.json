@@ -1,1 +1,21 @@
-{"compilerOptions":{"target":"ES2022","lib":["ES2022","DOM","DOM.Iterable"],"module":"ESNext","moduleResolution":"Bundler","jsx":"react-jsx","strict":true,"skipLibCheck":true,"allowJs":true,"checkJs":false,"noEmit":true,"esModuleInterop":true},"include":["apps/web/src","packages/contracts"]}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "paths": {"@/*": ["./*"]},
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src", "components", "hooks", "lib", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

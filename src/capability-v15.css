@@ -1,0 +1,58 @@
+/* Capability reports, release decisions, and autonomous production progress. */
+.workflow-node-icon.input{background:#fbf2e8;color:#b79360}
+.flow-version-note{flex:1;min-width:230px;font-size:11px;line-height:1.6;color:#849a72}
+.capability-task-report{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.capability-task-report>div{display:flex;flex-direction:column;gap:10px;padding:22px;border:1px solid #dfe9d5;background:#fff;border-radius:12px}
+.capability-task-report>div:first-child{background:#f4f8ed}
+.capability-task-report span{font-size:12px;color:#849872}
+.capability-task-report strong{font-size:34px;font-weight:600;line-height:1.1;letter-spacing:-1px;color:#65894b}
+.capability-task-report small{font-size:11px;line-height:1.5;color:#97a68a}
+.capability-report-explanation{margin:0;max-width:1080px;font-size:11px;line-height:1.8;color:#8b9b7d}
+.capability-risk-section{border-top:1px solid #e1e9da;margin-top:26px;padding-top:25px}
+.capability-risk-list{display:grid;gap:14px;margin:20px 0}
+.capability-risk-list>div{display:flex;align-items:flex-start;gap:11px}
+.capability-risk-list svg{color:#b09768;flex:0 0 17px;margin-top:3px}
+.capability-risk-list strong{font-size:12px;font-weight:550;color:#879572}
+.capability-risk-list p{margin:4px 0 0;font-size:11px;line-height:1.8;color:#96a086}
+.capability-risk-acceptance{display:flex;gap:13px;align-items:flex-start;flex-wrap:wrap;border:1px solid #e9dfc7;background:#fcf8ee;border-radius:10px;padding:18px;color:#a28c61}
+.capability-risk-acceptance>div{flex:1;min-width:180px}
+.capability-risk-acceptance strong{font-size:12px;font-weight:550}
+.capability-risk-acceptance p{font-size:11px;line-height:1.7;color:#a29c80;margin:5px 0 0}
+.capability-explicit-consent{display:flex;align-items:flex-start;gap:12px;cursor:pointer;border:1px solid #dce8d0;background:#f4f8ee;border-radius:9px;padding:18px;margin:20px 0}
+.capability-explicit-consent input{flex:0 0 17px;width:17px;height:17px;accent-color:#6e924f;margin:2px 0 0}
+.capability-explicit-consent strong{font-size:12px;font-weight:550;line-height:1.7;color:#6f8a59}
+.capability-explicit-consent small{display:block;font-size:11px;line-height:1.8;color:#91a57c;margin-top:7px}
+.capability-uat-report{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:24px}
+.capability-uat-report>div{display:flex;align-items:flex-start;flex-direction:column;gap:10px;border:1px solid #deead0;background:#f7faF2;border-radius:11px;padding:20px;color:#7c9b5e}
+.capability-uat-report h3{font-size:12px;font-weight:550}
+.capability-uat-report strong{font-size:23px;color:#6d904f;line-height:1.3}
+.capability-uat-report>div p{font-size:11px;line-height:1.8;color:#94a880;margin:0}
+.capability-uat-report .capability-uat-note{grid-column:1/-1;font-size:11px;line-height:1.7;color:#97a78a;margin:0}
+.production-emulation{margin-top:25px}
+.production-emulation-heading{display:flex;align-items:center;gap:16px}
+.production-emulation-heading>div{flex:1}
+.production-emulation-heading h3{font-size:17px;color:#719153}
+.production-emulation-heading p{font-size:11px;line-height:1.7;color:#98aa88;margin:5px 0 0}
+.production-agent{display:grid;place-items:center;flex:0 0 63px;width:63px;height:63px;border-radius:18px;background:#f2f8e9;border:1px solid #dbeac8;color:#7ba454;animation:production-agent-pulse 1.6s ease-in-out infinite}
+.production-spinner{color:#91ad73;animation:production-spin 1.25s linear infinite}
+.production-execution-steps{display:flex;gap:8px;justify-content:space-between;margin:25px 0 16px}
+.production-execution-steps>span{display:flex;align-items:center;gap:7px;font-size:11px;color:#a7b49b}
+.production-execution-steps i{display:grid;place-items:center;width:23px;height:23px;border:1px solid #e1ead7;border-radius:50%;font-size:10px;font-style:normal;background:#fff}
+.production-execution-steps .active{color:#759953}
+.production-execution-steps .active i{border-color:#a3c480;background:#f2f8e8;box-shadow:0 0 0 4px #aac78516}
+.production-execution-steps .complete{color:#759953}
+.production-execution-steps .complete i{background:#eaf4dd;border-color:#c4dca7}
+.production-progress-track{height:5px;border-radius:10px;background:#edf2e7;overflow:hidden}
+.production-progress-track>span{display:block;height:100%;background:linear-gradient(90deg,#b5cf95,#83a861);border-radius:10px;transition:width .35s ease}
+.production-task-queue{display:grid;gap:9px;margin-top:22px}
+.production-task-queue>div{display:flex;align-items:center;gap:10px;min-height:49px;border:1px solid #e2eadb;border-radius:8px;padding:11px 13px;background:#fcfdf9;transition:background .25s,border-color .25s}
+.production-task-queue>div.finished{background:#f5f9ed;border-color:#dce8ce}
+.production-task-status{display:flex;color:#8caa6d}
+.production-task-queue strong{flex:1;font-size:11px;line-height:1.6;font-weight:500;color:#869774}
+.production-task-queue small{font-size:10px;color:#9cab8d;white-space:nowrap}
+.production-task-queue .finished small{color:#7e9e5f}
+@keyframes production-agent-pulse{0%,100%{box-shadow:0 0 0 0 #b6ce951d}50%{box-shadow:0 0 0 8px #b6ce951d}}
+@keyframes production-spin{to{transform:rotate(360deg)}}
+@media(max-width:1100px){.capability-task-report{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.capability-task-report{gap:9px}.capability-task-report>div{padding:17px}.capability-task-report strong{font-size:28px}.capability-uat-report{grid-template-columns:1fr}.production-execution-steps{flex-direction:column;gap:12px}.production-agent{flex-basis:49px;width:49px;height:49px;border-radius:14px}.production-task-queue>div{flex-wrap:wrap}.production-task-queue strong{min-width:160px}.production-task-queue small{margin-left:26px}.production-emulation-heading h3{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.production-agent,.production-spinner{animation:none}.production-progress-track>span,.production-task-queue>div{transition:none}}
