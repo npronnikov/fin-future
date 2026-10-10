@@ -124,7 +124,7 @@ Do not prepopulate product/team/workspace data in `createEmptyState`; keep onboa
 
 - [ ] **Step 5: Scan for stale user-visible demo names**
 
-Run: `rg -n "Копилка|Savings Core|bank/savings" components lib public tests`  
+Run: `rg -n "старое имя продукта|устаревшая система|устаревший репозиторий" components lib public tests`
 Expected: no user-visible populated-demo references remain; any intentional legacy migration fixture is explicitly named and isolated.
 
 - [ ] **Step 6: Run domain and render regression suites**
@@ -216,7 +216,7 @@ Move the attached demo's Authoring → Control Plane → Graph/Search → Runtim
 
 - [ ] **Step 3: Replace old demo examples**
 
-Replace «Копилка», savings systems, repositories, tasks, screenshots/copy, and diagrams with the retail/corporate accreditive example while retaining the existing trusted-autonomy material.
+Replace the previous demo product, systems, repositories, tasks, screenshots/copy, and diagrams with the retail/corporate accreditive example while retaining the existing trusted-autonomy material.
 
 - [ ] **Step 4: Support direct chapter links**
 

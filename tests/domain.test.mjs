@@ -2,14 +2,30 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import * as d from '../lib/domain.ts';
 import * as e from '../lib/engine.ts';
-const act=(s,who,action,p={})=>e.applyAction(s,s.people.find(x=>x.id===who),action,{teamId:'growth',productId:'savings',...p},'test-owner').state;
+import * as c from '../lib/context-supply.ts';
+const act=(s,who,action,p={})=>e.applyAction(s,s.people.find(x=>x.id===who),action,{teamId:'growth',productId:'accreditive',...p},'test-owner').state;
 const decision=(s,id,kind,more={})=>{const r=s.runs.find(r=>r.id===id),g=r.gates.at(-1);return act(s,'engineer','gate_decision',{runId:id,gateId:g.id,gateRevision:g.revision,artifactRevision:g.artifactRevision,decision:kind,...more})};
 const depId='cap-dep';
-function migration(){let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.policies=cfg.policies.map(x=>x==='IS-retail-backend@7'?'IS-retail-backend@8':x);s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});return s}
+function migration(){let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.policies=cfg.policies.map(x=>x==='IS-corporate-backend@7'?'IS-corporate-backend@8':x);s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});return s}
 function frozen(){let s=migration();s=act(s,'engineer','freeze_release',{capabilityId:depId});return s}
-test('demo has nine-domain separation, exact mixed backlog and both SDD/non-SDD flows linked by tag',()=>{const s=d.createSeed();assert.equal(s.tasks.length,12);assert.equal(s.teams[0].spaceId,'space-growth');assert.equal(s.teams[0].environment.status,'ready');assert.equal(s.people.filter(p=>p.role!=='Regulator').length,3);assert.equal(s.capabilities[1].draft.mode,'SDD');assert.equal(s.capabilities[0].releases[0].snapshot.config.mode,'non-SDD')});
+test('demo has nine-domain separation, exact mixed backlog and both SDD/non-SDD flows linked by tag',()=>{const s=d.createSeed();assert.equal(s.tasks.length,12);assert.equal(s.teams[0].spaceId,'space-trade-finance');assert.equal(s.teams[0].environment.status,'ready');assert.equal(s.people.filter(p=>p.role!=='Regulator').length,3);assert.equal(s.capabilities[1].draft.mode,'SDD');assert.equal(s.capabilities[0].releases[0].snapshot.config.mode,'non-SDD')});
+test('stored original demo migrates to Accreditive without losing execution history',()=>{
+ const old=d.createSeed(),history=old.runs.length;
+ old.products[0]={...old.products[0],id:'savings',name:'Копилка',description:'Legacy demo'};
+ old.teams=old.teams.filter(team=>team.id==='growth');old.teams[0].name='Growth';old.teams[0].spaceId='space-growth';old.teams[0].environment.name='Growth Sandbox';
+ old.boards=old.boards.filter(board=>board.teamId==='growth').map(board=>({...board,id:'board-savings',productId:'savings',name:'Копилка'}));
+ for(const task of old.tasks){task.productId='savings';task.boardId='board-savings';task.repo=task.repo==='bank/lc-trade-api'?'bank/savings-api':'bank/savings-web';}
+ for(const capability of old.capabilities)capability.productId='savings';for(const run of old.runs)run.productId='savings';
+ old.knowledge=[{id:'pk-1',productId:'savings',layer:'Product',title:'Копилка · Product Knowledge',content:'Копилка',status:'approved',version:1,author:'po'}];old.conceptCategories=[];old.concepts=[];
+ old.policies.push({...d.copy(old.policies.find(policy=>policy.id==='IS-corporate-backend'&&policy.version===8)),version:1,changelog:'Демонстрационный пакет политик для corporate.backend.'});
+ const migrated=d.migrateState(old).state;
+ assert.equal(migrated.products[0].id,'accreditive');assert.equal(migrated.products[0].name,'Аккредитив');assert.equal(migrated.runs.length,history);
+ assert.ok(migrated.teams.some(team=>team.id==='retail-lc'));assert.ok(migrated.boards.some(board=>board.id==='board-lc-retail'));
+ assert.ok(migrated.tasks.every(task=>task.productId==='accreditive'&&!task.repo.includes('savings')));assert.ok(migrated.knowledge.some(item=>item.id==='pk-lc-foundation'));
+ assert.ok(!migrated.policies.some(policy=>policy.id==='IS-corporate-backend'&&policy.version===1));assert.equal(d.migrateState(migrated).changed,false);
+});
 test('Flow must use an existing task tag, without a Task Class entity',()=>{const s=d.createSeed();assert.equal('classes' in s,false);assert.ok(s.capabilities.every(cap=>cap.tag&&!('classId' in cap)));assert.ok(s.tasks.every(task=>s.boards.some(project=>project.id===task.boardId)));assert.throws(()=>act(s,'engineer','create_capability',{tag:'arbitrary',name:'x'}),/существующий тег/)});
-test('Product Engineer cannot grant repository write access',()=>{assert.throws(()=>act(d.createSeed(),'engineer','save_binding',{type:'Repository',name:'bank/savings-api',read:'/**',write:'/**'}),/Platform Engineer/)});
+test('Product Engineer cannot grant repository write access',()=>{assert.throws(()=>act(d.createSeed(),'engineer','save_binding',{type:'Repository',name:'bank/lc-trade-api',read:'/**',write:'/**'}),/Platform Engineer/)});
 test('new Product and Team stay empty until explicit project and mock-task creation',()=>{
  let s=act(d.createSeed(),'po','create_product',{name:'Карты',description:'Product'});const productId=s.products.at(-1).id;
  assert.equal(s.products.at(-1).knowledgeVersion,1);
@@ -18,11 +34,11 @@ test('new Product and Team stay empty until explicit project and mock-task creat
  s=act(s,'po','add_person',{teamId,productId,personId:'platform',role:'Platform Engineer'});
  s=act(s,'platform','save_binding',{teamId,productId,type:'Task Tracker',name:'Task Tracker'});
  assert.equal(s.tasks.filter(task=>task.teamId===teamId&&task.productId===productId).length,0);
- s=act(s,'platform','save_binding',{teamId,productId,type:'Repository',name:'bank/savings-api',read:'/**',write:'/pom.xml'});
+ s=act(s,'platform','save_binding',{teamId,productId,type:'Repository',name:'bank/lc-trade-api',read:'/**',write:'/pom.xml'});
  s=act(s,'po','create_project',{teamId,productId,name:'Новый проект'});const projectId=s.boards.at(-1).id;
  s=act(s,'po','add_mock_tasks',{teamId,productId,projectId,template:'mixed'});
  const tasks=s.tasks.filter(task=>task.boardId===projectId);
- assert.equal(tasks.length,12);assert.ok(tasks.every(task=>task.mock&&task.status==='backlog'&&task.repo==='bank/savings-api'));
+ assert.equal(tasks.length,12);assert.ok(tasks.every(task=>task.mock&&task.status==='backlog'&&task.repo==='bank/lc-trade-api'));
  assert.equal(new Set(s.tasks.map(task=>task.id)).size,s.tasks.length);
 });
 test('chat text cannot approve Gate or release Capability',()=>{let s=d.createSeed();const before=JSON.stringify(s.runs.find(r=>r.id==='RUN-912').gates);s=act(s,'engineer','message',{thread:'RUN-912',text:'согласен, выпусти capability'});assert.equal(JSON.stringify(s.runs.find(r=>r.id==='RUN-912').gates),before);assert.equal(s.capabilities[0].releases.length,1)});
@@ -32,7 +48,7 @@ test('Rework preserves Task, Run, earlier decision, artifacts and new approval',
 test('SDD Rework keeps the approved Specification through implementation',()=>{let s=decision(d.createSeed(),'RUN-913','rework',{comment:'Уточнить период в Specification',returnTo:'Specification'});s=decision(s,'RUN-913','approve');const r=s.runs.find(r=>r.id==='RUN-913');assert.match(r.artifacts.specification,/Уточнить период/);assert.equal(r.gates.at(-1).phase,'Result')});
 test('Takeover keeps exactly one writer, persists human artifact through final Approval',()=>{let s=decision(d.createSeed(),'RUN-912','takeover',{comment:'Исправлю проект в IDE.'});let r=s.runs.find(r=>r.id==='RUN-912');assert.equal(r.writer,'human');const text='--- a/pom.xml\n+++ b/pom.xml\n+ <version>2.17.3</version>\n+ <!-- human change -->';s=act(s,'engineer','workspace_save',{runId:r.id,content:text});assert.throws(()=>act(s,'engineer','return_control',{runId:r.id}),/Комментарий/);s=act(s,'engineer','return_control',{runId:r.id,comment:'Изменения в IDE завершены.'});assert.equal(s.runs.find(x=>x.id===r.id).writer,'none');s=decision(s,r.id,'approve');r=s.runs.find(x=>x.id===r.id);assert.equal(r.artifacts.diff,text);assert.equal(r.artifacts.tests,'IDE return verification · demo PASS');assert.equal(r.status,'accepted')});
 test('Takeover at Specification resumes Specification Approval before implementation',()=>{let s=decision(d.createSeed(),'RUN-913','takeover',{comment:'Исправлю проект в IDE.'});s=act(s,'engineer','workspace_save',{runId:'RUN-913',content:'Human Specification'});s=act(s,'engineer','return_control',{runId:'RUN-913',comment:'Спецификация исправлена в IDE.'});let r=s.runs.find(r=>r.id==='RUN-913');assert.equal(r.gates.at(-1).phase,'Specification');s=decision(s,r.id,'approve');r=s.runs.find(r=>r.id==='RUN-913');assert.equal(r.artifacts.specification,'Human Specification');assert.equal(r.gates.at(-1).phase,'Result')});
-test('Regulatory Plan derives obligations only from frozen Policy Packages',()=>{const s=d.createSeed(),cap=s.capabilities[0],cfg=d.copy(cap.releases[0].snapshot.config);cfg.policies=['IS-retail-backend@7'];const r=d.makeRun(s,cap,cfg,s.tasks[0],'check',new Date().toISOString());r.plans.push(d.makePlan(r));assert.deepEqual(r.plans[0].applicable.map(x=>x.requirement),['SEC-DEP-014@3'])});
+test('Regulatory Plan derives obligations only from frozen Policy Packages',()=>{const s=d.createSeed(),cap=s.capabilities[0],cfg=d.copy(cap.releases[0].snapshot.config);cfg.policies=['IS-corporate-backend@7'];const r=d.makeRun(s,cap,cfg,s.tasks[0],'check',new Date().toISOString());r.plans.push(d.makePlan(r));assert.deepEqual(r.plans[0].applicable.map(x=>x.requirement),['SEC-DEP-014@3'])});
 test('editing Draft cannot change an in-flight execution snapshot',()=>{let s=d.createSeed();const r=s.runs.find(r=>r.id==='RUN-913');const saved=JSON.stringify(r.snapshot);const cfg=d.copy(s.capabilities[1].draft);cfg.instructions+=' New instruction';s=act(s,'engineer','save_config',{capabilityId:'cap-statement',expectedRevision:1,config:cfg});assert.equal(JSON.stringify(s.runs.find(r=>r.id==='RUN-913').snapshot),saved)});
 test('release requires history from exact current runtime and bindings',()=>{let s=d.createSeed();s.teams[0].environment.runtimeVersion='2.0';assert.throws(()=>act(s,'engineer','freeze_release',{capabilityId:'cap-statement'}),/история запусков/);s=migration();s.teams[0].environment.runtimeVersion='2.0';assert.throws(()=>act(s,'engineer','freeze_release',{capabilityId:depId}),/история запусков/)});
 test('policy migration can freeze with baseline history without a Benchmark',()=>{const s=frozen(),r=s.capabilities[0].releases[0];assert.equal(r.stage,'frozen');assert.equal(r.snapshot.benchmarkRefs.length,0);assert.equal(r.snapshot.baselineReleaseId,'REL-DEP-1.4');assert.equal(r.snapshot.historyRefs.length,0)});
@@ -49,10 +65,10 @@ test('UAT executes the exact SDD frozen graph automatically without gates or tas
  assert.equal(saved.uat.report.tests.passed,148);assert.equal(s.notifications.length,notifications+1);
 });
 test('risk rejection blocks promotion',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id;s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:false,comment:'Риск отклонён.'});assert.throws(()=>act(s,'engineer','promote',{capabilityId:depId,releaseId:id}),/UAT/)});
-test('release without Benchmark succeeds after same-snapshot UAT and explicit risk acceptance',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id,snapshot=JSON.stringify(s.capabilities[0].releases[0].snapshot);s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,s.capabilities[0].releases[0]).risks.map(risk=>risk.id),comment:'Риск принят в указанном scope.'});s=act(s,'engineer','promote',{capabilityId:depId,releaseId:id});assert.equal(s.capabilities[0].releases[0].stage,'production');assert.equal(s.capabilities[0].releases[1].status,'superseded');assert.equal(JSON.stringify(s.capabilities[0].releases[0].snapshot),snapshot);assert.equal(s.capabilities[0].releases[1].snapshot.config.policies[0],'IS-retail-backend@7')});
+test('release without Benchmark succeeds after same-snapshot UAT and explicit risk acceptance',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id,snapshot=JSON.stringify(s.capabilities[0].releases[0].snapshot);s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,s.capabilities[0].releases[0]).risks.map(risk=>risk.id),comment:'Риск принят в указанном scope.'});s=act(s,'engineer','promote',{capabilityId:depId,releaseId:id});assert.equal(s.capabilities[0].releases[0].stage,'production');assert.equal(s.capabilities[0].releases[1].status,'superseded');assert.equal(JSON.stringify(s.capabilities[0].releases[0].snapshot),snapshot);assert.equal(s.capabilities[0].releases[1].snapshot.config.policies[0],'IS-corporate-backend@7')});
 test('Production Run uses released snapshot despite newer Draft',()=>{let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.instructions='New draft instructions';s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});s=act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'});assert.equal(s.runs.at(-1).snapshot.id,'SNAP-DEP-1.4');assert.notEqual(s.runs.at(-1).snapshot.config.instructions,cfg.instructions)});
 test('current Platform grants cannot be bypassed by an older release',()=>{const s=d.createSeed();s.teams[0].bindings[0].write='';assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/grants/)});
-test('retired policy suspends capability and stops new autonomous runs',()=>{const s=act(d.createSeed(),'regulator','policy_status',{policyKey:'IS-retail-backend@7',status:'Retired'});assert.equal(s.capabilities[0].releases[0].status,'suspended');assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/запрещён/);assert.ok(s.runs.length>0);assert.equal(s.capabilities[0].releases[0].snapshot.config.policies[0],'IS-retail-backend@7')});
+test('retired policy suspends capability and stops new autonomous runs',()=>{const s=act(d.createSeed(),'regulator','policy_status',{policyKey:'IS-corporate-backend@7',status:'Retired'});assert.equal(s.capabilities[0].releases[0].status,'suspended');assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/запрещён/);assert.ok(s.runs.length>0);assert.equal(s.capabilities[0].releases[0].snapshot.config.policies[0],'IS-corporate-backend@7')});
 test('Run history is never automatically published as Knowledge',()=>{let s=d.createSeed();const count=s.knowledge.length;s=decision(s,'RUN-912','input',{value:'2.17.4'});s=decision(s,'RUN-912','approve');assert.equal(s.knowledge.length,count)});
 
 test('Model Gateway is runtime configuration, not a required or writable Resource Binding',()=>{
@@ -129,7 +145,7 @@ test('Test Suites are scoped by tag and reject cases from a different tag',()=>{
  let s=d.createSeed();const task=s.tasks[0];
  const payload={name:'Tag suite',tag:task.tag,cases:[{taskId:task.id,pr:task.pr,base:task.base,golden:task.golden,confirmed:true}],judgeId:'dependency-judge@1'};
  s=act(s,'engineer','save_suite',payload);const suite=s.suites.at(-1);
- assert.equal(suite.tag,'dep-update');assert.equal(suite.teamId,'growth');assert.equal(suite.productId,'savings');assert.equal('classId' in suite,false);
+ assert.equal(suite.tag,'dep-update');assert.equal(suite.teamId,'growth');assert.equal(suite.productId,'accreditive');assert.equal('classId' in suite,false);
  assert.throws(()=>act(s,'engineer','save_suite',{...payload,tag:'statement-doc'}),/тегу или scope/);
  assert.throws(()=>act(s,'engineer','benchmark',{capabilityId:'cap-statement',suiteId:suite.id,suiteVersion:suite.version}),/тега и scope/);
 });
@@ -159,7 +175,7 @@ test('legacy workspace migration removes Task Class bindings while preserving ev
  const {state,changed}=d.migrateState(legacy);
  assert.equal(changed,true);assert.equal(JSON.stringify(legacy),before);
  assert.equal('classes' in state,false);assert.ok(state.capabilities.every(cap=>cap.tag&&!('classId' in cap)));
- assert.equal(state.suites[0].tag,'dep-update');assert.equal(state.suites[0].productId,'savings');
+ assert.equal(state.suites[0].tag,'dep-update');assert.equal(state.suites[0].productId,'accreditive');
  assert.equal(state.boards.length,1);assert.ok(state.tasks.every(task=>task.boardId===state.boards[0].id));
  assert.ok(state.teams[0].bindings.every(binding=>binding.type!=='Model Gateway'));
  assert.equal(JSON.stringify(state.runs.map(run=>run.snapshot)),history);
@@ -174,7 +190,7 @@ test('legacy snapshots still support policy migration and released execution aft
  let s=d.migrateState(legacyState()).state;
  const plan=d.makePlan(s.runs[0]);assert.ok(plan.applicable.some(item=>item.requirement==='SEC-DEP-014@3'));
  s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);
- cfg.policies=cfg.policies.map(key=>key==='IS-retail-backend@7'?'IS-retail-backend@8':key);
+ cfg.policies=cfg.policies.map(key=>key==='IS-corporate-backend@7'?'IS-corporate-backend@8':key);
  s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});
  s=act(s,'engineer','freeze_release',{capabilityId:depId});
  assert.equal(s.capabilities[0].releases[0].snapshot.baselineReleaseId,'REL-DEP-1.4');
@@ -403,8 +419,8 @@ function sharedProductWorkspace() {
  team.bindings=team.bindings.map(binding=>({...binding,id:`delivery-${binding.id}`}));
  s.teams.push(team);
  s.people.push({id:'delivery-engineer',name:'Delivery Engineer',role:'Product Engineer',assignments:['capability.review','knowledge.contribute'],teams:['delivery']});
- s.responsibilities.push({productId:'savings',teamId:'delivery',scope:['Delivery']});
- s.boards.push({id:'board-delivery',productId:'savings',teamId:'delivery',name:'Delivery board',description:'Private tasks'});
+ s.responsibilities.push({productId:'accreditive',teamId:'delivery',scope:['Delivery']});
+ s.boards.push({id:'board-delivery',productId:'accreditive',teamId:'delivery',name:'Delivery board',description:'Private tasks'});
  s.tasks.push({...d.copy(s.tasks[1]),id:'DELIVERY-1',externalId:'DELIVERY-1',teamId:'delivery',boardId:'board-delivery',title:'Private delivery dependency update',status:'todo',assigneeId:'delivery-engineer'});
  return s;
 }
@@ -416,11 +432,11 @@ test('boards are canonical; old project IDs and all frozen history migrate once 
  const snapshots=state=>JSON.stringify([...state.runs.map(run=>run.snapshot),...state.capabilities.flatMap(cap=>cap.releases.map(release=>release.snapshot))]);
  const before=snapshots(legacy),migrated=d.migrateState(legacy);
  assert.ok(migrated.changed);assert.equal('projects' in migrated.state,false);
- assert.equal(migrated.state.boards[0].id,'board-savings');
- assert.ok(migrated.state.tasks.every(task=>task.boardId==='board-savings'&&!('projectId' in task)));
+ assert.equal(migrated.state.boards[0].id,'board-accreditive');
+ assert.ok(migrated.state.tasks.every(task=>task.boardId==='board-accreditive'&&!('projectId' in task)));
  assert.equal(snapshots(migrated.state),before);
  assert.equal(d.migrateState(migrated.state).changed,false);
- const created=e.applyAction(migrated.state,migrated.state.people[0],'create_board',{teamId:'growth',productId:'savings',name:'Second board'},'test');
+ const created=e.applyAction(migrated.state,migrated.state.people[0],'create_board',{teamId:'growth',productId:'accreditive',name:'Second board'},'test');
  assert.ok(created.state.boards.some(board=>board.id===created.result.id));
 });
 
@@ -446,10 +462,10 @@ test('Flow and versioned Subagents catalog, per-node attachment and economics pe
 
 test('Git Permissions derive grants, preserve unchanged legacy scope and require re-provision only on semantic change',()=>{
  let s=d.createSeed();const oldScope=s.teams[0].bindings[0].write;
- s=act(s,'platform','save_binding',{id:'repo-api',type:'Repository',name:'bank/savings-api',permissions:['read','write','create_pr']});
+ s=act(s,'platform','save_binding',{id:'repo-api',type:'Repository',name:'bank/lc-trade-api',permissions:['read','write','create_pr']});
  assert.equal(s.teams[0].bindings[0].write,oldScope);
  assert.equal(s.teams[0].environment.status,'ready');
- s=act(s,'platform','save_binding',{id:'repo-api',type:'Repository',name:'bank/savings-api',permissions:['admin']});
+ s=act(s,'platform','save_binding',{id:'repo-api',type:'Repository',name:'bank/lc-trade-api',permissions:['admin']});
  assert.equal(s.teams[0].bindings[0].write,'/**');assert.equal(s.teams[0].bindings[0].read,'/**');assert.equal(s.teams[0].bindings[0].createPr,true);
  assert.equal(s.teams[0].environment.status,'configured');assert.deepEqual(s.teams[0].environment.provisionSteps,[]);
  s=act(s,'platform','save_binding',{type:'Task Tracker',name:'Jira',scope:'KOPILKA'});
@@ -457,14 +473,14 @@ test('Git Permissions derive grants, preserve unchanged legacy scope and require
  s=act(s,'platform','save_binding',{type:'CI',name:'Jenkins CI',scope:'kopilka/build-and-test'});
  assert.equal(s.teams[0].bindings.find(binding=>binding.name==='Jenkins CI').scope,'kopilka/build-and-test');
  for(const type of ['Artifact Repository','Approved Connector','Secret'])assert.throws(()=>act(s,'platform','save_binding',{type,name:type}),/тип Resource Binding/);
- assert.throws(()=>act(s,'platform','save_binding',{type:'Repository',name:'bank/savings-api',permissions:['owner']}),/Permissions/);
+ assert.throws(()=>act(s,'platform','save_binding',{type:'Repository',name:'bank/lc-trade-api',permissions:['owner']}),/Permissions/);
 });
 
 test('Product metric is optional and adding an existing participant can set Russian-labeled Permissions',()=>{
  let s=act(d.createSeed(),'po','create_product',{name:'Без метрик',description:'Описание',goals:'Цель'});
  assert.equal('metrics' in s.products.at(-1),false);
  const old=s.products[0].metrics;
- s=act(s,'po','update_product',{name:'Копилка',description:'Описание',goals:''});assert.equal(s.products[0].metrics,old);
+ s=act(s,'po','update_product',{name:'Аккредитив',description:'Описание',goals:''});assert.equal(s.products[0].metrics,old);
  s=act(s,'po','add_person',{personId:'platform',role:'Platform Engineer',assignments:['knowledge.review']});
  assert.deepEqual(s.people.find(person=>person.id==='platform').assignments,['knowledge.review']);
  assert.equal(d.permissionLabel('risk.accept'),'Принятие риска (risk.accept)');
@@ -491,7 +507,7 @@ test('released emulation solves all eligible product-tag tasks across teams with
  s.tasks.find(task=>task.id==='BANK-1857').status='done';
  s.tasks.push({...d.copy(s.tasks.find(task=>task.id==='DELIVERY-1')),id:'DELIVERY-OUT',title:'Out-of-scope private task',repo:'outside/repository'});
  const frozen=JSON.stringify(s.capabilities[0].releases[0].snapshot),historical=JSON.stringify(s.runs);
- let output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'savings',capabilityId:'cap-dep'},'test');
+ let output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'},'test');
  s=output.state;
  assert.equal(output.result.completed,2);assert.equal(output.result.skipped,4);
  assert.ok(output.result.results.some(row=>row.taskId==='DELIVERY-1'&&row.status==='completed'));
@@ -506,7 +522,7 @@ test('released emulation solves all eligible product-tag tasks across teams with
   assert.ok(run.execution.autonomous);assert.ok(run.execution.flow.completed);assert.ok(run.execution.flow.trace.every(row=>row.demo));
  }
  assert.equal(JSON.stringify(s.runs.slice(0,JSON.parse(historical).length)),historical);
- output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'savings',capabilityId:'cap-dep'},'test');
+ output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'},'test');
  assert.equal(output.result.completed,0);assert.equal(output.state.runs.length,s.runs.length);
 });
 
@@ -533,10 +549,10 @@ test('bulk emulation checks owner authority, policy status and each task team cu
  assert.throws(()=>act(s,'po','emulate_release',{capabilityId:'cap-dep'}),/Product Engineer/);
  assert.throws(()=>act(s,'delivery-engineer','emulate_release',{teamId:'delivery',capabilityId:'cap-dep'}),/Нет доступа/);
  s.teams.find(team=>team.id==='delivery').bindings.find(binding=>binding.type==='Repository').write='';
- const output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'savings',capabilityId:'cap-dep'},'test');
+ const output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'},'test');
  assert.match(output.result.results.find(row=>row.taskId==='DELIVERY-1').reason,/grants/);
  assert.ok(!output.state.runs.some(run=>run.taskId==='DELIVERY-1'));
- s=act(s,'regulator','policy_status',{policyKey:'IS-retail-backend@7',status:'Retired'});
+ s=act(s,'regulator','policy_status',{policyKey:'IS-corporate-backend@7',status:'Retired'});
  assert.throws(()=>act(s,'engineer','emulate_release',{capabilityId:'cap-dep'}),/запрещена/);
 });
 
@@ -546,14 +562,14 @@ test('legacy duplicate product-tag Flows retain histories while shared lookup re
  const frozen=JSON.stringify(s.capabilities.flatMap(cap=>cap.releases.map(release=>release.snapshot)));
  const migrated=d.migrateState(s).state;
  assert.equal(migrated.capabilities.at(-1).legacyDuplicateOf,'cap-dep');
- assert.equal(d.capabilityForTag(migrated,'savings','dep-update').id,'cap-dep');
+ assert.equal(d.capabilityForTag(migrated,'accreditive','dep-update').id,'cap-dep');
  assert.equal(JSON.stringify(migrated.capabilities.flatMap(cap=>cap.releases.map(release=>release.snapshot))),frozen);
  assert.throws(()=>act(migrated,'delivery-engineer','emulate_release',{teamId:'delivery',capabilityId:duplicate.id}),/общий Flow cap-dep/);
 });
 
 test('notification read actions are isolated to current team/product and never change another team notification',()=>{
  let s=sharedProductWorkspace();
- s.notifications.push({id:'delivery-notice',teamId:'delivery',productId:'savings',title:'Private notice',text:'Private',target:'tasks',ref:'',read:false});
+ s.notifications.push({id:'delivery-notice',teamId:'delivery',productId:'accreditive',title:'Private notice',text:'Private',target:'tasks',ref:'',read:false});
  s.notifications.push({id:'other-product-notice',teamId:'growth',productId:'other-product',title:'Other product',text:'Other',target:'tasks',ref:'',read:false});
  s=act(s,'engineer','mark_notification',{id:'n-gate-1'});
  assert.equal(s.notifications.find(notice=>notice.id==='n-gate-1').read,true);
@@ -561,7 +577,7 @@ test('notification read actions are isolated to current team/product and never c
  assert.throws(()=>act(s,'engineer','mark_notification',{id:'delivery-notice'}),/Нет доступа/);
  assert.throws(()=>act(s,'engineer','mark_notification',{id:'other-product-notice'}),/выбранному Product/);
  s=act(s,'engineer','mark_all_notifications');
- assert.ok(s.notifications.filter(notice=>notice.teamId==='growth'&&notice.productId==='savings').every(notice=>notice.read));
+ assert.ok(s.notifications.filter(notice=>notice.teamId==='growth'&&notice.productId==='accreditive').every(notice=>notice.read));
  assert.equal(s.notifications.find(notice=>notice.id==='delivery-notice').read,false);
  assert.equal(s.notifications.find(notice=>notice.id==='other-product-notice').read,false);
 });
@@ -572,7 +588,7 @@ test('offered catalog combinations create and supervise from API/web repositorie
   s.teams[0].bindings=s.teams[0].bindings.filter(binding=>binding.type!=='Repository'||binding.name===repository.name);
   const binding=s.teams[0].bindings.find(binding=>binding.type==='Repository');binding.read='/**';binding.write='/**';
   const task={...d.copy(s.tasks[1]),id:'MATRIX-TASK',tag:'custom-catalog-tag',repo:repository.name,status:'todo'};s.tasks=[task];
-  const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'savings',tag:task.tag,template,name:'Matrix Flow',config:{description:'Catalog description'}},'test');
+  const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'accreditive',tag:task.tag,template,name:'Matrix Flow',config:{description:'Catalog description'}},'test');
   s=created.state;const id=created.result.id;let cfg=d.copy(s.capabilities[0].draft);
   assert.ok(cfg.repos.includes(repository.name));assert.equal(cfg.model,'glm');assert.equal(cfg.tokenLimit,100000);
   assert.ok(cfg.policies.every(key=>s.policies.find(policy=>d.policyKey(policy)===key).segment===repository.segment));
@@ -602,10 +618,10 @@ test('offered catalog combinations create and supervise from API/web repositorie
 test('new mixed-repository Flow includes both connected repositories and generates artifacts inside their common grants',()=>{
  let s=d.createSeed();s.capabilities=[];s.runs=[];
  s.tasks=s.tasks.slice(1,3).map(task=>({...task,tag:'shared-dependency-tag',status:'todo'}));
- const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'savings',tag:'shared-dependency-tag',template:'dependency-update@1'},'test');
+ const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'accreditive',tag:'shared-dependency-tag',template:'dependency-update@1'},'test');
  s=created.state;const id=created.result.id,cfg=s.capabilities[0].draft;
- assert.deepEqual(cfg.repos,['bank/savings-api','bank/savings-web']);assert.equal(cfg.scope,'/src/onboarding/**');
- assert.ok(cfg.policies.some(key=>key.includes('retail-frontend')));
+ assert.deepEqual(cfg.repos,['bank/lc-trade-api','bank/lc-retail-api']);assert.equal(cfg.scope,'/src/letters-of-credit/**');
+ assert.ok(cfg.policies.some(key=>key.includes('retail-backend')));
  for(const task of s.tasks){
   s=act(s,'engineer','start_run',{capabilityId:id,taskId:task.id,mode:'supervised'});const runId=s.runs.at(-1).id;
   s=decision(s,runId,'input',{value:'2.17.3'});s=decision(s,runId,'approve');
@@ -756,4 +772,42 @@ test('Policy Package composition validates textual rules and exact Skills/Subage
  const cap=s.capabilities[1],cfg=d.copy(cap.draft);cfg.policies=cfg.policies.map(key=>key.startsWith('IS-')?'IS-team-rules@2':key);const run=d.makeRun(s,cap,cfg,s.tasks[4],'POLICY-FROZEN',new Date().toISOString());
  assert.deepEqual(run.snapshot.policyPackages.find(item=>item.id===payload.id).subagents,['checks-agent@1']);
  s.policies.at(-1).requirements[0].text='Changed live';assert.equal(run.snapshot.policyPackages.find(item=>item.id===payload.id).requirements[0].text,payload.requirements[0].text);
+});
+
+test('Context Bundle compiles product, team, ontology and policy sources through explicit selectors',()=>{
+ const s=d.createSeed(),input={productId:'accreditive',teamId:'growth',system:'Trade Finance LC',productTopic:'foundation',workType:'dependency_change',stage:'implementation'};
+ const bundle=c.compileContextBundle(s,input);
+ assert.equal(bundle.segment,'corporate.backend');assert.equal(bundle.receiptStatus,'ready');
+ assert.deepEqual(bundle.productKnowledge.map(item=>item.id),['pk-lc-foundation']);
+ assert.deepEqual(bundle.teamKnowledge.map(item=>item.id),['tk-trade-lc']);
+ assert.ok(bundle.concepts.some(item=>item.id==='lc_definition'));assert.ok(bundle.concepts.every(item=>item.variant!=='individual'));
+ assert.ok(bundle.policies.some(item=>d.policyKey(item)==='IS-corporate-backend@8'));
+ assert.ok(bundle.selectionReasons.every(item=>item.reason));assert.match(bundle.agentContext,/Аккредитив/);
+ assert.equal((bundle.agentContext.match(/SEC-DEP-014@3/g)||[]).length,1,'The agent fragment must deduplicate the same obligation across policy versions.');
+ assert.equal(bundle.hash,c.compileContextBundle(d.copy(s),d.copy(input)).hash,'Hash must depend on canonical source content, not object order.');
+});
+
+test('Context Bundle follows team/system segmentation and reports incomplete or blocked delivery',()=>{
+ const s=d.createSeed();
+ const retail=c.compileContextBundle(s,{productId:'accreditive',teamId:'retail-lc',system:'LC Retail Service',productTopic:'deals',workType:'implementation',stage:'plan'});
+ assert.equal(retail.segment,'retail.backend');assert.deepEqual(retail.teamKnowledge.map(item=>item.id),['tk-retail-lc']);
+ assert.ok(retail.concepts.some(item=>item.id==='deal_realty'));assert.ok(retail.concepts.every(item=>item.variant!=='corporate'));
+ const incomplete=c.compileContextBundle(s,{productId:'accreditive',teamId:'growth',system:'Unknown system',productTopic:'foundation',workType:'implementation',stage:'plan'});
+ assert.equal(incomplete.receiptStatus,'incomplete');assert.ok(incomplete.unknown.some(item=>item.includes('Resource Bindings')));
+ s.policies.find(item=>d.policyKey(item)==='IS-corporate-backend@8').status='Retired';
+ const blocked=c.compileContextBundle(s,{productId:'accreditive',teamId:'growth',system:'Trade Finance LC',productTopic:'foundation',workType:'dependency_change',stage:'implementation'});
+ assert.equal(blocked.receiptStatus,'blocked');assert.ok(blocked.blocking.some(item=>item.includes('IS-corporate-backend@8')));
+});
+
+test('Context actions classify systems by role and persist immutable delivery snapshots',()=>{
+ let s=d.createSeed();
+ assert.throws(()=>act(s,'engineer','classify_system',{system:'Trade Finance LC',segment:'retail.backend'}),/Platform Engineer/);
+ s=act(s,'platform','classify_system',{system:'Trade Finance LC',segment:'corporate.backend'});
+ assert.ok(s.teams[0].bindings.filter(item=>item.system==='Trade Finance LC').every(item=>item.segment==='corporate.backend'));
+ const input={teamId:'growth',productId:'accreditive',system:'Trade Finance LC',productTopic:'foundation',workType:'dependency_change',stage:'implementation'};
+ const output=e.applyAction(s,s.people.find(item=>item.id==='engineer'),'save_context_bundle',input,'context-test');s=output.state;
+ assert.equal(s.contextBundles.length,1);assert.equal(s.contextBundles[0].id,output.result.id);assert.equal(s.contextBundles[0].receiptStatus,'ready');
+ const saved=JSON.stringify(s.contextBundles[0]);s.knowledge[0].content='Changed after delivery';
+ assert.equal(JSON.stringify(s.contextBundles[0]),saved,'Saved bundle must not follow later live source edits.');
+ assert.throws(()=>e.applyAction(s,s.people.find(item=>item.id==='platform'),'save_context_bundle',input,'context-test'),/knowledge.contribute/);
 });

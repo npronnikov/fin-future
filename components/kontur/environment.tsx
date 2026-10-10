@@ -9,7 +9,7 @@ import SandboxPreview, {bindingPermissions, resourceTypeLabel} from './sandbox-p
 import {Button, Input, Card, PageHead, Pill, Status, Pick, Modal, Field, KV, Notice, Toggle, Table, TableHeader, TableHead, TableBody, TableRow, TableCell} from './ui';
 
 const RESOURCE_TYPES = ['Repository', 'Task Tracker', 'CI'];
-const TRACKER_PROJECTS = [{value: 'KOPILKA', label: 'Копилка (KOPILKA)'}, {value: 'GROWTH', label: 'Growth (GROWTH)'}, {value: 'PAYMENTS', label: 'Платежи (PAYMENTS)'}];
+const TRACKER_PROJECTS = [{value: 'LC-TRADE', label: 'Аккредитив · Trade Finance (LC-TRADE)'}, {value: 'LC-RETAIL', label: 'Аккредитив · Retail (LC-RETAIL)'}, {value: 'PAYMENTS', label: 'Платежи (PAYMENTS)'}];
 const CI_SCOPES = ['kopilka/build-and-test', 'growth/quality-checks', 'payments/build-and-test'];
 const GIT_PERMISSIONS = [{value: 'read', label: 'Чтение (read)'}, {value: 'write', label: 'Запись (write)'}, {value: 'admin', label: 'Администрирование (admin)'}, {value: 'create_pr', label: 'Создание pull request (create_pr)'}];
 const ENV_FIELDS = [{key: 'isolation', label: 'Isolation profile'}, {key: 'network', label: 'Network zone'}, {key: 'cpu', label: 'CPU', number: true}, {key: 'ram', label: 'RAM · GB', number: true}, {key: 'disk', label: 'Disk · GB', number: true}, {key: 'ttl', label: 'TTL · hours', number: true}, {key: 'parallel', label: 'Максимум параллельных запусков', number: true}, {key: 'quota', label: 'Quota', number: true}, {key: 'modelGateway', label: 'Model Gateway'}, {key: 'runtimeVersion', label: 'Runtime version'}, {key: 'internet', label: 'Network / internet constraints'}, {key: 'uatBindings', label: 'UAT environment bindings'}];

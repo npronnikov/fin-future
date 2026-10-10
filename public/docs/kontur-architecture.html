@@ -14,7 +14,7 @@
   #/knowledge  — граф знаний и публикация
   #/assistant  — контекстный ассистент и интеграция оркестратора
   #/capability — Trusted Capability и доверенная автономность
-  Программная навигация: window.KonturInfoPages.open('regulator' | 'flow' | 'sandbox' | 'knowledge' | 'assistant' | 'capability')
+  Программная навигация: window.KonturInfoPages.open('context-supply-chain' | 'accreditive' | 'context-service-api' | 'regulator' | 'flow' | 'sandbox' | 'knowledge' | 'assistant' | 'capability')
 -->
 <style>
 :root {
@@ -537,6 +537,23 @@ a.side-item {text-decoration:none}
 .docs-app-back .ico{transform:rotate(180deg)}
 @media(max-width:780px){.sidebar{background:#121d31;box-shadow:12px 0 32px #0b132499}}
 
+/* Context Supply Chain documentation */
+.supply-doc-flow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:stretch;gap:8px;margin:20px 0}
+.supply-doc-flow>div{padding:17px 12px;border:1px solid #dce7d8;border-radius:9px;background:#f8fbf6;min-width:0;text-align:center}
+.supply-doc-flow>div strong{display:block;color:#4f7155;font-size:12px;line-height:1.5}
+.supply-doc-flow>div small{display:block;margin-top:6px;color:#899a8a;font-size:9px;line-height:1.5}
+.supply-doc-flow>b{align-self:center;color:#a2b3a1;text-align:center;font-weight:400}
+.doc-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.doc-lane{padding:17px;border:1px solid #dfe8dc;border-radius:10px;background:#fff}
+.doc-lane.product{background:#eff7eb}.doc-lane.policy{background:#f3f0f7}.doc-lane.team{background:#f4f7ef}
+.doc-lane strong{display:block;margin:8px 0 5px;color:#506f56;font-size:13px}.doc-lane p{margin:0;font-size:10.5px}
+.doc-code{margin:14px 0;padding:17px;border:1px solid #dce5da;border-radius:9px;background:#182236;color:#dce8f6;overflow:auto;font:10.5px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap}
+.doc-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:11px}.doc-table th,.doc-table td{padding:11px 12px;border:1px solid #e0e8dd;text-align:left;vertical-align:top}.doc-table th{background:#f3f7f1;color:#55705a}.doc-table td{color:#697a6c}
+.guarantee-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.guarantee-grid>div{padding:16px;border:1px solid #dfe8dc;border-radius:9px;background:#fafcf9}.guarantee-grid strong{display:block;color:#4f7255;font-size:12px}.guarantee-grid p{margin:7px 0 0;font-size:10.5px}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.glossary-grid>div{padding:13px 14px;border-left:2px solid #8fae85;background:#f7faf5}.glossary-grid dt{font-weight:700;color:#4f6f55}.glossary-grid dd{margin:5px 0 0;color:#758679;font-size:10.5px;line-height:1.65}
+.source-list{display:grid;gap:7px}.source-list a{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e0e8dd;border-radius:7px;color:#55735b;text-decoration:none;background:#fff}.source-list a:hover{border-color:#b9cfb4;background:#f6faf4}
+@media(max-width:900px){.supply-doc-flow{grid-template-columns:1fr}.supply-doc-flow>b{transform:rotate(90deg)}.doc-lanes,.guarantee-grid,.glossary-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -576,6 +593,9 @@ a.side-item {text-decoration:none}
     <nav class="sidebar-menu" aria-label="Разделы и подразделы">
       <div class="side-label">НАВИГАЦИЯ</div>
       <a class="side-item side-home" href="#/" data-page-link="home"><svg class="ico"><use href="#ic-layers"/></svg><span class="side-title">Обзор</span><span class="n">00</span></a>
+      <a class="side-item" href="#/context-supply-chain" data-page-link="context-supply-chain"><svg class="ico"><use href="#ic-flow"/></svg><span class="side-title">Context Supply Chain</span><span class="n">A1</span></a>
+      <a class="side-item" href="#/accreditive" data-page-link="accreditive"><svg class="ico"><use href="#ic-network"/></svg><span class="side-title">Сквозной аккредитив</span><span class="n">A2</span></a>
+      <a class="side-item" href="#/context-service-api" data-page-link="context-service-api"><svg class="ico"><use href="#ic-code"/></svg><span class="side-title">API и гарантии</span><span class="n">A3</span></a>
       <div class="side-label" style="margin-top:19px">РАЗДЕЛЫ АРХИТЕКТУРЫ</div>
     <div class="side-group" data-group="regulator">
       <div class="side-row">
@@ -657,7 +677,7 @@ a.side-item {text-decoration:none}
     </nav>
     <div class="side-note">
       <a class="side-item docs-app-back" href="/#/home" target="_top"><svg class="ico"><use href="#ic-arrow"/></svg><span class="side-title">Вернуться в приложение</span></a>
-      Шесть самостоятельных страниц с подробными схемами и примерами для последующего встраивания в КОНТУР.
+      Девять самостоятельных страниц: Context Supply Chain, сквозной пример аккредитива и архитектура доверенной автономности.
       <div class="side-status"><span class="status-dot"></span> Работает без внешних библиотек</div>
     </div>
   </aside>
@@ -670,19 +690,22 @@ a.side-item {text-decoration:none}
         </button>
         <div class="crumb"><span>КОНТУР</span><svg class="ico sm"><use href="#ic-arrow"/></svg><strong id="page-breadcrumb">Как устроена платформа</strong></div>
       </div>
-      <div class="topbar-right"><span class="topbar-label">Информационные материалы</span><span class="pill"><svg class="ico sm"><use href="#ic-file"/></svg> 6 страниц</span></div>
+      <div class="topbar-right"><span class="topbar-label">Информационные материалы</span><span class="pill"><svg class="ico sm"><use href="#ic-file"/></svg> 9 страниц</span></div>
     </header>
 <main class="main-content home-route" id="kontur-home" data-page="home">
       <div class="hero">
         <div class="hero-copy">
           <span class="pill ink">REGULATION · KNOWLEDGE · EXECUTION · TRUST</span>
           <h1>Как КОНТУР управляет<br>автономной разработкой</h1>
-          <p>Шесть связанных тем: регулирование и применение политик, изолированная среда исполнения, граф знаний, контекстный ассистент и жизненный цикл Trusted Capability — от настройки до автономного релиза.</p>
+          <p>Девять связанных тем: Context Supply Chain и аккредитив, регулирование и применение политик, изолированная среда, граф знаний, контекстный ассистент и жизненный цикл Trusted Capability.</p>
         </div>
         <div class="hero-visual" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-orbit second"></div><div class="orbital main"><svg class="ico xl"><use href="#ic-shield"/></svg></div><div class="orbital one"><svg class="ico xl"><use href="#ic-file"/></svg></div><div class="orbital two"><svg class="ico xl"><use href="#ic-flow"/></svg></div><div class="orbital three"><svg class="ico xl"><use href="#ic-box"/></svg></div><div class="orbital four"><svg class="ico xl"><use href="#ic-code"/></svg></div></div>
       </div>
-      <div class="intro-line"><h2>Шесть разделов архитектуры</h2><p>Выберите тему и изучайте её на отдельной странице</p></div>
+      <div class="intro-line"><h2>Девять разделов документации</h2><p>Выберите тему и изучайте её на отдельной странице</p></div>
       <div class="cards">
+        <article class="guide-card"><div class="card-top"><div class="card-icon"><svg class="ico lg"><use href="#ic-flow"/></svg></div><span class="card-index">A1 / CONTEXT SUPPLY CHAIN</span></div><h3>От источника до Context Bundle</h3><p>Authoring, Control Plane, Knowledge Graph и Runtime: выбор, версии, provenance и Delivery Receipt.</p><div class="preview-rail" aria-hidden="true"><div class="preview-block">Product</div><span class="preview-arrow">+</span><div class="preview-block">Policy</div><span class="preview-arrow">+</span><div class="preview-block active">Team</div></div><div class="card-foot"><small>4 раздела · промышленная архитектура</small><a class="btn primary" href="#/context-supply-chain">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></article>
+        <article class="guide-card"><div class="card-top"><div class="card-icon blue"><svg class="ico lg"><use href="#ic-network"/></svg></div><span class="card-index">A2 / ACCREDITIVE</span></div><h3>Сквозной пример «Аккредитив»</h3><p>Единый Product Knowledge, retail/corporate системы, команды и различимый Regulatory Context.</p><div class="preview-rail" aria-hidden="true"><div class="preview-block">Retail LC</div><span class="preview-arrow">↔</span><div class="preview-block active">Аккредитив</div><span class="preview-arrow">↔</span><div class="preview-block">Trade Finance</div></div><div class="card-foot"><small>4 раздела · синтетические знания</small><a class="btn primary" href="#/accreditive">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></article>
+        <article class="guide-card"><div class="card-top"><div class="card-icon violet"><svg class="ico lg"><use href="#ic-code"/></svg></div><span class="card-index">A3 / API &amp; OPERATIONS</span></div><h3>API, Neo4j и гарантии</h3><p>Контракт Context Service, минимальная схема графа, эксплуатационные гарантии, глоссарий и источники.</p><div class="preview-rail" aria-hidden="true"><div class="preview-block">REST / MCP</div><span class="preview-arrow">→</span><div class="preview-block active">Bundle</div><span class="preview-arrow">→</span><div class="preview-block">Gateway</div></div><div class="card-foot"><small>5 разделов · production target</small><a class="btn primary" href="#/context-service-api">Открыть страницу <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></article>
         <article class="guide-card">
           <div class="card-top"><div class="card-icon"><svg class="ico lg"><use href="#ic-shield"/></svg></div><span class="card-index">01 / REGULATION</span></div>
           <h3>Процесс работы регулятора</h3>
@@ -731,6 +754,107 @@ a.side-item {text-decoration:none}
     </main>
 
 
+<main class="main-content info-page" id="kontur-page-context-supply-chain" data-page="context-supply-chain" aria-labelledby="csc-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Context Supply Chain</span><span class="chapter-count">A1 / 09</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">AUTHORING · CONTROL PLANE · GRAPH · RUNTIME</div><h2 id="csc-title">Context Supply Chain: <em>как знание доходит до агента</em></h2></div><div class="article-head-right"><span class="article-count">A1 / 09</span><a class="icon-btn" href="#/" aria-label="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout"><div class="article-scroll">
+      <div class="article-lead"><div class="eyebrow">КЛЮЧЕВАЯ ИДЕЯ</div><h3>Контекст — это версионированная поставка, а не длинный prompt</h3><p>КОНТУР независимо выбирает продуктовые знания, практики команды и обязательные политики, объясняет каждое решение и фиксирует состав пакета. Агент получает только опубликованные источники в разрешённом scope.</p></div>
+      <section id="csc-architecture"><div class="section-head"><span class="section-no">01</span><div><h3>Промышленная архитектура</h3><p>Минимальный путь от источника до runtime.</p></div></div><div class="supply-doc-flow"><div><strong>Authoring</strong><small>Git · Confluence · Docling · эксперты</small></div><b>→</b><div><strong>Control Plane</strong><small>PostgreSQL · версии · review · ACL</small></div><b>→</b><div><strong>Graph / Search</strong><small>Neo4j · pgvector · typed relations</small></div><b>→</b><div><strong>Runtime</strong><small>Context Service · MCP/REST · Gateway</small></div></div><div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Source of truth — Control Plane.</strong> Graph и embeddings являются индексами. Статус публикации, владельцы, версии и права хранятся отдельно и проверяются перед выдачей.</span></div></section>
+      <section id="csc-selection"><div class="section-head"><span class="section-no">02</span><div><h3>Три независимых пути выбора</h3><p>Каждый слой отвечает на свой вопрос и не подменяет другой.</p></div></div><div class="doc-lanes"><div class="doc-lane product"><div class="eyebrow">PRODUCT</div><strong>Product ID + Topic</strong><p>Понятия аккредитива и опубликованное Product Knowledge: что это за продукт и какие инварианты у него есть.</p></div><div class="doc-lane policy"><div class="eyebrow">POLICY</div><strong>System → Segment + Work Type</strong><p>Обязательные требования вычисляются детерминированно. Similarity search не определяет обязательность.</p></div><div class="doc-lane team"><div class="eyebrow">TEAM</div><strong>Team ID</strong><p>Инженерные практики, локальные соглашения и проверенные lessons learned конкретной команды.</p></div></div><table class="doc-table"><thead><tr><th>Вход</th><th>Разрешение</th><th>Результат</th></tr></thead><tbody><tr><td>Аккредитив + settlement</td><td>Product ID → Concept Category</td><td>Условия платежа и документарные понятия</td></tr><tr><td>Trade Finance LC</td><td>Binding → corporate.backend</td><td>Current/Deprecating Policy Package</td></tr><tr><td>Trade Finance Engineering</td><td>Team ID</td><td>Approved Team Knowledge</td></tr></tbody></table></section>
+      <section id="csc-bundle"><div class="section-head"><span class="section-no">03</span><div><h3>Context Bundle и Delivery Receipt</h3><p>Preview можно пересобирать, сохранённый snapshot неизменяем.</p></div></div><pre class="doc-code">Context Bundle
+├─ input: product, team, system, topic, workType, stage
+├─ selected: concepts, Product Knowledge, Team Knowledge, Policy
+├─ selectionReasons: источник и причина каждого выбора
+├─ sourceVersions: точные версии публикаций
+├─ unknown / blocking: незакрытые и запрещающие условия
+├─ agentContext: подготовленный фрагмент для runtime
+└─ hash + Delivery Receipt</pre><p>Content hash строится из канонического payload без случайного ID и времени создания. Одинаковый состав даёт одинаковый hash; изменение версии источника меняет hash.</p></section>
+      <section id="csc-runtime"><div class="section-head"><span class="section-no">04</span><div><h3>Доставка по стадиям</h3><p>Объём контекста зависит от момента выполнения, но provenance сохраняется.</p></div></div><div class="work-steps"><div class="work-step"><span>01</span><strong>Before Plan</strong><p>Цель продукта, понятия, scope и обязательные ограничения.</p></div><div class="work-step"><span>02</span><strong>Implementation</strong><p>Точные требования, Team Knowledge, разрешённые repositories и инструкции.</p></div><div class="work-step"><span>03</span><strong>Verification</strong><p>Evidence rules, обязательные артефакты и verification skills.</p></div></div><div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Snapshot не отменяет живой допуск.</strong> Версии контекста заморожены для воспроизводимости, но Gateway повторно проверяет revoked/retired policy перед новым действием.</span></div></section>
+    </div></div>
+    <footer class="article-foot"><small>Context Supply Chain фиксирует происхождение, версии и причины отбора.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn primary" href="#/accreditive">Сквозной пример <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+
+<main class="main-content info-page" id="kontur-page-accreditive" data-page="accreditive" aria-labelledby="lc-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Сквозной аккредитив</span><span class="chapter-count">A2 / 09</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">PRODUCT EXAMPLE · SYNTHETIC DATA</div><h2 id="lc-title">Аккредитив: <em>один продукт, разные контексты</em></h2></div><div class="article-head-right"><span class="article-count">A2 / 09</span><a class="icon-btn" href="#/" aria-label="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout"><div class="article-scroll">
+      <div class="article-lead"><div class="eyebrow">СКВОЗНАЯ МОДЕЛЬ</div><h3>Продукт остаётся общим, система определяет регуляторный scope</h3><p>Individual и corporate — продуктовые варианты понятий. retail.backend и corporate.backend — IT-сегменты технических систем. Эти оси нельзя смешивать.</p></div>
+      <section id="lc-ontology"><div class="section-head"><span class="section-no">01</span><div><h3>Онтология продукта</h3><p>Семь категорий описывают предметную область без ставок и условий конкретного банка.</p></div></div><div class="package-parts"><div><strong>Основы</strong><small>Определение и свойства</small></div><div><strong>Сценарии клиентов</strong><small>individual / corporate</small></div><div><strong>Сделки</strong><small>Недвижимость, поставка, внешняя торговля</small></div><div><strong>Реквизиты</strong><small>Сумма, участники, документы</small></div><div><strong>Платежи</strong><small>По предъявлении и с отсрочкой</small></div><div><strong>Комиссии</strong><small>Тарифные события без выдуманных ставок</small></div><div><strong>Участники</strong><small>Плательщик, бенефициар и банки</small></div></div></section>
+      <section id="lc-systems"><div class="section-head"><span class="section-no">02</span><div><h3>Две системы и две команды</h3><p>Обе используют Product Knowledge, но получают разный Policy и Team контекст.</p></div></div><table class="doc-table"><thead><tr><th>Team</th><th>System / Repository</th><th>Segment</th><th>Пример Product variant</th></tr></thead><tbody><tr><td>Trade Finance Engineering</td><td>Trade Finance LC<br><code>bank/lc-trade-api</code></td><td><code>corporate.backend</code></td><td>Поставка товара, отсроченный платёж</td></tr><tr><td>LC Retail Engineering</td><td>LC Retail Service<br><code>bank/lc-retail-api</code></td><td><code>retail.backend</code></td><td>Недвижимость, автомобиль</td></tr></tbody></table></section>
+      <section id="lc-walkthrough"><div class="section-head"><span class="section-no">03</span><div><h3>Пример сборки для B2B-интеграции</h3><p>Оркестратор готовит изменение в корпоративной системе.</p></div></div><pre class="doc-code">input:
+  product: Аккредитив
+  team: Trade Finance Engineering
+  system: Trade Finance LC
+  topic: settlement
+  workType: integration_change
+  stage: implementation
+
+selection:
+  Product → «Условия исполнения и комплект документов»
+  Team → «Trade Finance · инженерные практики»
+  Policy → corporate.backend + integration_change
+  Concepts → «Отсроченный платёж», «Комплект документов»</pre><div class="note"><svg class="ico"><use href="#ic-check"/></svg><span><strong>Каждый элемент объясним.</strong> Bundle хранит ID, версию и строку selection reason, поэтому состав можно воспроизвести без чтения reasoning модели.</span></div></section>
+      <section id="lc-boundaries"><div class="section-head"><span class="section-no">04</span><div><h3>Границы учебного примера</h3><p>Что является демонстрацией, а что — архитектурной гарантией.</p></div></div><div class="guarantee-grid"><div><strong>Синтетические продуктовые знания</strong><p>Формулировки нужны для демонстрации графа и не являются тарифами или юридической консультацией.</p></div><div><strong>Настоящий lifecycle приложения</strong><p>Proposal, review, версии, RBAC и immutable snapshot работают через общий state КОНТУРа.</p></div><div><strong>Эмуляция Neo4j/Cypher</strong><p>Граф вычисляется в браузере. Запросы показывают смысл будущего API без соединения с базой.</p></div><div><strong>Детерминированный Policy selection</strong><p>Применимость основана на segment/work type, а не на семантической близости.</p></div></div></section>
+    </div></div>
+    <footer class="article-foot"><small>Аккредитив — единый Product Knowledge и разные runtime-контексты.</small><div class="article-foot-actions"><a class="btn" href="#/context-supply-chain">Предыдущая тема</a><a class="btn primary" href="#/context-service-api">API и гарантии <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+
+<main class="main-content info-page" id="kontur-page-context-service-api" data-page="context-service-api" aria-labelledby="api-title" hidden>
+  <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>API и гарантии</span><span class="chapter-count">A3 / 09</span></nav>
+  <div class="article-frame">
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">CONTEXT SERVICE · GRAPH · OPERATIONS</div><h2 id="api-title">Контракты, гарантии и <em>эксплуатация</em></h2></div><div class="article-head-right"><span class="article-count">A3 / 09</span><a class="icon-btn" href="#/" aria-label="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <div class="article-layout"><div class="article-scroll">
+      <div class="article-lead"><div class="eyebrow">PRODUCTION TARGET</div><h3>REST/MCP возвращает данные и доказательство их отбора</h3><p>API не выдаёт скрытое reasoning. Он возвращает входной scope, опубликованные версии, причины выбора, unknown/blocking и Delivery Receipt.</p></div>
+      <section id="api-contract"><div class="section-head"><span class="section-no">01</span><div><h3>Контракт Context Service</h3><p>Минимальный запрос сборки и форма ответа.</p></div></div><pre class="doc-code">POST /api/context/compile
+{
+  "productId": "accreditive",
+  "teamId": "growth",
+  "system": "Trade Finance LC",
+  "productTopic": "settlement",
+  "workType": "integration_change",
+  "stage": "implementation",
+  "principal": "agent-runtime:demo"
+}
+
+200 OK
+{
+  "hash": "ctx-…",
+  "segment": "corporate.backend",
+  "sourceVersions": ["pk-lc-settlement@3", "tk-trade-lc@2"],
+  "selectionReasons": ["Product + topic", "Team ID", "System → Segment + Work Type"],
+  "unknown": [],
+  "blocking": [],
+  "receiptStatus": "ready"
+}</pre></section>
+      <section id="api-graph"><div class="section-head"><span class="section-no">02</span><div><h3>Минимальная схема Neo4j</h3><p>Graph хранит типизированные отношения; права и lifecycle проверяет Control Plane.</p></div></div><pre class="doc-code">CREATE CONSTRAINT product_id IF NOT EXISTS
+FOR (p:Product) REQUIRE p.id IS UNIQUE;
+
+CREATE CONSTRAINT concept_id IF NOT EXISTS
+FOR (c:Concept) REQUIRE c.id IS UNIQUE;
+
+CREATE CONSTRAINT requirement_revision IF NOT EXISTS
+FOR (r:Requirement) REQUIRE (r.id, r.version) IS UNIQUE;
+
+// Product -[:HAS_CATEGORY]-> ConceptCategory
+// ConceptCategory -[:CONTAINS]-> Concept
+// Knowledge -[:DESCRIBES]-> Concept
+// Team -[:HAS_KNOWLEDGE]-> Knowledge
+// System -[:CLASSIFIED_AS]-> Segment
+// Requirement -[:APPLIES_TO]-> Segment
+// IT Segment не прикрепляется к Product Knowledge.</pre></section>
+      <section id="api-guarantees"><div class="section-head"><span class="section-no">03</span><div><h3>Принципиальные гарантии</h3><p>Условия, без которых поставка контекста не считается управляемой.</p></div></div><div class="guarantee-grid"><div><strong>Проверяемая публикация</strong><p>Draft не виден агенту; approval имеет owner, роль и audit trail.</p></div><div><strong>Детерминированные obligations</strong><p>Policy вычисляется по segment и условиям, а не по embeddings.</p></div><div><strong>Права на каждом переходе</strong><p>ACL проверяется на источнике, graph projection и конечной выдаче.</p></div><div><strong>Snapshot + живой допуск</strong><p>Пакет неизменяем, но retired policy блокирует новое действие в Gateway.</p></div><div><strong>Evidence вне текста модели</strong><p>CI, tests и проверки подтверждают результат; Delivery Receipt не равен compliance.</p></div><div><strong>Инкрементальная перестройка</strong><p>Изменение документа переоценивает связанные знания, а не весь корпус.</p></div></div></section>
+      <section id="api-glossary"><div class="section-head"><span class="section-no">04</span><div><h3>Глоссарий</h3><p>Основные термины в одном месте.</p></div></div><dl class="glossary-grid"><div><dt>Product Knowledge</dt><dd>Версионированное каноническое знание, общее для команд продукта.</dd></div><div><dt>Team Knowledge</dt><dd>Подтверждённые практики и lessons learned конкретной команды.</dd></div><div><dt>Policy Package</dt><dd>Версия требований, применимости, evidence и reusable assets для сегмента.</dd></div><div><dt>Context Bundle</dt><dd>Собранный пакет данных, версий, причин выбора и unknown для runtime.</dd></div><div><dt>Delivery Receipt</dt><dd>Квитанция доставки с hash и provenance; не является доказательством compliance.</dd></div><div><dt>Segment</dt><dd>Классификация технической системы, используемая для Policy selection.</dd></div></dl></section>
+      <section id="api-sources"><div class="section-head"><span class="section-no">05</span><div><h3>Источники и дальнейшее чтение</h3><p>Нормативная база примера и техническая документация.</p></div></div><div class="source-list"><a href="https://www.consultant.ru/document/cons_doc_LAW_9027/bbb41480e7d427b19ba268effd2c523cbeabf40c/" target="_blank" rel="noopener noreferrer">ГК РФ, статья 867 · общие положения об аккредитиве</a><a href="https://www.consultant.ru/document/cons_doc_LAW_9027/cd85e11f618388129bdfeb4819694e2300b0600e/" target="_blank" rel="noopener noreferrer">ГК РФ, статья 871 · исполнение аккредитива</a><a href="https://www.consultant.ru/document/cons_doc_LAW_131829/f5d55ee4425a44daf6f4ad6fef0eecfd54eb5641/" target="_blank" rel="noopener noreferrer">Положение Банка России № 762-П</a><a href="https://neo4j.com/docs/getting-started/data-modeling/" target="_blank" rel="noopener noreferrer">Neo4j Graph Data Modeling</a><a href="https://neo4j.com/docs/cypher-manual/current/clauses/match/" target="_blank" rel="noopener noreferrer">Cypher MATCH</a><a href="https://microservices.io/patterns/data/transactional-outbox.html" target="_blank" rel="noopener noreferrer">Transactional Outbox</a><a href="https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html" target="_blank" rel="noopener noreferrer">Debezium Outbox Event Router</a></div></section>
+    </div></div>
+    <footer class="article-foot"><small>Учебный HTML не подключён к рабочим политикам, Neo4j или данным банка.</small><div class="article-foot-actions"><a class="btn" href="#/accreditive">Предыдущая тема</a><a class="btn primary" href="#/regulator">Процесс регулятора <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+  </div>
+</main>
+
+
 <main class="main-content info-page" id="kontur-page-regulator" data-page="regulator" aria-labelledby="reg-title" hidden>
       <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Процесс регулятора</span><span class="chapter-count">01 / 06</span></nav>
       <div class="article-frame">
@@ -744,9 +868,9 @@ a.side-item {text-decoration:none}
         <section id="reg-seg" aria-labelledby="reg-seg-title">
           <div class="section-head"><span class="section-no">01</span><div><h3 id="reg-seg-title">Сегментация ИТ-ландшафта</h3><p>Repository связан с System; System содержит Business Domain и Platform Type.</p></div></div>
           <div class="segment-chain">
-            <div class="chain-box"><div class="eyebrow">GIT REPOSITORY</div><strong>bank/savings-api</strong><small>Репозиторий технической системы</small></div>
+            <div class="chain-box"><div class="eyebrow">GIT REPOSITORY</div><strong>bank/lc-trade-api</strong><small>Репозиторий технической системы</small></div>
             <div class="chain-arr"><svg class="ico"><use href="#ic-arrow"/></svg></div>
-            <div class="chain-box"><div class="eyebrow">SYSTEM</div><strong>Savings Core</strong><div class="meta-tags"><span>Domain: Retail</span><span>Type: Backend</span></div></div>
+            <div class="chain-box"><div class="eyebrow">SYSTEM</div><strong>Trade Finance LC</strong><div class="meta-tags"><span>Domain: Corporate</span><span>Type: Backend</span></div></div>
             <div class="chain-arr"><svg class="ico"><use href="#ic-arrow"/></svg></div>
             <div class="chain-box final"><div class="eyebrow">INHERITED SEGMENT</div><strong>retail.backend</strong><small>Автоматически следует из метаданных System</small></div>
           </div>
@@ -757,9 +881,9 @@ a.side-item {text-decoration:none}
           <div class="section-head"><span class="section-no">02</span><div><h3 id="reg-process-title">Что делает регулятор</h3><p>Отдельное пространство <code>Regulation / Segments &amp; Policies</code>.</p></div></div>
           <div class="pane soft" style="margin-bottom:12px"><div class="eyebrow">ВЫБРАННЫЙ СЕГМЕНТ</div><h4 style="font-size:16px;margin-top:5px">Retail / Backend <span class="pill" style="margin-left:5px">retail.backend</span></h4><p>Три контрольных направления независимо задают требования к одной и той же категории систем.</p></div>
           <div class="direction-grid">
-            <div class="direction-card"><svg class="ico"><use href="#ic-shield"/></svg><strong>Information Security</strong><code>IS-retail-backend@7</code></div>
-            <div class="direction-card"><svg class="ico"><use href="#ic-server"/></svg><strong>Reliability</strong><code>REL-retail-backend@4</code></div>
-            <div class="direction-card"><svg class="ico"><use href="#ic-sliders"/></svg><strong>Risk</strong><code>RISK-retail-backend@3</code></div>
+            <div class="direction-card"><svg class="ico"><use href="#ic-shield"/></svg><strong>Information Security</strong><code>IS-corporate-backend@7</code></div>
+            <div class="direction-card"><svg class="ico"><use href="#ic-server"/></svg><strong>Reliability</strong><code>REL-corporate-backend@4</code></div>
+            <div class="direction-card"><svg class="ico"><use href="#ic-sliders"/></svg><strong>Risk</strong><code>RISK-corporate-backend@3</code></div>
           </div>
           <div class="work-steps">
             <div class="work-step"><span class="num">1</span><div><strong>Выбирает сегмент и направление</strong><p>Например, <code>retail.backend</code> и Information Security.</p></div></div>
@@ -771,7 +895,7 @@ a.side-item {text-decoration:none}
         <section id="reg-package" aria-labelledby="reg-package-title">
           <div class="section-head"><span class="section-no">03</span><div><h3 id="reg-package-title">Из чего состоит Policy Package</h3><p>Набор текстовых правил, условий применимости, исполняемых процедур и ожидаемых доказательств.</p></div></div>
           <div class="package-box">
-            <div class="package-head"><div><small>VERSIONED REGULATORY PACKAGE</small><strong>IS-retail-backend@7</strong></div><span class="pill ink"><svg class="ico sm"><use href="#ic-check"/></svg> Current</span></div>
+            <div class="package-head"><div><small>VERSIONED REGULATORY PACKAGE</small><strong>IS-corporate-backend@7</strong></div><span class="pill ink"><svg class="ico sm"><use href="#ic-check"/></svg> Current</span></div>
             <div class="package-parts">
               <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-file"/></svg>01 · Requirements</div><p><code>SEC-DEP-014@3</code><br>«При обновлении библиотек разрешено использовать только сертифицированные версии».</p><code>ID · version · owner · segment · effective date</code></div>
               <div class="package-part"><div class="part-title"><svg class="ico sm"><use href="#ic-search"/></svg>02 · Applicability Rules</div><p>Правило включается, когда работа относится к <code>dependency_change</code> и затрагивает репозиторий сегмента <code>retail.backend</code>.</p><code>Task tag · segment · code change · work type</code></div>
@@ -785,7 +909,7 @@ a.side-item {text-decoration:none}
         <section id="reg-lifecycle" aria-labelledby="reg-lifecycle-title">
           <div class="section-head"><span class="section-no">04</span><div><h3 id="reg-lifecycle-title">Публикация, версии и воздействие на capability</h3><p>Новая редакция требования не подменяет старую в существующем релизе.</p></div></div>
           <div class="pane"><div class="eyebrow">LIFECYCLE ПАКЕТА</div><div class="lifecycle"><span class="pill muted">Draft</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill ink">Current</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill amber">Deprecating</span><svg class="ico sm"><use href="#ic-arrow"/></svg><span class="pill muted">Withdrawn / Superseded</span><span class="pill amber">Revoked — отдельное критическое состояние</span></div></div>
-          <div class="split-2" style="margin-top:12px"><div class="pane soft"><h4>Релиз закрепляет версию</h4><p>Если Trusted Capability выпущена с <code>IS-retail-backend@7</code>, каждый её production Run использует именно этот snapshot. Переход на <code>@8</code> требует новой конфигурации и переоценки.</p></div><div class="pane soft"><h4>Изменение запускает impact analysis</h4><p>Платформа находит репозитории сегмента, команды и зависящие Capabilities. При отзыве политики новые автономные Runs блокируются согласно её статусу.</p></div></div>
+          <div class="split-2" style="margin-top:12px"><div class="pane soft"><h4>Релиз закрепляет версию</h4><p>Если Trusted Capability выпущена с <code>IS-corporate-backend@7</code>, каждый её production Run использует именно этот snapshot. Переход на <code>@8</code> требует новой конфигурации и переоценки.</p></div><div class="pane soft"><h4>Изменение запускает impact analysis</h4><p>Платформа находит репозитории сегмента, команды и зависящие Capabilities. При отзыве политики новые автономные Runs блокируются согласно её статусу.</p></div></div>
         </section>
       </div>
     </div>
@@ -804,7 +928,7 @@ a.side-item {text-decoration:none}
           <div class="section-head"><span class="section-no">01</span><div><h3 id="flow-source-title">Откуда берутся политики</h3><p>Цепочка запуска проходит через техническую систему и её Segment.</p></div></div>
           <div class="pipeline-scroll"><div class="pipeline">
             <div class="pipeline-node"><div class="eyebrow">TASK</div><strong>BANK-1842</strong><small>tag: dep-update</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
-            <div class="pipeline-node"><div class="eyebrow">REPOSITORY</div><strong>bank/savings-api</strong><small>System: Savings Core</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
+            <div class="pipeline-node"><div class="eyebrow">REPOSITORY</div><strong>bank/lc-trade-api</strong><small>System: Trade Finance LC</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
             <div class="pipeline-node system"><div class="eyebrow">SEGMENT</div><strong>retail.backend</strong><small>унаследован от System</small></div><div class="pipeline-arrow"><svg class="ico sm"><use href="#ic-arrow"/></svg></div>
             <div class="pipeline-node dark"><div class="eyebrow">POLICY SNAPSHOT</div><strong>IS@7 · REL@4 · RISK@3</strong><small>зафиксированные версии</small></div>
           </div></div>
@@ -841,7 +965,7 @@ Required: compatibility suite report</pre>
         </section>
         <section id="flow-scope" aria-labelledby="flow-scope-title">
           <div class="section-head"><span class="section-no">05</span><div><h3 id="flow-scope-title">Если изменился scope или версия политики</h3><p>Новый репозиторий или сегмент нельзя игнорировать.</p></div></div>
-          <div class="pane soft"><div class="eyebrow">SCOPE CHANGE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Regulatory Plan v1</strong><small>bank/savings-api</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Новый repository</strong><small>обнаружена затронутая система</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Regulatory Plan v2</strong><small>пересчитана применимость</small></div></div></div>
+          <div class="pane soft"><div class="eyebrow">SCOPE CHANGE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Regulatory Plan v1</strong><small>bank/lc-trade-api</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Новый repository</strong><small>обнаружена затронутая система</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Regulatory Plan v2</strong><small>пересчитана применимость</small></div></div></div>
           <div class="split-2" style="margin-top:12px"><div class="pane"><h4>Изменение scope внутри Run</h4><p>При новом репозитории, сегменте или значимом work type оркестратор пересчитывает план и сохраняет обе версии в trace. Это не происходит после каждого обычного шага.</p></div><div class="pane"><h4>Новая версия Policy Package</h4><p>Published <code>IS@8</code> не подменяет <code>IS@7</code> внутри released capability. Требуется новая конфигурация, переоценка и выпуск.</p></div></div>
         </section>
       </div>
@@ -919,12 +1043,12 @@ Required: compatibility suite report</pre>
       <div class="section-head"><span class="section-no">01</span><div><h3 id="know-ontology-title">Единая онтология и Product Knowledge Graph</h3><p>Онтология задаёт типы объектов и связей; граф связывает знания с реальными системами.</p></div></div>
       
     <div class="pane soft"><div class="eyebrow">ПРИМЕР · КОПИЛКА / ACTIVATION</div>
-      <div class="knowledge-network" aria-label="Пример графа знаний: продукт Копилка связан с бизнес-функцией Activation, которая реализована сервисом savings-api">
-        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-layers"/></svg><span class="eyebrow">PRODUCT</span><strong>Копилка</strong><small>Канонические продуктовые правила</small></div>
+      <div class="knowledge-network" aria-label="Пример графа знаний: продукт Аккредитив связан с понятием условий исполнения и системой Trade Finance LC">
+        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-layers"/></svg><span class="eyebrow">PRODUCT</span><strong>Аккредитив</strong><small>Канонические продуктовые знания</small></div>
         <div class="knowledge-edge"><small>HAS_FEATURE</small><svg class="ico"><use href="#ic-arrow"/></svg></div>
         <div class="knowledge-entity core"><svg class="ico lg"><use href="#ic-network"/></svg><span class="eyebrow">FEATURE</span><strong>Activation</strong><small>Условия первого пополнения</small></div>
         <div class="knowledge-edge"><small>IMPLEMENTED_BY</small><svg class="ico"><use href="#ic-arrow"/></svg></div>
-        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-code"/></svg><span class="eyebrow">SYSTEM / REPOSITORY</span><strong>Savings Core</strong><small>bank/savings-api</small></div>
+        <div class="knowledge-entity"><svg class="ico lg"><use href="#ic-code"/></svg><span class="eyebrow">SYSTEM / REPOSITORY</span><strong>Trade Finance LC</strong><small>bank/lc-trade-api</small></div>
       </div>
       <div class="eyebrow">ТИПИЗИРОВАННЫЕ СВЯЗИ · ПРЕДЛОЖЕНИЕ</div>
       <div class="knowledge-relations"><span>Product → HAS_FEATURE → Feature</span><span>Feature → IMPLEMENTED_BY → System</span><span>System → HAS_REPOSITORY → Repository</span><span>Team → RESPONSIBLE_FOR → Feature</span><span>Decision → GOVERNS → Feature</span></div>
@@ -989,7 +1113,7 @@ Required: compatibility suite report</pre>
       <div class="section-head"><span class="section-no">01</span><div><h3 id="asst-surface-title">Ассистент — полноценный контекстный чат</h3><p>Всплывающий bubble открывает переписку, связанную с текущим экраном и ролью пользователя.</p></div></div>
       
     <div class="assistant-chat" aria-label="Пример интерфейса контекстного ассистента">
-      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>КОНТУР Assistant</strong><small>Product: Копилка · Team: Growth · Automation / Run</small></div><span class="pill ink" style="margin-left:auto">Контекст учтён</span></div>
+      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>КОНТУР Assistant</strong><small>Product: Аккредитив · Team: Trade Finance Engineering · Automation / Run</small></div><span class="pill ink" style="margin-left:auto">Контекст учтён</span></div>
       <div class="chat-thread"><div class="chat-bubble user">Что мне делать дальше с этой capability?</div><div class="chat-bubble">Вы на экране настройки <strong>Dependency Update v1.3</strong>. Environment готов, Flow связан с тегом <code>dep-update</code>, но история этой версии ещё не собрана. Следующий шаг — запустить задачи в <strong>Supervised</strong> режиме и изучить результаты.<span class="source">Контекст: Product / Team / Capability / Environment / текущий экран</span></div></div>
       <div class="chat-action"><svg class="ico sm"><use href="#ic-chat"/></svg>Это информационный пример. Ответ не меняет статус и не запускает Flow.</div>
     </div>
@@ -1059,7 +1183,7 @@ response: message + source references + available actions</pre>
       <div class="section-head"><span class="section-no">01</span><div><h3 id="cap-meaning-title">Что такое Trusted Capability</h3><p>Объект доверия — конкретная способность решать определённый вид задач в ограниченном scope.</p></div></div>
       
     <div class="pane soft" style="padding:23px"><div class="eyebrow">НЕ АГЕНТ И НЕ ВЕСЬ TEAM SPACE</div><h4 style="font-size:18px;margin-top:9px">Dependency Update · <code>dep-update</code></h4><p>Логическая Capability связывает <strong>Product</strong>, тег класса задач, рабочий Flow и историю качества. Доверенной автономностью обладает не «любой coding agent», а <strong>зафиксированный релиз этой Capability</strong> с точными версиями и границами.</p>
-      <div class="context-list" style="margin-top:13px"><span>Product: Копилка</span><span>Tag: dep-update</span><span>Flow: Dependency Update v1.4</span><span>Runtime: HG SDLC</span><span>Scope: approved repositories</span></div></div>
+      <div class="context-list" style="margin-top:13px"><span>Product: Аккредитив</span><span>Tag: dep-update</span><span>Flow: LC Dependency Update v1.4</span><span>Runtime: HG SDLC</span><span>Scope: bank/lc-trade-api</span></div></div>
     <div class="split-2" style="margin-top:13px"><div class="pane"><h4>Capability — развиваемая сущность</h4><p>Существует в командном рабочем пространстве, имеет конфигурацию, историю запусков, статистику, версии и ссылку на опубликованные релизы.</p></div><div class="pane"><h4>Trusted Capability Release — неизменяемый пакет</h4><p>Фиксирует проверенный способ исполнения. Production использует именно Release Snapshot, а не текущий Draft и не произвольно выбранные новые Skills.</p></div></div>
     <div class="note"><svg class="ico"><use href="#ic-info"/></svg><span><strong>Тег сам по себе не даёт автономности.</strong> Одинаковый тег может встречаться на разных Task Boards продукта; маршрутизация возможна только если существует активный доверенный релиз и задача находится в разрешённом scope.</span></div>
     </section><section id="cap-development" aria-labelledby="cap-development-title">
@@ -1089,7 +1213,7 @@ response: message + source references + available actions</pre>
     </section><section id="cap-migration" aria-labelledby="cap-migration-title">
       <div class="section-head"><span class="section-no">06</span><div><h3 id="cap-migration-title">Версии, миграция политик и отзыв доверия</h3><p>Один релиз не переписывается. Для изменившегося поведения создаётся новая версия capability.</p></div></div>
       
-    <div class="pane soft"><div class="eyebrow">EXAMPLE · POLICY UPDATE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Release v1.4</strong><small>IS-retail-backend@7 · active</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Impact analysis</strong><small>Новая политика @8 затрагивает capability</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Release v1.5</strong><small>Новая оценка · UAT · риск</small></div></div></div>
+    <div class="pane soft"><div class="eyebrow">EXAMPLE · POLICY UPDATE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Release v1.4</strong><small>IS-corporate-backend@7 · active</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Impact analysis</strong><small>Новая политика @8 затрагивает capability</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Release v1.5</strong><small>Новая оценка · UAT · риск</small></div></div></div>
     <div class="status-rail"><span class="active">ACTIVE</span><span>MIGRATION REQUIRED</span><span>SUSPENDED</span><span>REVOKED</span><span>SUPERSEDED</span></div>
     <div class="work-steps"><div class="work-step"><span class="num">1</span><div><strong>Изменился Policy Package</strong><p>КОНТУР находит затронутые репозитории, команды и релизы по dependency graph.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Создаётся новая версия</strong><p>Копируется выпущенная конфигурация; Policy @7 → @8 без изменения предыдущего snapshot.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Переоценка</strong><p>Применимые тесты, optional Benchmark, UAT того же snapshot и Risk Decision.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Замена или приостановка</strong><p>После нового релиза прежний становится Superseded. При Withdrawn/Revoked приём новых автономных задач может блокироваться.</p></div></div></div>
     <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Хорошая статистика старой версии не доказывает новую.</strong> Она остаётся контекстом для решения, но изменение политики, модели или runtime должно быть проверено отдельно. Новое поведение никогда не подменяет опубликованный snapshot.</span></div>
@@ -1104,7 +1228,7 @@ response: message + source references + available actions</pre>
 <script>
 (function(){
   'use strict';
-  const titles={home:'Как устроена платформа',regulator:'Процесс регулятора',flow:'Политика во Flow',sandbox:'Sandbox и setup',knowledge:'Управление знаниями',assistant:'Контекстный ассистент',capability:'Trusted Capability'};
+  const titles={home:'Как устроена платформа','context-supply-chain':'Context Supply Chain',accreditive:'Сквозной аккредитив','context-service-api':'API и гарантии',regulator:'Процесс регулятора',flow:'Политика во Flow',sandbox:'Sandbox и setup',knowledge:'Управление знаниями',assistant:'Контекстный ассистент',capability:'Trusted Capability'};
   const routes=Object.keys(titles);
   const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const pages=[...document.querySelectorAll('[data-page]')];

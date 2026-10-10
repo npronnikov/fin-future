@@ -113,7 +113,7 @@ test('Tracker only binds a resource; mock tasks are explicitly added to their pr
   assert.equal(w.state.teams[0].bindings.filter(binding => binding.type === 'Task Tracker').length, 1);
   const projectId = w.act('engineer', 'create_project', {name: 'Первый проект'}).id;
   assert.throws(() => w.act('engineer', 'add_mock_tasks', {projectId, template: 'mixed', count: 12}), /Repository/);
-  w.act('platform', 'save_binding', {type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/pom.xml', createPr: true});
+  w.act('platform', 'save_binding', {type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/pom.xml', createPr: true});
   w.act('engineer', 'add_mock_tasks', {projectId, template: 'mixed', count: 12, assigneeId: 'engineer'});
   const first = w.state.tasks.filter(task => task.teamId === w.teamId);
   assert.equal(first.length, 12);
@@ -128,7 +128,7 @@ test('Tracker only binds a resource; mock tasks are explicitly added to their pr
   const secondTeamId = w.act('po', 'create_team', {name: 'Вторая команда', scope: 'Activation'}).id;
   w.act('po', 'add_person', {teamId: secondTeamId, personId: 'platform', role: 'Platform Engineer'});
   w.act('platform', 'save_binding', {teamId: secondTeamId, type: 'Task Tracker', name: 'Task Tracker'});
-  w.act('platform', 'save_binding', {teamId: secondTeamId, type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/pom.xml', createPr: true});
+  w.act('platform', 'save_binding', {teamId: secondTeamId, type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/pom.xml', createPr: true});
   assert.equal(w.state.tasks.filter(task => task.teamId === secondTeamId).length, 0);
   const secondProjectId = w.act('po', 'create_project', {teamId: secondTeamId, name: 'Второй проект'}).id;
   w.act('po', 'add_mock_tasks', {teamId: secondTeamId, boardId: secondProjectId, template: 'dep-update', count: 3, assigneeId: ''});
@@ -146,14 +146,14 @@ test('setup preserves role, required resources, topology and repository scope ga
   assert.ok(team.spaceId, 'Team Space exists before an Environment is provisioned.');
   assert.equal(team.environment.status, 'not_configured');
   assert.throws(() => w.act('engineer', 'save_binding', {
-    type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/**',
+    type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/**',
   }), error => error instanceof DomainError && error.status === 403);
   w.act('platform', 'save_environment', {...team.environment, automation: 'HG SDLC'});
   for (const type of ['Repository', 'Task Tracker', 'CI']) {
     assert.throws(() => w.act('platform', 'provision', {topologyConfirmed: true}),
       error => error instanceof DomainError && error.message.includes(type));
     w.act('platform', 'save_binding', type === 'Repository' ? {
-      type, name: 'bank/savings-api', read: '/**', write: '/pom.xml', createPr: true,
+      type, name: 'bank/lc-trade-api', read: '/**', write: '/pom.xml', createPr: true,
     } : {type, name: type});
   }
   assert.throws(() => w.act('platform', 'provision', {topologyConfirmed: false}), /topology/);
@@ -165,14 +165,14 @@ test('setup preserves role, required resources, topology and repository scope ga
   const taskId = w.act('engineer', 'add_mock_tasks', {projectId, template: 'dep-update', count: 1}).taskIds[0];
   const capabilityId = w.act('engineer', 'create_capability', {tag: 'dep-update', template: 'dependency-update@1'}).id;
   w.act('platform', 'save_binding', {
-    type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/src/onboarding/**', createPr: true,
+    type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/src/letters-of-credit/**', createPr: true,
   });
   assert.equal(w.state.teams[0].environment.status, 'configured', 'Changed binding requires provisioning again.');
   assert.throws(() => w.act('engineer', 'start_run', {capabilityId, taskId, mode: 'supervised'}), /Environment/);
   w.act('platform', 'provision', {topologyConfirmed: true});
   assert.throws(() => w.act('engineer', 'start_run', {capabilityId, taskId, mode: 'supervised'}), /grants/);
   w.act('platform', 'save_binding', {
-    type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/pom.xml', createPr: true,
+    type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/pom.xml', createPr: true,
   });
   w.act('platform', 'provision', {topologyConfirmed: true});
   w.act('po', 'update_assignments', {personId: 'engineer', assignments: []});
@@ -214,8 +214,8 @@ for (const runtime of ['HG SDLC', 'AI Manager']) {
     await act('select_actor', {actorId: 'platform'});
     assert.ok(current.actor.teams.includes(teamId));
     await act('save_binding', {
-      type: 'Repository', name: 'bank/savings-api', read: '/**',
-      write: '/pom.xml\n/src/onboarding/**', createPr: true, merge: false,
+      type: 'Repository', name: 'bank/lc-trade-api', read: '/**',
+      write: '/pom.xml\n/src/letters-of-credit/**', createPr: true, merge: false,
     });
     assert.equal(current.state.tasks.length, 0);
     for (const type of ['Task Tracker', 'CI']) {
@@ -331,7 +331,7 @@ test('switching scenarios preserves independent datasets and the selection survi
   assert.equal(first.body.scenarioChosen, false);
   const demoWrite = await f.request({
     scenario: 'demo', revision: first.body.state.revision, action: 'message',
-    payload: {productId: 'savings', teamId: 'growth', thread: 'RUN-912', text: 'Demo state remains saved'},
+    payload: {productId: 'accreditive', teamId: 'growth', thread: 'RUN-912', text: 'Demo state remains saved'},
   });
   assert.equal(demoWrite.status, 200);
   const empty = await f.request({action: 'select_scenario', payload: {scenario: 'empty'}});
@@ -374,7 +374,7 @@ test('a stale tab cannot mutate data or its actor after the session changes scen
   const attempts = [
     {action: 'create_product', revision: empty.body.state.revision, payload: {name: 'Wrong scenario', description: 'Must not persist'}},
     {action: 'select_actor', payload: {actorId: 'regulator'}},
-    {action: 'ask_assistant', payload: {teamId: 'growth', productId: 'savings', text: 'Что дальше?', surface: 'home'}},
+    {action: 'ask_assistant', payload: {teamId: 'growth', productId: 'accreditive', text: 'Что дальше?', surface: 'home'}},
   ];
   for (const attempt of attempts) {
     const rejected = await f.request({scenario: 'empty', ...attempt});
@@ -402,7 +402,7 @@ test('stale writes in the empty scenario cannot overwrite newer setup or the dem
   assert.equal(current.body.state.revision, revision + 1);
   const originalDemo = f.store.readState('demo');
   assert.equal(originalDemo.products.length, 1);
-  assert.equal(originalDemo.products[0].id, 'savings');
+  assert.equal(originalDemo.products[0].id, 'accreditive');
   const stale = {...empty.body.state, revision: revision + 1};
   assert.throws(() => f.store.writeState(stale, revision, 'empty'),
     error => error instanceof DomainError && error.status === 409);
@@ -559,7 +559,7 @@ test('legacy SQLite Task Classes migrate to task tags once while frozen history 
   assert.ok(state.capabilities.every(capability => !Object.hasOwn(capability, 'classId')));
   assert.equal(state.suites[0].tag, 'dep-update');
   assert.equal(state.suites[0].teamId, 'growth');
-  assert.equal(state.suites[0].productId, 'savings');
+  assert.equal(state.suites[0].productId, 'accreditive');
   assert.ok(state.teams[0].bindings.every(binding => binding.type !== 'Model Gateway'));
   assert.deepEqual(snapshots(state).map(snapshot => JSON.stringify(snapshot)), frozenBefore);
   assert.equal(getStats(state.runs.filter(run => snapshotTag(run.snapshot) === 'dep-update')).started, 44);

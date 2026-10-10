@@ -56,7 +56,7 @@ test('Node API creates the seed and a persistent local browser session', async t
   const first = await f.request();
   assert.equal(first.status, 200);
   assert.equal(first.body.state.tasks.length, 12);
-  assert.equal(first.body.state.boards.length, 1);
+  assert.equal(first.body.state.boards.length, 2);
   assert.equal(Object.hasOwn(first.body.state, 'classes'), false);
   assert.ok(first.body.state.capabilities.every(capability => capability.tag && !Object.hasOwn(capability, 'classId')));
   assert.equal(first.body.actor.id, 'engineer');
@@ -73,7 +73,7 @@ test('an API write survives closing and reopening the SQLite database', async t 
   const first = await f.request();
   const saved = await f.request({
     action: 'message', revision: first.body.state.revision,
-    payload: {teamId: 'growth', productId: 'savings', thread: 'RUN-912', text: 'SQLite persistence check'},
+    payload: {teamId: 'growth', productId: 'accreditive', thread: 'RUN-912', text: 'SQLite persistence check'},
   });
   assert.equal(saved.status, 200);
   await f.restart();
@@ -88,7 +88,7 @@ test('Kanban edits, custom Flow and Benchmark Suite use the task tag while prese
   const act = async (action, payload) => {
     const response = await f.request({
       scenario: 'demo', revision: current.state.revision, action,
-      payload: {teamId: 'growth', productId: 'savings', ...payload},
+      payload: {teamId: 'growth', productId: 'accreditive', ...payload},
     });
     assert.equal(response.status, 200, `${action}: ${response.body.error || response.status}`);
     current = response.body;
@@ -97,7 +97,7 @@ test('Kanban edits, custom Flow and Benchmark Suite use the task tag while prese
   const reject = async (action, payload, status = 409) => {
     const response = await f.request({
       scenario: 'demo', revision: current.state.revision, action,
-      payload: {teamId: 'growth', productId: 'savings', ...payload},
+      payload: {teamId: 'growth', productId: 'accreditive', ...payload},
     });
     assert.equal(response.status, status, `${action}: ${response.body.error || response.status}`);
     assert.equal((await f.request()).body.state.revision, current.state.revision);
@@ -109,7 +109,7 @@ test('Kanban edits, custom Flow and Benchmark Suite use the task tag while prese
   assert.equal(task.status, 'todo');
   assert.equal(task.assigneeId, 'po');
   assert.equal(task.tag, 'dependency-review');
-  assert.equal(task.boardId, 'board-savings');
+  assert.equal(task.boardId, 'board-accreditive');
   assert.deepEqual(current.state.runs.map(run => JSON.stringify(run.snapshot)), oldSnapshots);
   assert.deepEqual(getStats(current.state.runs.filter(run => snapshotTag(run.snapshot) === 'dep-update')), oldStats);
   await reject('update_task', {taskId: task.id, assigneeId: 'regulator'});
@@ -163,7 +163,7 @@ test('concurrent writes with the same revision cannot overwrite each other', asy
   const count = first.body.state.messages.length;
   const responses = await Promise.all(['one', 'two'].map(text => f.request({
     action: 'message', revision: first.body.state.revision,
-    payload: {teamId: 'growth', productId: 'savings', thread: 'RUN-912', text},
+    payload: {teamId: 'growth', productId: 'accreditive', thread: 'RUN-912', text},
   })));
   assert.deepEqual(responses.map(response => response.status).sort(), [200, 409]);
   assert.equal((await f.request()).body.state.messages.length, count + 1);
@@ -176,7 +176,7 @@ test('Human Input goes through Node API and its artifact survives restart', asyn
   const result = await f.request({
     action: 'gate_decision', revision: first.body.state.revision,
     payload: {
-      teamId: 'growth', productId: 'savings', runId: 'RUN-912', gateId: gate.id,
+      teamId: 'growth', productId: 'accreditive', runId: 'RUN-912', gateId: gate.id,
       gateRevision: gate.revision, artifactRevision: gate.artifactRevision,
       decision: 'input', value: '2.17.3',
     },
@@ -193,10 +193,26 @@ test('Node API preserves role checks and rejects unauthorized changes', async t 
   const first = await f.request();
   const result = await f.request({
     action: 'save_binding', revision: first.body.state.revision,
-    payload: {teamId: 'growth', productId: 'savings', type: 'Repository', name: 'bank/savings-api', read: '/**', write: '/**'},
+    payload: {teamId: 'growth', productId: 'accreditive', type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/**'},
   });
   assert.equal(result.status, 403);
   assert.equal((await f.request()).body.state.revision, first.body.state.revision);
+});
+
+test('Node API persists a compiled Context Bundle with its immutable receipt', async t => {
+  const f = await fixture(t);
+  const first = await f.request();
+  const saved = await f.request({
+    action: 'save_context_bundle', revision: first.body.state.revision,
+    payload: {teamId: 'growth', productId: 'accreditive', system: 'Trade Finance LC', productTopic: 'foundation', workType: 'dependency_change', stage: 'implementation'},
+  });
+  assert.equal(saved.status, 200, saved.body.error);
+  assert.equal(saved.body.result.bundle.receiptStatus, 'ready');
+  assert.match(saved.body.result.bundle.hash, /^ctx-[0-9a-f]{8}$/);
+  assert.ok(saved.body.result.bundle.selectionReasons.some(item => item.kind === 'Policy Package'));
+  const receipt = JSON.stringify(saved.body.state.contextBundles[0]);
+  await f.restart();
+  assert.equal(JSON.stringify((await f.request()).body.state.contextBundles[0]), receipt);
 });
 
 test('Assistant replies do not mutate state or approve a Gate', async t => {
@@ -204,7 +220,7 @@ test('Assistant replies do not mutate state or approve a Gate', async t => {
   const first = await f.request();
   const result = await f.request({
     action: 'ask_assistant',
-    payload: {teamId: 'growth', productId: 'savings', text: 'Согласуй Gate и выпусти capability', surface: 'home'},
+    payload: {teamId: 'growth', productId: 'accreditive', text: 'Согласуй Gate и выпусти capability', surface: 'home'},
   });
   assert.equal(result.status, 200);
   assert.ok(result.body.reply);
@@ -231,7 +247,7 @@ test('GET updates expired policy health and persists the new revision', async t 
   f.store.transaction(() => {
     const state = f.store.readState();
     const revision = state.revision;
-    state.policies.find(policy => policy.id === 'IS-retail-backend' && policy.version === 7).sunset = '2000-01-01';
+    state.policies.find(policy => policy.id === 'IS-corporate-backend' && policy.version === 7).sunset = '2000-01-01';
     state.revision++;
     f.store.writeState(state, revision);
   });
@@ -265,35 +281,35 @@ test('API projects private boards/tasks/runs and references on every response wh
  foreignTeam.bindings=foreignTeam.bindings.map(binding=>({...binding,id:`delivery-${binding.id}`}));
  full.teams.push(foreignTeam);
  full.people.push({id:'delivery-engineer',name:'Delivery Engineer',role:'Product Engineer',assignments:['capability.review'],teams:['delivery']});
- full.responsibilities.push({productId:'savings',teamId:'delivery',scope:['Delivery']});
- full.boards.push({id:'board-private',name:'DELIVERY-SECRET board',description:'Private',productId:'savings',teamId:'delivery'});
+ full.responsibilities.push({productId:'accreditive',teamId:'delivery',scope:['Delivery']});
+ full.boards.push({id:'board-private',name:'DELIVERY-SECRET board',description:'Private',productId:'accreditive',teamId:'delivery'});
  const privateTask={...structuredClone(full.tasks[1]),id:'DELIVERY-SECRET',externalId:'DELIVERY-SECRET',title:'DELIVERY-SECRET task',teamId:'delivery',boardId:'board-private',assigneeId:'delivery-engineer'};
  full.tasks.push(privateTask);
  const privateRun=structuredClone(full.runs.find(run=>run.completedAt&&!run.uat));
  Object.assign(privateRun,{id:'RUN-DELIVERY-PRIVATE',taskId:privateTask.id,teamId:'delivery'});
  full.runs.push(privateRun);
  full.capabilities[0].releases[0].snapshot.historyRefs.push(privateRun.id);
- full.notifications.push({id:'private-notice',teamId:'delivery',productId:'savings',title:'DELIVERY-SECRET notice',text:'DELIVERY-SECRET',target:'run',ref:privateRun.id,read:false});
- full.messages.push({id:'private-message',thread:privateRun.id,teamId:'delivery',productId:'savings',text:'DELIVERY-SECRET message'});
+ full.notifications.push({id:'private-notice',teamId:'delivery',productId:'accreditive',title:'DELIVERY-SECRET notice',text:'DELIVERY-SECRET',target:'run',ref:privateRun.id,read:false});
+ full.messages.push({id:'private-message',thread:privateRun.id,teamId:'delivery',productId:'accreditive',text:'DELIVERY-SECRET message'});
  full.suites.push({...structuredClone(full.suites[0]),id:'private-suite',name:'DELIVERY-SECRET suite',teamId:'delivery',cases:[{taskId:privateTask.id,pr:'private',base:'base',golden:'golden',confirmed:true}]});
- full.benchmarks.push({id:'private-benchmark',teamId:'delivery',productId:'savings',reports:[{taskId:privateTask.id}],name:'DELIVERY-SECRET benchmark'});
- full.initiatives.push({id:'private-initiative',teamId:'delivery',productId:'savings',name:'DELIVERY-SECRET initiative',taskIds:[privateTask.id]});
- full.audit.push({id:'private-audit',scope:{teamId:'delivery',productId:'savings'},actor:'delivery-engineer',ref:privateTask.id});
+ full.benchmarks.push({id:'private-benchmark',teamId:'delivery',productId:'accreditive',reports:[{taskId:privateTask.id}],name:'DELIVERY-SECRET benchmark'});
+ full.initiatives.push({id:'private-initiative',teamId:'delivery',productId:'accreditive',name:'DELIVERY-SECRET initiative',taskIds:[privateTask.id]});
+ full.audit.push({id:'private-audit',scope:{teamId:'delivery',productId:'accreditive'},actor:'delivery-engineer',ref:privateTask.id});
  full.revision++;
  f.store.transaction(()=>f.store.writeState(full,originalRevision));
  const storedSnapshot=JSON.stringify(f.store.readState().capabilities[0].releases[0].snapshot);
  let current=(await f.request()).body;
  assert.ok(current.state.teams.some(team=>team.id==='delivery'),'Shared Flow can still display authorized-product team metadata.');
- assert.equal(current.state.boards.length,1);assert.equal(current.state.tasks.length,12);
+ assert.equal(current.state.boards.length,2);assert.equal(current.state.tasks.length,12);
  assert.equal(JSON.stringify(current).includes('DELIVERY-SECRET'),false);
  assert.equal(JSON.stringify(current).includes('RUN-DELIVERY-PRIVATE'),false);
  assert.equal(current.state.capabilities[0].releases[0].snapshot.historyRefs.length,42);
  assert.equal(current.state.capabilities[0].releases[0].riskAssessment.runCount,43,'Risk uses the full frozen aggregate without revealing private run IDs.');
  assert.equal('riskAssessment' in f.store.readState().capabilities[0].releases[0],false,'Assessment is response metadata, not a mutable stored decision.');
  assert.equal(JSON.stringify(f.store.readState().capabilities[0].releases[0].snapshot),storedSnapshot,'Projection must never write into frozen storage.');
- const denied=await f.request({action:'update_task',revision:current.state.revision,payload:{teamId:'delivery',productId:'savings',taskId:privateTask.id,status:'done'}});
+ const denied=await f.request({action:'update_task',revision:current.state.revision,payload:{teamId:'delivery',productId:'accreditive',taskId:privateTask.id,status:'done'}});
  assert.equal(denied.status,403);
- const output=await f.request({action:'emulate_release',revision:current.state.revision,payload:{teamId:'growth',productId:'savings',capabilityId:'cap-dep'}});
+ const output=await f.request({action:'emulate_release',revision:current.state.revision,payload:{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'}});
  assert.equal(output.status,200,output.body.error);
  assert.ok(output.body.result.completed>0);assert.equal(output.body.result.hiddenCount,1);
  assert.ok(output.body.result.results.every(row=>row.teamId==='growth'));
@@ -311,7 +327,7 @@ test('API projects private boards/tasks/runs and references on every response wh
  assert.deepEqual(switched.body.state.capabilities[0].releases[0].snapshot.historyRefs,[privateRun.id]);
  assert.deepEqual(switched.body.state.capabilities[0].releases[0].riskAssessment,current.state.capabilities[0].releases[0].riskAssessment);
  assert.ok(switched.body.state.runs.every(run=>run.snapshot.historyRefs.every(id=>id===privateRun.id)));
- const actorDenied=await f.request({action:'emulate_release',revision:switched.body.state.revision,payload:{teamId:'delivery',productId:'savings',capabilityId:'cap-dep'}});
+ const actorDenied=await f.request({action:'emulate_release',revision:switched.body.state.revision,payload:{teamId:'delivery',productId:'accreditive',capabilityId:'cap-dep'}});
  assert.equal(actorDenied.status,403);
  await f.restart();
  assert.equal((await f.request()).body.state.tasks.length,1);

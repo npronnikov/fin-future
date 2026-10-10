@@ -76,7 +76,7 @@ export default function Regulation() {
   const referenced = state.policies.find(policy => policyKey(policy) === ref);
   const [segment, setSegment] = useState(referenced?.segment || 'retail.backend');
   const [direction, setDirection] = useState(referenced?.direction || 'Information Security');
-  const [selected, setSelected] = useState(ref || 'IS-retail-backend@7');
+  const [selected, setSelected] = useState(ref || 'IS-corporate-backend@7');
   const [statusForm, setStatusForm] = useState<Item | null>(null);
   const [editor, setEditor] = useState<PackageDraft | null>(null);
   const [editorTab, setEditorTab] = useState('rules');

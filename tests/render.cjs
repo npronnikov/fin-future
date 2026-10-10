@@ -72,6 +72,26 @@ for(const fixture of checks){
  count++;
 }
 
+const Knowledge=require('../components/kontur/knowledge.tsx').default;
+const knowledgeStages={
+ overview:['Контекст с происхождением','Product variant не равен IT-сегменту'],
+ segmentation:['Техническая система','Как возник сегмент'],
+ policy:['POLICY SELECTION','IS-corporate-backend@8'],
+ ontology:['Онтология продукта','Что такое аккредитив'],
+ publication:['Продуктовое и командное знание','Аккредитив · каноническая модель продукта'],
+ graph:['Исследователь графа','Готовые Cypher-запросы'],
+ delivery:['Запрос от оркестратора','Context Bundle'],
+};
+for(const [tab,expectedItems] of Object.entries(knowledgeStages)){
+ const value={...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab};
+ const html=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value},React.createElement(Knowledge)));
+ for(const expected of expectedItems)if(!html.includes(expected))throw new Error(`Knowledge stage ${tab} missing ${expected}`);
+ for(const step of ['Обзор','Сегментация систем','Policy Package','Онтология аккредитива','Публикация знаний','Граф знаний','Доставка агенту'])if(!html.includes(step))throw new Error(`Knowledge route ${tab} missing step ${step}`);
+ count++;
+}
+const docsSource=fs.readFileSync(path.join(root,'public/docs/kontur-architecture.html'),'utf8');
+for(const expected of ['#/context-supply-chain','#/accreditive','#/context-service-api','Промышленная архитектура','POST /api/context/compile','Neo4j','Принципиальные гарантии','Глоссарий','Источники'])if(!docsSource.includes(expected))throw new Error(`Documentation missing ${expected}`);
+
 
 const {copy,defaultConfig,getFlowNodes,currentRelease}=require('../lib/domain.ts');
 const FlowEditor=require('../components/kontur/flow-editor.tsx').default;
