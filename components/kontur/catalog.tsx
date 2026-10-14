@@ -1,9 +1,9 @@
 'use client';
-import {useEffect, useState} from 'react';
-import {ArrowLeft, ArrowRight, Bot, Check, FileCode2, FileCheck, GitBranch, Layers, Lock, Scale, Settings2, ShieldCheck, Sparkles, Tag, Users, Workflow} from 'lucide-react';
+import React, {useEffect, useState} from 'react';
+import {ArrowLeft, ArrowRight, Bot, Check, FileCode2, FileCheck, GitBranch, Layers, Lock, Plus, Scale, Settings2, ShieldCheck, Sparkles, Tag, Trash2, Users, Workflow} from 'lucide-react';
 import {useKontur} from './context';
 import {Button, Card, PageHead, Pill, Status, Detail, Tabs, TabsList, TabsTrigger, TabsContent, KV, Blank, Code, TextLink, Field, Pick, Input, Notice} from './ui';
-import {currentRelease, defaultConfig, getFlowNodes, type Asset, type Config} from '@/lib/domain';
+import {createFlowNode, currentRelease, defaultConfig, getFlowNodes, type Asset, type Config, type FlowNodeType} from '@/lib/domain';
 
 const catalogTypes = ['Flow', 'Skills', 'Subagents', 'AI Agent Blueprints', 'Judge Profiles'];
 const catalogTypeLabels: Record<string, string> = {Flow: 'Сценарии', Skills: 'Скиллы', Subagents: 'Сабагенты', 'AI Agent Blueprints': 'Шаблоны ИИ-агентов', 'Judge Profiles': 'Профили проверки'};
@@ -40,6 +40,7 @@ export default function Catalog({initialType}: {initialType?: string} = {}) {
       <TabsContent value="Flow">
         {!configuredRuntime && <Card><Blank title="Сначала выберите оркестратор" text="Настройте Sandbox, чтобы каталог показал совместимые сценарии." action={<Button onClick={() => go('environment', '', 'sandbox')}>Настроить Sandbox</Button>}/></Card>}
         {configuredRuntime && team.environment.status !== 'ready' && <Card><Blank title="Завершите настройку Sandbox" text={`После создания среды здесь появятся сценарии ${configuredRuntime}.`} action={<Button onClick={() => go('environment', '', 'sandbox')}>Открыть Sandbox</Button>}/></Card>}
+        {!!configuredRuntime && team.environment.status === 'ready' && <CustomScenarioBuilder runtime={runtime} suggestedTag={decodeTag(ref)}/>}
         <div className="flow-template-grid">{flows.map((item, index) => {
           const id = templateId(item), preview = defaultConfig(id === 'sdd-statements@1' ? 'statement-doc' : decodeTag(ref) || 'dep-update', runtime, id), InfoIcon = templateInfo[id]?.icon || Workflow;
           return <button key={`${item.id}@${item.version}`} type="button" className="flow-template-card flow-catalog-template" onClick={() => setFlowId(`${item.id}@${item.version}`)} aria-label={`Открыть сценарий: ${templateInfo[id]?.name || item.name}`}>
@@ -82,7 +83,7 @@ function CatalogFlowDetail({asset, suggestedTag, onBack}: {asset: Asset; suggest
       <div className="stack"><Card className="flow-catalog-schema" title={<span className="row"><Workflow size={18}/>Структура сценария</span>} action={<Pill>v{asset.version}</Pill>} body={false}><TemplatePreview config={config}/></Card><Card title="О сценарии"><p className="subtext">{description}</p><div className="mt-4"><KV label="Результат">{templateInfo[template]?.output || 'Результат задачи и подтверждающие артефакты'}</KV><KV label="Оркестратор">{runtime}</KV><KV label="Владелец шаблона">{asset.owner}</KV><KV label="Версия в каталоге">{asset.id}@{asset.version}</KV></div><p className="state-note">При создании появится самостоятельная конфигурация сценария продукта. В ней можно менять узлы, скиллы, сабагентов и экономику исполнения.</p></Card></div>
       <div className={`flow-catalog-selection ${chosen ? 'selected' : ''}`}>
         <div className="flow-catalog-selection-head"><span className="icon-tile">{chosen ? <Check size={22}/> : <Workflow size={22}/>}</span><p className="eyebrow">{chosen ? 'ВЫБРАННЫЙ СЦЕНАРИЙ' : 'СЦЕНАРИЙ ИЗ КАТАЛОГА'}</p><h2>{displayName}</h2><p>{description}</p></div>
-        {!chosen ? <div className="flow-catalog-selection-body"><div className="row wrap">{asset.runtimes.map(item => <Pill key={item}>{item}</Pill>)}</div><Button onClick={() => setChosen(true)}>Выбрать процесс<ArrowRight size={16}/></Button></div> : <form className="flow-catalog-selection-body stack" onSubmit={create}>
+        {!chosen ? <div className="flow-catalog-selection-body"><div className="row wrap">{asset.runtimes.map(item => <Pill key={item}>{item}</Pill>)}</div><Button onClick={() => setChosen(true)}>Выбрать и настроить<ArrowRight size={16}/></Button></div> : <form className="flow-catalog-selection-body stack" onSubmit={create}>
           <Field label="Тег задач" hint="Сценарий будет работать с этим тегом на досках продукта."><Pick label="Тег для сценария" value={tag} onChange={setTag} disabled={busy || !tags.length} options={tags.map(value => ({value, label: `#${value} · ${tasks.filter(task => task.tag === value).length} задач моей команды`}))}/></Field>
           <Field label="Название сценария"><Input value={name} onChange={event => setName(event.target.value)} maxLength={160} required disabled={busy}/></Field>
           <div className="row wrap"><Pill tone="green"><Tag size={12}/>{tag ? `#${tag}` : 'Выберите тег'}</Pill><span className="task-sub">{product.name} / {team.name}</span></div>
@@ -94,6 +95,75 @@ function CatalogFlowDetail({asset, suggestedTag, onBack}: {asset: Asset; suggest
       </div>
     </div>
   </div>;
+}
+
+const customBlocks: {type: FlowNodeType; label: string; hint: string; icon: typeof Workflow}[] = [
+  {type: 'analysis', label: 'Анализ', hint: 'Разобрать задачу и ограничения', icon: Sparkles},
+  {type: 'specification', label: 'Спецификация', hint: 'Описать ожидаемое изменение', icon: FileCode2},
+  {type: 'input', label: 'Ввод человека', hint: 'Запросить недостающие данные', icon: Users},
+  {type: 'approval', label: 'Согласование', hint: 'Получить явное решение', icon: Check},
+  {type: 'implementation', label: 'Реализация', hint: 'Внести изменение', icon: Settings2},
+  {type: 'checks', label: 'Проверки', hint: 'Проверить результат', icon: FileCheck},
+];
+
+function CustomScenarioBuilder({runtime, suggestedTag}: {runtime: Config['runtime']; suggestedTag: string}) {
+  const {state, team, product, go, act, can, busy} = useKontur();
+  const tasks = state.tasks.filter(task => task.teamId === team.id && task.productId === product.id);
+  const tags = Array.from(new Set(tasks.map(task => task.tag).filter(Boolean)));
+  const [tag, setTag] = useState(tags.includes(suggestedTag) ? suggestedTag : tags[0] || '');
+  const [name, setName] = useState('Мой сценарий');
+  const [steps, setSteps] = useState<FlowNodeType[]>(['analysis', 'implementation', 'checks']);
+  useEffect(() => {if (tags.includes(suggestedTag)) setTag(suggestedTag);}, [suggestedTag]);
+  const base = defaultConfig(tag || 'task', runtime, 'custom');
+  const nodes = [
+    createFlowNode('task', 'builder-task', base),
+    ...steps.map((type, index) => createFlowNode(type, `builder-${type}-${index + 1}`, base)),
+    createFlowNode('result', 'builder-result', base),
+  ];
+  const implementation = steps.indexOf('implementation');
+  const lastImplementation = steps.lastIndexOf('implementation');
+  const checks = steps.indexOf('checks');
+  const structureReady = implementation >= 0 && checks > lastImplementation;
+  const existing = state.capabilities.find(capability => capability.productId === product.id && capability.tag === tag && !capability.legacyDuplicateOf);
+  const enabled = can('Product Engineer') && !!tag && !!name.trim() && structureReady && !existing && team.environment.status === 'ready';
+  function add(type: FlowNodeType) {setSteps(current => [...current, type]);}
+  function remove(index: number) {setSteps(current => current.filter((_, itemIndex) => itemIndex !== index));}
+  function move(index: number, delta: number) {setSteps(current => {const target = index + delta; if (target < 0 || target >= current.length) return current; const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next;});}
+  async function create(event: React.FormEvent) {
+    event.preventDefault();
+    if (!enabled || busy) return;
+    const config = {
+      description: 'Собственный сценарий, собранный из блоков в каталоге.',
+      nodes: nodes.map(node => node.name),
+      nodeConfigs: nodes,
+      humanInput: steps.includes('input'),
+      humanApproval: steps.includes('approval'),
+    };
+    const result = await act('create_capability', {tag, template: 'custom', name: name.trim(), config});
+    if (result?.id) go('capability', result.id, 'configuration');
+  }
+  return <section className="custom-scenario-builder" aria-label="Конструктор собственного сценария">
+    <header className="custom-scenario-head"><div><span className="eyebrow">СВОЙ СЦЕНАРИЙ</span><h2>Соберите последовательность из блоков</h2><p>Добавьте нужные шаги, расставьте их по порядку и продолжите настройку в полном редакторе.</p></div><Pill tone="green">{runtime}</Pill></header>
+    <div className="custom-scenario-layout">
+      <div className="custom-scenario-workbench">
+        <div className="custom-block-palette" aria-label="Доступные блоки">{customBlocks.map(block => <button type="button" key={block.type} disabled={busy || steps.length >= 22} onClick={() => add(block.type)}><block.icon size={17}/><span><strong>{block.label}</strong><small>{block.hint}</small></span><Plus size={14}/></button>)}</div>
+        <div className="custom-block-canvas" aria-label="Последовательность сценария">
+          <div className="custom-flow-block endpoint"><Tag size={17}/><strong>Задача</strong><small>Вход</small></div>
+          {steps.map((type, index) => {const block = customBlocks.find(item => item.type === type)!; return <React.Fragment key={`${type}-${index}`}><ArrowRight className="custom-block-arrow" size={15}/><div className={`custom-flow-block ${type}`}><block.icon size={17}/><strong>{block.label}</strong><span className="custom-block-controls"><button type="button" aria-label={`Переместить ${block.label} раньше`} disabled={busy || index === 0} onClick={() => move(index, -1)}><ArrowLeft size={12}/></button><button type="button" aria-label={`Переместить ${block.label} позже`} disabled={busy || index === steps.length - 1} onClick={() => move(index, 1)}><ArrowRight size={12}/></button><button type="button" aria-label={`Удалить ${block.label}`} disabled={busy} onClick={() => remove(index)}><Trash2 size={12}/></button></span></div></React.Fragment>;})}
+          <ArrowRight className="custom-block-arrow" size={15}/><div className="custom-flow-block endpoint"><Check size={17}/><strong>Результат</strong><small>Выход</small></div>
+        </div>
+        {!structureReady && <Notice tone="blue" title="Завершите структуру">Добавьте «Реализацию», а после последней реализации — «Проверки».</Notice>}
+      </div>
+      <form className="custom-scenario-form" onSubmit={create}>
+        <Field label="Тег задач" hint="Сценарий будет запускаться для задач с этим тегом."><Pick label="Тег для сценария" value={tag} onChange={setTag} disabled={busy || !tags.length} options={tags.map(value => ({value, label: `#${value} · ${tasks.filter(task => task.tag === value).length} задач`}))}/></Field>
+        <Field label="Название сценария"><Input value={name} onChange={event => setName(event.target.value)} maxLength={160} required disabled={busy}/></Field>
+        {existing && <Notice tone="blue" title="Для тега уже есть сценарий"><TextLink onClick={() => go('capability', existing.id, 'configuration')}>Открыть существующий сценарий</TextLink></Notice>}
+        {!tags.length && <Notice tone="blue" title="Сначала добавьте задачи">На доске должна быть хотя бы одна задача с тегом.</Notice>}
+        {!can('Product Engineer') && <Notice tone="blue" title="Требуется инженер продукта">Создание сценария доступно роли Product Engineer.</Notice>}
+        <Button type="submit" disabled={!enabled || busy}>Создать и настроить<ArrowRight size={16}/></Button>
+      </form>
+    </div>
+  </section>;
 }
 
 function TemplatePreview({config}: {config: Config}) {

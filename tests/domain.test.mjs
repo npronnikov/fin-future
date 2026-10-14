@@ -718,15 +718,28 @@ test('Takeover and return require comments, keep one authorized writer, and neve
  s=decision(s,run.id,'approve');assert.equal(s.runs.find(item=>item.id===run.id).status,'accepted');
 });
 
-test('each new Human Gate creates a bell notification including later full-rework attempts',()=>{
- let {state:s,id}=configuredDraft('dep-update',cfg=>{cfg.humanInput=true;});const count=s.notifications.length;
+test('each new Human Gate creates a bell notification and Messenger entry including later full-rework attempts',()=>{
+ let {state:s,id}=configuredDraft('dep-update',cfg=>{cfg.humanInput=true;});const count=s.notifications.length,messageCount=s.messages.length;
  const started=startConfigured(s,id);s=started.state;let run=s.runs.find(run=>run.id===started.runId);
  assert.equal(s.notifications.length,count+1);assert.equal(s.notifications[0].kind,'Human Input');assert.equal(s.notifications[0].ref,run.id);
+ assert.equal(s.messages.length,messageCount+1);assert.equal(s.messages.at(-1).thread,run.id);assert.equal(s.messages.at(-1).kind,'gate');assert.equal(s.messages.at(-1).gateId,run.gates.at(-1).id);
  s=decision(s,run.id,'input',{value:'2.17.4'});assert.equal(s.notifications[0].kind,'Human Approval');
  s=decision(s,run.id,'rework',{comment:'Повторить весь сценарий.'});run=s.runs.find(item=>item.id===run.id);
  assert.equal(run.gates.at(-1).type,'input');assert.equal(s.notifications[0].kind,'Human Input');assert.equal(s.notifications[0].read,false);
  const gates=s.notifications.filter(notice=>notice.ref===run.id&&['Human Input','Human Approval'].includes(notice.kind));
  assert.equal(gates.length,run.gates.length);assert.equal(new Set(gates.map(notice=>notice.id)).size,gates.length);
+ const gateMessages=s.messages.filter(message=>message.runId===run.id&&message.kind==='gate');
+ assert.equal(gateMessages.length,run.gates.length);assert.equal(new Set(gateMessages.map(message=>message.gateId)).size,gateMessages.length);
+});
+
+test('legacy Human Gates gain one Messenger entry per gate during migration',()=>{
+ const legacy=d.createSeed();legacy.messages=legacy.messages.filter(message=>message.kind!=='gate');
+ const migrated=d.migrateState(legacy);assert.equal(migrated.changed,true);
+ const gates=migrated.state.runs.flatMap(run=>run.gates.map(gate=>({run,gate})));
+ const messages=migrated.state.messages.filter(message=>message.kind==='gate');
+ assert.equal(messages.length,gates.length);
+ for(const {run,gate} of gates)assert.ok(messages.some(message=>message.gateId===gate.id&&message.thread===run.id&&message.assigneeId===gate.assignee));
+ assert.equal(d.migrateState(migrated.state).changed,false);
 });
 
 test('UAT freezes the applicable basket version and risks require all explicit acknowledgements',()=>{

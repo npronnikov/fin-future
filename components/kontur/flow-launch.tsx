@@ -67,6 +67,6 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
         <p className="flow-launch-note">Демонстрационное исполнение. После запуска откроется запуск с Timeline, Human Gates и артефактами.</p>
       </div>
     </div>
-    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : saveBeforeRun ? 'Сохранить и запустить процесс' : 'Запустить процесс'}</Button></div>
+    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : saveBeforeRun ? 'Сохранить и запустить сценарий' : 'Запустить сценарий'}</Button></div>
   </Modal>;
 }

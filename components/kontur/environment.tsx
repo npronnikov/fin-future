@@ -64,7 +64,7 @@ export default function Environment() {
     if (result?.ok) {setReviewedConfiguration(configurationKey); setProvisionStep(-1); setPreview(true);}
   }
   async function provision() {
-    if (!enabled || busy || running || !resourcesReady) return;
+    if (!enabled || busy || running || provisioned || !resourcesReady) return;
     if (reviewedConfiguration !== configurationKey) {await openPreview(); return;}
     setPreview(true); setRunning(true); setProvisionStep(0);
     for (let index = 0; index < PROVISION_STEPS.length; index++) {
@@ -128,7 +128,7 @@ export default function Environment() {
       {!provisioned && <div className="environment-stage-head"><div><p className="eyebrow">ШАГ 3 / 3</p><h2>Finish</h2><p className="subtext">Проверьте Sandbox, сохраните конфигурацию и выполните Provisioning.</p></div></div>}
       {showReadyNotice && <Notice tone="green" title="Environment готов">Следующий шаг — на главной создать доску задач и добавить задачи команды.</Notice>}
       <div className="sandbox-config-layout"><div className="stack"><Card title="Конфигурация Sandbox"><div className="form-grid">{SANDBOX_FIELDS.map(item => <Field key={item.key} label={item.label}><Input value={form[item.key] ?? ''} type="number" min={1} onChange={event => field(item.key, Number(event.target.value))} disabled={!enabled || busy || running}/></Field>)}</div></Card><Card title="Оркестратор"><div className="form-grid"><Field label="Название оркестратора"><Input value={form.automation ?? ''} disabled/></Field>{ORCHESTRATOR_FIELDS.map(item => <Field key={item.key} label={item.label}><Input value={form[item.key] ?? ''} type={item.number ? 'number' : 'text'} min={1} onChange={event => field(item.key, item.number ? Number(event.target.value) : event.target.value)} disabled={!enabled || busy || running}/></Field>)}</div></Card></div><div className="stack"><SandboxPreview team={team} form={form} confirmed={ready}/>{!provisioned && <Notice tone="blue" title="Проверьте конфигурацию">Preview показывает Sandbox, платформу и подключённые ресурсы. Provisioning создаёт среду в демонстрационном контуре.</Notice>}</div></div>
-      <div className="environment-finish-actions"><Button variant="outline" onClick={save} disabled={!enabled || busy || running}>Сохранить конфигурацию</Button><Button variant="outline" onClick={openPreview} disabled={!enabled || busy || running}><Network size={16}/>Предпросмотр</Button><Button onClick={provision} disabled={!enabled || busy || running}><Server size={16}/>{running ? 'Создание…' : 'Создать'}</Button></div>
+      <div className="environment-finish-actions"><Button variant="outline" onClick={save} disabled={!enabled || busy || running}>Сохранить конфигурацию</Button><Button variant="outline" onClick={openPreview} disabled={!enabled || busy || running}><Network size={16}/>Предпросмотр</Button><Button data-action="provision" onClick={provision} disabled={!enabled || busy || running || provisioned}><Server size={16}/>{provisioned ? 'Создано' : running ? 'Создание…' : 'Создать'}</Button></div>
       {!provisioned && <div className="environment-wizard-footer"><Button variant="outline" onClick={() => go('environment', '', 'automation')} disabled={busy || running}><ArrowLeft size={16}/>Назад</Button><p>После Provisioning вернитесь на главную к созданию доски и задач.</p></div>}
     </section>}
 
@@ -143,7 +143,7 @@ export default function Environment() {
     <Modal open={preview} onClose={() => !running && setPreview(false)} title="Preview" description={`${product.name} / ${team.name} · ${form.automation}`} wide>
       <SandboxPreview team={team} form={form} confirmed={provisionStep === PROVISION_STEPS.length || ready}/>
       {provisionStep >= 0 && <div className="stack"><Progress value={Math.min(100, provisionStep / PROVISION_STEPS.length * 100)}/><div className="grid-2 gap-2">{PROVISION_STEPS.map((item, index) => <div className={`row text-sm ${index === provisionStep ? 'text-[#628057]' : 'muted'}`} key={item}>{index < provisionStep ? <Check size={15} className="text-[#608149]"/> : index === provisionStep ? <Loader2 size={15} className="animate-spin"/> : <span className="w-[15px]"/>}{item}</div>)}</div></div>}
-      <div className="actions"><Button variant="outline" disabled={running} onClick={() => setPreview(false)}>Закрыть</Button><Button onClick={provision} disabled={busy || running || !enabled}>{running ? 'Создание…' : 'Создать'}</Button></div>
+      <div className="actions"><Button variant="outline" disabled={running} onClick={() => setPreview(false)}>Закрыть</Button><Button data-action="provision" onClick={provision} disabled={busy || running || !enabled || provisioned}>{provisioned ? 'Создано' : running ? 'Создание…' : 'Создать'}</Button></div>
     </Modal>
   </div>;
 }

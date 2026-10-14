@@ -692,6 +692,18 @@ button.item-row:hover { background: #fafcf6; }
 
 /* Context Supply Chain */
 .knowledge-supply-page { max-width: 1540px; }
+.context-journey-guide { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 18px; margin: 24px 0 0; padding: 18px 50px 18px 20px; border: 1px solid rgba(77, 109, 77, .16); border-radius: 12px; background: #f1f6ed; }
+.context-journey-count { width: 58px; height: 58px; display: grid; place-content: center; justify-items: center; border-radius: 50%; background: #dfead8; color: #4e744e; }
+.context-journey-count strong { font: 700 20px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.context-journey-count span { margin-top: 4px; color: #789071; font-size: 9px; }
+.context-journey-copy { min-width: 0; }
+.context-journey-copy > span { color: #82967e; font-size: 9px; font-weight: 700; letter-spacing: 1.15px; }
+.context-journey-copy h2 { margin: 4px 0 3px; color: #365a40; font-size: 17px; }
+.context-journey-copy p { max-width: 760px; color: #718070; font-size: 12px; line-height: 1.55; }
+.context-journey-actions { display: flex; align-items: center; gap: 8px; }
+.context-journey-close { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #8b9c87; }
+.context-journey-close:hover { color: #3e6046; background: #e4eddf; }
+.context-journey-close:focus-visible { outline: 2px solid #8faa78; outline-offset: 1px; }
 .context-route-layout { display: grid; grid-template-columns: 218px minmax(0, 1fr); gap: 24px; align-items: start; }
 .context-route-nav { position: sticky; top: 88px; display: grid; gap: 5px; padding: 8px; border: 1px solid rgba(77, 105, 82, .13); border-radius: 12px; background: #f8faf6; }
 .context-route-nav button { min-width: 0; display: grid; grid-template-columns: 28px 18px minmax(0, 1fr); align-items: center; gap: 8px; padding: 11px 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #728176; text-align: left; font-size: 12px; transition: background .16s, border-color .16s, color .16s; }
@@ -837,6 +849,9 @@ button.item-row:hover { background: #fafcf6; }
   .context-delivery-layout .grid-2 { grid-template-columns: 1fr; }
 }
 @media (max-width: 1100px) {
+  .context-journey-guide { grid-template-columns: 54px minmax(0, 1fr); }
+  .context-journey-count { width: 50px; height: 50px; }
+  .context-journey-actions { grid-column: 2; }
   .context-route-layout { grid-template-columns: 1fr; }
   .context-route-nav { position: static; display: flex; overflow-x: auto; padding: 6px; }
   .context-route-nav button { flex: 0 0 auto; grid-template-columns: 24px 16px auto; }
@@ -844,6 +859,11 @@ button.item-row:hover { background: #fafcf6; }
   .delivery-output { position: static; }
 }
 @media (max-width: 720px) {
+  .context-journey-guide { grid-template-columns: 42px minmax(0, 1fr); gap: 12px; padding: 15px 40px 15px 14px; }
+  .context-journey-count { width: 42px; height: 42px; }
+  .context-journey-count strong { font-size: 16px; }
+  .context-journey-actions { grid-column: 1 / -1; }
+  .context-journey-actions [data-slot="button"] { flex: 1; }
   .context-convergence, .ontology-grid { grid-template-columns: 1fr; }
   .context-convergence-lines { display: none; }
   .context-receipt { grid-column: 1; }

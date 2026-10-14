@@ -259,7 +259,12 @@ export function createSeed():State{const time='2026-10-06T11:02:00.000Z';const t
  s.assets=[...['code-diff-analysis@4','dependency-review@5','certified-dependency-selection@5','dependency-evidence-check@3','hg-sdlc-run-diagnostics@1'].map(k=>{const[id,v]=k.split('@');return{id,version:Number(v),type:'Skills',name:id,owner:id.includes('certified')||id.includes('evidence')?'Information Security':'Product Engineer',status:'Current',runtimes:['HG SDLC','AI Manager'] as Runtime[],changelog:'Versioned reusable asset'}}),{id:'dependency-update',version:1,type:'Workflow Templates',name:'Dependency Update · non-SDD',owner:'Product Engineer',status:'Current',runtimes:['HG SDLC'],changelog:'Analyze → Implement → Checks → Result'},{id:'sdd-statements',version:1,type:'Workflow Templates',name:'Statements & Certificates · SDD',owner:'Product Engineer',status:'Current',runtimes:['HG SDLC'],changelog:'Task → Specification → Human Approval → Implementation → Checks → Result'},{id:'product-engineer',version:1,type:'AI Agent Blueprints',name:'Product Engineer',owner:'Product Engineer',status:'Current',runtimes:['AI Manager'],changelog:'Workers, handoffs, instructions, constraints'},{id:'dependency-judge',version:1,type:'Judge Profiles',name:'Dependency Review Judge',owner:'Product Engineer',status:'Current',runtimes:['HG SDLC','AI Manager'],changelog:'Структурированная оценка Actual ↔ Golden',instruction:'Сравнить actual result и golden result. Проверить correctness, scope control, test quality и minimal change.',skills:['code-diff-analysis@4','dependency-review@5'],schema:{correctness:'number',scope_control:'number',test_quality:'number',minimal_change:'number',verdict:'PASS | FAIL',summary:'text',findings:'array'}}];
  mergeCatalogAssets(s);
  s.suites=[{id:'dep-update-suite',version:3,name:'LC Dependency Update',tag:'dep-update',teamId:'growth',productId:'accreditive',cases:s.tasks.slice(0,3).map(t=>({taskId:t.id,pr:t.pr!,base:t.base,golden:t.golden,confirmed:true})),judgeId:'dependency-judge@1'}];
- s.messages=[{id:'msg-1',thread:'RUN-912',actor:'engineer',text:'Обнови только dependency. Не меняй правила исполнения аккредитива.',time},{id:'msg-2',thread:'team-growth',actor:'po',text:'Responsibility команды: B2B сделки, документарные условия, Trade Finance.',time}];
+ s.messages=[
+  {id:'msg-1',thread:'RUN-912',teamId:'growth',productId:'accreditive',actor:'engineer',text:'Обнови только dependency. Не меняй правила исполнения аккредитива.',time},
+  {id:'msg-2',thread:'team-growth',teamId:'growth',productId:'accreditive',actor:'po',text:'Responsibility команды: B2B сделки, документарные условия, Trade Finance.',time},
+  {id:'gate-message-RUN-912',thread:'RUN-912',teamId:'growth',productId:'accreditive',actor:'automation',kind:'gate',title:'BANK-1842 · Input required',text:active.gates[0].question,runId:'RUN-912',gateId:active.gates[0].id,assigneeId:active.gates[0].assignee,time:active.gates[0].createdAt},
+  {id:'gate-message-RUN-913',thread:'RUN-913',teamId:'growth',productId:'accreditive',actor:'automation',kind:'gate',title:'BANK-2012 · Approval required',text:statement.gates[0].question,runId:'RUN-913',gateId:statement.gates[0].id,assigneeId:statement.gates[0].assignee,time:statement.gates[0].createdAt},
+ ];
  s.notifications=[{id:'n-policy',kind:'Policy migration required',title:'IS-corporate-backend@7 · Deprecating',text:'LC Dependency Update v1.4 требует migration. Sunset: 30 November 2026.',teamId:'growth',productId:'accreditive',target:'regulation',ref:'IS-corporate-backend@7',time,read:false},{id:'n-gate-1',kind:'Human Input',title:'BANK-1842 · Input required',text:'Какую сертифицированную версию использовать?',teamId:'growth',productId:'accreditive',target:'run',ref:'RUN-912',time,read:false},{id:'n-gate-2',kind:'Human Approval',title:'BANK-2012 · Approval required',text:'Specification условий отсроченного платежа готова к согласованию.',teamId:'growth',productId:'accreditive',target:'run',ref:'RUN-913',time,read:false}];return s}
 
 /** Empty user workspace; platform catalog, policies and demo identities remain available. */
@@ -416,6 +421,11 @@ export function migrateState(source:Item):{state:State;changed:boolean}{
   for(const rule of policy.applicability){
    if(rule.taskClass!==undefined){rule.tag=rule.tag??rule.taskClass;delete rule.taskClass;}
   }
+ }
+ if(!Array.isArray(state.messages))state.messages=[];
+ for(const run of state.runs)for(const gate of run.gates||[]){
+  if(state.messages.some((message:Item)=>message.gateId===gate.id))continue;
+  state.messages.push({id:`gate-message-${gate.id}`,thread:run.id,teamId:run.teamId,productId:run.productId,actor:'automation',kind:'gate',title:`${run.taskId} · ${gate.type==='input'?'Input':'Approval'} required`,text:gate.question,runId:run.id,gateId:gate.id,assigneeId:gate.assignee,time:gate.createdAt});
  }
  delete state.classes;delete state.projects;
  mergeCatalogAssets(state as State);mergeRepositoryPolicies(state as State);

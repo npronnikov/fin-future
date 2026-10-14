@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
-import {Boxes, Building2, Check, Database, Layers, Plus, Server, ShieldCheck, Trash2, Users, Workflow} from 'lucide-react';
+import {Popover} from 'radix-ui';
+import {ArrowRight, Boxes, Building2, Check, Database, Home, Layers, MoreHorizontal, Plus, RefreshCw, Server, ShieldCheck, Trash2, Users, Workflow, X} from 'lucide-react';
 import {capabilityForTag, type State, type Person, type Product, type Team, type Item} from '@/lib/domain';
 import {useKontur} from './context';
 import {Button, Card, Field, Input, Textarea, Pick, Notice, Pill, Modal} from './ui';
@@ -8,9 +9,66 @@ export function Brand() {
   return <><span className="brand-mark" aria-hidden="true"><i/><i/><i/><i/></span><span className="brand-copy"><strong>КОНТУР</strong><small>TEAM SPACE</small></span></>;
 }
 
-export function ResetSetupButton({busy, reset}: {busy: boolean; reset: () => Promise<boolean>}) {
+export function ResetSetupButton({busy, reset, menu = false}: {busy: boolean; reset: () => Promise<boolean>; menu?: boolean}) {
   const [open, setOpen] = useState(false);
-  return <><Button variant="ghost" disabled={busy} onClick={() => setOpen(true)}><Trash2 size={15}/>Очистить данные</Button><Modal open={open} onClose={() => !busy && setOpen(false)} title="Очистить сценарий «С нуля»?" description="Продукты, команды, доски, задачи, Flow и история этого сценария будут удалены."><div className="stack"><p className="subtext">Настройка начнётся с создания Product. Сценарий с демонстрационными данными сохранится.</p><div className="actions"><Button variant="outline" disabled={busy} onClick={() => setOpen(false)}>Отмена</Button><Button variant="destructive" disabled={busy} onClick={async () => {if (await reset()) setOpen(false);}}><Trash2 size={15}/>Очистить и начать заново</Button></div></div></Modal></>;
+  return <>{menu ? <button type="button" className="workspace-menu-item danger" disabled={busy} onClick={() => setOpen(true)}><Trash2 size={15}/><span>Очистить данные</span></button> : <Button variant="ghost" disabled={busy} onClick={() => setOpen(true)}><Trash2 size={15}/>Очистить данные</Button>}<Modal open={open} onClose={() => !busy && setOpen(false)} title="Очистить сценарий «С нуля»?" description="Продукты, команды, доски, задачи, Flow и история этого сценария будут удалены."><div className="stack"><p className="subtext">Настройка начнётся с создания Product. Сценарий с демонстрационными данными сохранится.</p><div className="actions"><Button variant="outline" disabled={busy} onClick={() => setOpen(false)}>Отмена</Button><Button variant="destructive" disabled={busy} onClick={async () => {if (await reset()) setOpen(false);}}><Trash2 size={15}/>Очистить и начать заново</Button></div></div></Modal></>;
+}
+
+export type SetupStep = {
+  title: string;
+  text: string;
+  done: boolean;
+  role: string;
+  screen: string;
+  tab: string;
+  button: string;
+};
+
+export function getSetupSteps(state: State, team: Team, product: Product): SetupStep[] {
+  const members = state.people.filter(person => team.people.includes(person.id));
+  const boards = state.boards.filter(item => item.teamId === team.id && item.productId === product.id);
+  const tasks = state.tasks.filter(item => item.teamId === team.id && item.productId === product.id);
+  const capabilities = Array.from(new Set(tasks.map(task => task.tag).filter(Boolean))).map(tag => capabilityForTag(state, product.id, tag)).filter((item): item is NonNullable<typeof item> => !!item);
+  const runs = state.runs.filter(run => run.teamId === team.id && run.productId === product.id && !run.uat);
+  const required = ['Repository', 'Task Tracker', 'CI'];
+  return [
+    {title: 'Назначьте участников', text: 'Добавьте Platform Engineer и Product Engineer в People.', done: ['Platform Engineer', 'Product Engineer'].every(role => members.some(person => person.role === role)), role: 'Product Owner', screen: 'settings', tab: 'people', button: 'Открыть участников'},
+    {title: 'Подключите ресурсы', text: 'Git-репозиторий с Permissions, проект в Task Tracker и pipeline в Jenkins CI.', done: required.every(type => team.bindings.some(binding => binding.type === type && binding.status === 'connected')), role: 'Platform Engineer', screen: 'environment', tab: 'resources', button: 'Подключить ресурсы'},
+    {title: 'Подготовьте Environment', text: 'Пройдите Workflow Platform → Finish: выберите платформу, проверьте Preview и выполните Provisioning.', done: team.environment.status === 'ready', role: 'Platform Engineer', screen: 'environment', tab: team.automation ? 'sandbox' : 'automation', button: 'Настроить среду'},
+    {title: 'Создайте доску и задачи', text: 'Создайте Task Board команды и добавьте моковые задачи с тегами и исполнителями.', done: boards.length > 0 && tasks.length > 0, role: 'Product Engineer', screen: 'tasks', tab: '', button: 'Открыть доску задач'},
+    {title: 'Выберите и настройте Flow', text: 'Откройте каталог, выберите Flow или соберите свой сценарий из блоков. Настройте узлы и сохраните конфигурацию.', done: capabilities.length > 0, role: 'Product Engineer', screen: 'catalog', tab: 'Flow', button: 'Выбрать и настроить сценарий'},
+    {title: 'Выполните первый запуск', text: 'Запустите задачу из Configuration в supervised mode и пройдите Input / Approval.', done: runs.some(run => run.status === 'accepted'), role: 'Product Engineer', screen: runs.some(run => ['input_required', 'approval_required', 'takeover'].includes(run.status)) ? 'messenger' : 'capability', tab: 'configuration', button: runs.length ? 'Продолжить работу' : 'Открыть сценарий и запустить'},
+  ];
+}
+
+export function SetupGuide({onClose}: {onClose: () => void}) {
+  const {state, team, product, actor, screen, act, go, busy} = useKontur();
+  const steps = getSetupSteps(state, team, product);
+  const index = steps.findIndex(step => !step.done);
+  if (index < 0) return null;
+  const step = steps[index];
+  const members = state.people.filter(person => team.people.includes(person.id));
+  const tasks = state.tasks.filter(item => item.teamId === team.id && item.productId === product.id);
+  const capabilities = Array.from(new Set(tasks.map(task => task.tag).filter(Boolean))).map(tag => capabilityForTag(state, product.id, tag)).filter((item): item is NonNullable<typeof item> => !!item);
+  const onTargetScreen = screen === step.screen || step.screen === 'capability' && screen === 'run';
+  const canContinue = !busy && (actor.role === step.role || members.some(person => person.role === step.role));
+  async function openStep() {
+    if (actor.role !== step.role) {
+      const target = members.find(person => person.role === step.role);
+      if (!target || !(await act('select_actor', {actorId: target.id}))?.ok) return;
+    }
+    go(step.screen, step.screen === 'capability' ? capabilities[0]?.id || '' : '', step.screen === 'messenger' ? '' : step.tab);
+  }
+  return <aside className="setup-route-guide" aria-label="Гид по первоначальной настройке">
+    <span className="setup-route-guide-mark">{index + 1}</span>
+    <div className="setup-route-guide-copy"><span>СЛЕДУЮЩИЙ ШАГ · {index + 1} ИЗ {steps.length}</span><strong>{step.title}</strong><p>{step.text} <small>Роль: {step.role}</small></p></div>
+    <div className="setup-route-guide-actions">
+      <Button variant="ghost" size="sm" onClick={() => go('home')}><Home size={14}/>К плану на главной</Button>
+      {!onTargetScreen && <Button size="sm" disabled={!canContinue} onClick={() => {void openStep();}}>Перейти к шагу<ArrowRight size={14}/></Button>}
+      {onTargetScreen && <span className="setup-route-guide-here"><Check size={14}/>Вы на нужном экране</span>}
+    </div>
+    <button className="setup-route-guide-close" type="button" aria-label="Скрыть весь гид" title="Скрыть весь гид" onClick={onClose}><X size={16}/></button>
+  </aside>;
 }
 
 export function ScenarioScreen({busy, choose, onBack}: {busy: boolean; choose: (scenario: 'demo' | 'empty') => void; onBack?: () => void}) {
@@ -52,7 +110,7 @@ export function Bootstrap({state, actor, product, busy, act, setScope, go, onSce
   }
   return <div className="entry-shell bootstrap-shell">
     <aside className="entry-aside"><button className="brand" onClick={onScenario}><Brand/></button><div className="bootstrap-steps"><p className="eyebrow">НАСТРОЙКА С НУЛЯ</p>{[{name: 'Создать продукт', icon: Building2}, {name: 'Создать Team', icon: Users}, {name: 'Участники и ресурсы', icon: Layers}, {name: 'Среда и первый запуск', icon: Workflow}].map((item, index) => <div className={`bootstrap-step ${index + 1 === step ? 'active' : ''} ${index + 1 < step ? 'done' : ''}`} key={item.name}><span>{index + 1 < step ? <Check size={15}/> : `0${index + 1}`}</span><div><item.icon size={16}/>{item.name}</div></div>)}</div><div className="entry-aside-foot"><ShieldCheck size={17}/><span>Настройка сохраняется<br/>после каждого действия</span></div></aside>
-    <main className="entry-main"><header className="entry-topbar"><span>Командная среда <i>/</i> <strong>Настройка</strong></span><div className="entry-tools">{onReset && <ResetSetupButton busy={busy} reset={onReset}/>}<Button variant="ghost" onClick={onScenario}>Сценарии</Button><Pick label="Демонстрационная роль" value={actor.id} onChange={actorId => {void act('select_actor', {actorId});}} options={state.people.map(person => ({value: person.id, label: person.name}))}/></div></header>
+    <main className="entry-main"><header className="entry-topbar"><span>Командная среда <i>/</i> <strong>Настройка</strong></span><div className="entry-tools"><span className="scenario-indicator" aria-label="Текущий режим данных">С нуля</span><Popover.Root><Popover.Trigger asChild><button type="button" className="icon-btn workspace-menu-trigger" aria-label="Действия рабочего пространства"><MoreHorizontal size={19}/></button></Popover.Trigger><Popover.Portal><Popover.Content align="end" sideOffset={10} collisionPadding={12} className="workspace-menu" aria-label="Меню рабочего пространства"><Popover.Close asChild><button type="button" className="workspace-menu-item" onClick={onScenario}><RefreshCw size={15}/><span>Сменить сценарий данных</span></button></Popover.Close>{onReset && <ResetSetupButton menu busy={busy} reset={onReset}/>}</Popover.Content></Popover.Portal></Popover.Root><Pick label="Демонстрационная роль" value={actor.id} onChange={actorId => {void act('select_actor', {actorId});}} options={state.people.map(person => ({value: person.id, label: person.name}))}/></div></header>
       <div className="entry-content bootstrap-content"><p className="eyebrow">ШАГ {step} / 4 · PRODUCT OWNER</p><h1>{product ? 'Создайте команду продукта' : 'Начните со своего продукта'}</h1><p className="entry-description">{product ? 'Команда получает Team Space сразу. Среду исполнения вы подключите на следующем этапе.' : 'Задайте продукт, за который отвечает команда. Его знания, задачи и результаты будут связаны с этим контекстом.'}</p>
         <div className="bootstrap-grid"><Card title={product ? 'Team & Responsibility' : 'Product'}><form className="stack" onSubmit={submit}>
           {product ? <><Field label="Название Team"><Input value={team.name} onChange={event => setTeam({...team, name: event.target.value})} required disabled={!allowed} placeholder="Название команды"/></Field><Field label="Responsibility Scope" hint="Области ответственности команды. По одной на строку."><Textarea rows={4} value={team.scope} onChange={event => setTeam({...team, scope: event.target.value})} required disabled={!allowed}/></Field></> : <><Field label="Название Product"><Input value={form.name} onChange={event => setForm({...form, name: event.target.value})} required disabled={!allowed} placeholder="Название продукта"/></Field><Field label="Описание"><Textarea rows={3} value={form.description} onChange={event => setForm({...form, description: event.target.value})} required disabled={!allowed}/></Field><Field label="Цели"><Textarea rows={2} value={form.goals} onChange={event => setForm({...form, goals: event.target.value})} disabled={!allowed}/></Field></>}
@@ -87,19 +145,9 @@ export function isSetupComplete(state: State, team: Team, product: Product) {
 export function SetupChecklist() {
   const {state, team, product, actor, act, go, busy} = useKontur();
   const members = state.people.filter(person => team.people.includes(person.id));
-  const boards = state.boards.filter(item => item.teamId === team.id && item.productId === product.id);
   const tasks = state.tasks.filter(item => item.teamId === team.id && item.productId === product.id);
   const capabilities = Array.from(new Set(tasks.map(task => task.tag).filter(Boolean))).map(tag => capabilityForTag(state, product.id, tag)).filter((item): item is NonNullable<typeof item> => !!item);
-  const runs = state.runs.filter(run => run.teamId === team.id && run.productId === product.id && !run.uat);
-  const required = ['Repository', 'Task Tracker', 'CI'];
-  const steps = [
-    {title: 'Назначьте участников', text: 'Добавьте Platform Engineer и Product Engineer в People.', done: ['Platform Engineer', 'Product Engineer'].every(role => members.some(person => person.role === role)), role: 'Product Owner', screen: 'settings', tab: 'people', button: 'Открыть участников'},
-    {title: 'Подключите ресурсы', text: 'Git-репозиторий с Permissions, проект в Task Tracker и pipeline в Jenkins CI.', done: required.every(type => team.bindings.some(binding => binding.type === type && binding.status === 'connected')), role: 'Platform Engineer', screen: 'environment', tab: 'resources', button: 'Подключить ресурсы'},
-    {title: 'Подготовьте Environment', text: 'Пройдите Workflow Platform → Finish: выберите платформу, проверьте Preview и выполните Provisioning.', done: team.environment.status === 'ready', role: 'Platform Engineer', screen: 'environment', tab: team.automation ? 'sandbox' : 'automation', button: 'Настроить среду'},
-    {title: 'Создайте доску и задачи', text: 'Создайте Task Board команды и добавьте моковые задачи с тегами и исполнителями.', done: boards.length > 0 && tasks.length > 0, role: 'Product Engineer', screen: 'tasks', tab: '', button: 'Открыть доску задач'},
-    {title: 'Выберите и настройте Flow', text: 'Откройте каталог, выберите Flow и создайте свою копию. Настройте узлы и сохраните конфигурацию.', done: capabilities.length > 0, role: 'Product Engineer', screen: 'catalog', tab: 'Flow', button: 'Выбрать процесс в каталоге'},
-    {title: 'Выполните первый запуск', text: 'Запустите задачу из Configuration в supervised mode и пройдите Input / Approval.', done: runs.some(run => run.status === 'accepted'), role: 'Product Engineer', screen: runs.some(run => ['input_required', 'approval_required', 'takeover'].includes(run.status)) ? 'messenger' : 'capability', tab: 'configuration', button: runs.length ? 'Продолжить работу' : 'Открыть процесс и запустить'},
-  ];
+  const steps = getSetupSteps(state, team, product);
   const done = steps.filter(step => step.done).length;
   if (done === steps.length) return null;
   async function open(step: typeof steps[number]) {

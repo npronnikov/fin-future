@@ -11,7 +11,7 @@ export function CapabilityList() {
   const {state, team, product, go, tab, can} = useKontur();
   const caps = state.capabilities.filter(cap => cap.productId === product.id && !cap.legacyDuplicateOf);
   if (tab === 'new') return <FlowCreate/>;
-  return <div className="page"><PageHead title="Доверенная автономность" description="Общие Flow продукта по тегам задач и доверенная автономность" actions={<Button onClick={() => go('catalog', '', 'Flow')} disabled={!can('Product Engineer') || team.environment.status !== 'ready'}><Plus size={16}/>Добавить процесс</Button>}/>
+  return <div className="page"><PageHead title="Доверенная автономность" description="Общие Flow продукта по тегам задач и доверенная автономность" actions={<Button onClick={() => go('catalog', '', 'Flow')} disabled={!can('Product Engineer') || team.environment.status !== 'ready'}><Plus size={16}/>Добавить сценарий</Button>}/>
     <div className="grid-2">{caps.map(cap => {
       const release = currentRelease(cap), cfg = cap.draft || release?.snapshot.config, owner = state.teams.find(item => item.id === cap.teamId);
       const runs = state.runs.filter(run => run.teamId === team.id && run.capabilityId === cap.id && run.productId === product.id && snapshotTag(run.snapshot) === cap.tag && !run.uat);
@@ -20,7 +20,7 @@ export function CapabilityList() {
         <KV label="Командное пространство">{owner?.name || 'Команда продукта'}</KV>{release && <KV label="Trusted Capability"><Pill tone="green">#{snapshotTag(release.snapshot)}</Pill></KV>}<KV label="Production">{release ? <>v{release.snapshot.config.version} <Lock className="inline ml-2" size={12}/></> : 'Не выпущена'}</KV><KV label="Рабочий Flow">{cap.draft ? shortConfig(cap.draft) : 'Нет изменений'}</KV><KV label="Задач с запусками моей команды">{new Set(runs.map(run => run.taskId)).size}</KV>
         <div className="actions wrap"><Button variant="outline" onClick={() => go('capability', cap.id, 'configuration')}>Открыть возможность</Button><Button variant="ghost" onClick={() => go('capability', cap.id, 'history')}><BarChart3 size={15}/>Отчёт по задачам</Button><ReleaseEmulation cap={cap}/></div>
       </Card>;
-    })}</div>{!caps.length && <Card><Blank title="Добавьте первый Flow" text="Откройте каталог, выберите Flow и создайте конфигурацию для тега задач." action={<Button onClick={() => go('catalog', '', 'Flow')}>Выбрать процесс в каталоге</Button>}/></Card>}
+    })}</div>{!caps.length && <Card><Blank title="Добавьте первый Flow" text="Откройте каталог, выберите готовый Flow или соберите сценарий из блоков для тега задач." action={<Button onClick={() => go('catalog', '', 'Flow')}>Выбрать и настроить сценарий</Button>}/></Card>}
   </div>;
 }
 

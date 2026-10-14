@@ -14,7 +14,7 @@ const s=createSeed();
 const fixtures=[['home','default'],['tasks','default'],['environment','default'],['settings','default'],['capabilities','CapabilityList'],['capabilities','CapabilityView'],['runs','RunView'],['runs','Automation'],['messenger','Messenger'],['assistant-bubble','default'],['knowledge','default'],['regulation','default'],['benchmark','default'],['catalog','default'],['notifications','default']];
 let count=0;
 for(const empty of [false,true]){for(const [file,name] of fixtures){if(empty&&['RunView','CapabilityView'].includes(name))continue;const component=require(`../components/kontur/${file}.tsx`)[name];const value={state:s,actor:s.people[2],team:empty?{id:'empty',name:'New Team',spaceId:'new-space',knowledgeVersion:1,people:[],bindings:[],environment:defaultEnvironment('New Team'),automation:null}:s.teams[0],product:s.products[0],screen:file,ref:name==='RunView'?'RUN-912':name==='CapabilityView'?'cap-dep':'',tab:'',busy:false,go:()=>{},act:async()=>({}),reload:async()=>{},can:()=>false,has:()=>false,ask:async()=>({text:''}),setScope:()=>{}};const html=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value},React.createElement(component)));if(!html.length)throw Error(`Empty ${file}:${name}`);count++}}
-const {ScenarioScreen,Bootstrap}=require('../components/kontur/onboarding.tsx');
+const {ScenarioScreen,Bootstrap,SetupGuide}=require('../components/kontur/onboarding.tsx');
 const {createEmptyState}=require('../lib/domain.ts');
 const {applyAction}=require('../lib/engine.ts');
 let zero=createEmptyState();
@@ -40,6 +40,8 @@ const Home=require('../components/kontur/home.tsx').default;
 const setupHtml=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:zero,actor:zero.people.find(person=>person.id==='po'),team:zero.teams[0],screen:'home',tab:''}},React.createElement(Home,{setup:true})));
 if(setupHtml.includes('Открыть задачи')||setupHtml.includes('Открыть доски задач')||setupHtml.includes('Открыть доску задач'))throw new Error('Tasks action must wait until required setup is complete');
 if(!setupHtml.includes('Подготовьте команду к первому запуску'))throw new Error('Setup progress not rendered');
+const guideHtml=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:zero,actor:zero.people.find(person=>person.id==='po'),team:zero.teams[0],screen:'settings',tab:'people'}},React.createElement(SetupGuide,{onClose:noop})));
+for(const expected of ['СЛЕДУЮЩИЙ ШАГ','К плану на главной','Вы на нужном экране'])if(!guideHtml.includes(expected))throw new Error(`Setup guide missing ${expected}`);
 for(const hidden of ['Рабочее пространство','Trusted Capabilities','Требуют вашего внимания','Context Supply Chain'])if(setupHtml.includes(hidden))throw new Error(`Home widget rendered before setup completion: ${hidden}`);
 const completedSetupHtml=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'home',tab:''}},React.createElement(Home,{setup:true})));
 if(completedSetupHtml.includes('Подготовьте команду к первому запуску')||!completedSetupHtml.includes('Рабочее пространство'))throw new Error('Completed setup did not switch to Home widgets');
@@ -47,17 +49,21 @@ count++;
 
 const checks = [
   {file:'tasks',name:'default',ref:s.boards[0].id,tab:'',contains:['Доски задач','Канбан задач','Фильтр по assignee','На проверке'],excludes:['Task Board']},
-  {file:'environment',name:'default',ref:'',tab:'sandbox',contains:['Рабочее окружение','Предварительная схема Sandbox','ВНЕ SANDBOX','Конфигурация Sandbox','Оркестратор','Создать'],excludes:['Setup environment','Шаги настройки Environment','Environment готов','Следующий шаг на Home']},
+  {file:'environment',name:'default',ref:'',tab:'sandbox',contains:['Рабочее окружение','Предварительная схема Sandbox','ВНЕ SANDBOX','Конфигурация Sandbox','Оркестратор','Создано'],excludes:['Setup environment','Шаги настройки Environment','Environment готов','Следующий шаг на Home']},
   {file:'messenger',name:'Messenger',ref:'',tab:'inbox',contains:['Сообщения'],excludes:['>Messenger<']},
   {file:'knowledge',name:'default',ref:'',tab:'product',contains:['Управление знаниями'],excludes:['>Knowledge<']},
   {file:'capabilities',name:'CapabilityList',ref:'',tab:'',contains:['Доверенная автономность'],excludes:['>Capabilities<']},
   {file:'benchmark',name:'default',ref:'',tab:'lab',contains:['Бенчмарки'],excludes:['Benchmark Lab']},
-  {file:'catalog',name:'default',ref:'telemetry',tab:'Flow',contains:['Каталог','Сценарии','Скиллы','Сабагенты','HG SDLC · v1','Обновление зависимостей'],excludes:['Выберите основу Flow','Откройте детали']},
+  {file:'catalog',name:'default',ref:'telemetry',tab:'Flow',contains:['Каталог','Сценарии','Скиллы','Сабагенты','HG SDLC · v1','Обновление зависимостей','Соберите последовательность из блоков','Создать и настроить'],excludes:['Выберите основу Flow','Откройте детали','Выбрать процесс']},
   {file:'regulation',name:'default',ref:'',tab:'',contains:['Регуляторы','Контрольные функции','Пакет политик','Скиллы','Сабагенты','Черновик','Действует','Выводится из эксплуатации','Выведена из эксплуатации'],excludes:['>Regulation<','Control functions','Policy Package','Отозвана','Аннулирована','Заменена']},
   {file:'capabilities',name:'CapabilityView',ref:'cap-dep',tab:'releases',contains:['Тег задач','dep-update']},
   {file:'capabilities',name:'CapabilityView',ref:'cap-dep',tab:'monitoring',contains:['Тег Trusted Capability','dep-update']},
 ];
 const appSource=fs.readFileSync(path.join(root,'components/kontur/app.tsx'),'utf8');
+for(const label of ['Скрыть гид','Возобновить гид'])if(!appSource.includes(label))throw new Error(`Guide toggle missing: ${label}`);
+for(const expected of ['scenario-indicator','workspace-menu','Действия рабочего пространства','Сменить сценарий данных'])if(!appSource.includes(expected))throw new Error(`Workspace menu missing: ${expected}`);
+if(appSource.includes('className="scenario-switch"'))throw new Error('Scenario data indicator must not remain a dropdown button');
+if(!appSource.includes('</main>{scenario===\'empty\'&&screen!==\'home\''))throw new Error('Setup guide must render after the page content');
 for(const label of ['Главная','Доски задач','Сообщения','Управление знаниями','Окружение','Автономизация','Доверенная автономность','Бенчмарки','Каталог','Регуляторы'])if(!appSource.includes(`title:'${label}'`))throw new Error(`Sidebar label missing: ${label}`);
 for(const label of ['Знания','Среда','Автоматизация','Возможности','Лаборатория оценок'])if(appSource.includes(`title:'${label}'`))throw new Error(`Old sidebar label remains: ${label}`);
 for(const fixture of checks){
@@ -69,8 +75,19 @@ for(const fixture of checks){
  if(html.includes('Task Class'))throw new Error(`Task Class entity leaked into ${fixture.file}/${fixture.tab}`);
  if(fixture.file==='tasks'&&(html.includes('Задачи добавлены на доску')||html.includes('Следующий шаг — выбрать Flow')))throw Error('Removed board onboarding section remains');
  if(fixture.file==='tasks'&&(html.match(/class="kanban-column-head"/g)||[]).length!==5)throw new Error('Kanban should have five columns');
+ if(fixture.file==='environment'){
+  const provisionButtons=[...html.matchAll(/<button\b[^>]*data-action="provision"[^>]*>/g)].map(match=>match[0]);
+  if(!provisionButtons.length||provisionButtons.some(button=>!button.includes('disabled=""'))||!html.includes('Создано'))throw new Error('Provision action must be disabled after Environment creation');
+ }
  count++;
 }
+
+const Environment=require('../components/kontur/environment.tsx').default;
+const configuredTeam={...s.teams[0],environment:{...s.teams[0].environment,status:'configured'}};
+const configuredEnvironmentHtml=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:s,actor:s.people[1],team:configuredTeam,product:s.products[0],screen:'environment',tab:'sandbox',can:()=>true}},React.createElement(Environment)));
+const configuredProvisionButton=[...configuredEnvironmentHtml.matchAll(/<button\b[^>]*data-action="provision"[^>]*>/g)][0]?.[0]||'';
+if(!configuredProvisionButton||configuredProvisionButton.includes('disabled=""')||!configuredEnvironmentHtml.includes('Создать'))throw new Error('Provision action must remain enabled for a saved configuration that is not ready');
+count++;
 
 const Knowledge=require('../components/kontur/knowledge.tsx').default;
 const knowledgeStages={
@@ -86,9 +103,13 @@ for(const [tab,expectedItems] of Object.entries(knowledgeStages)){
  const value={...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab};
  const html=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value},React.createElement(Knowledge)));
  for(const expected of expectedItems)if(!html.includes(expected))throw new Error(`Knowledge stage ${tab} missing ${expected}`);
+ for(const expected of ['МАРШРУТ CONTEXT SUPPLY CHAIN','На главную','Назад','Дальше'])if(!html.includes(expected))throw new Error(`Knowledge guide ${tab} missing ${expected}`);
+ if(html.indexOf('context-journey-guide')<html.indexOf('context-route-layout'))throw new Error(`Knowledge guide ${tab} must render below the route content`);
  for(const step of ['Обзор','Сегментация систем','Policy Package','Онтология аккредитива','Публикация знаний','Граф знаний','Доставка агенту'])if(!html.includes(step))throw new Error(`Knowledge route ${tab} missing step ${step}`);
  count++;
 }
+const hiddenKnowledgeGuide=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab:'overview'}},React.createElement(Knowledge,{guideOpen:false})));
+if(hiddenKnowledgeGuide.includes('МАРШРУТ CONTEXT SUPPLY CHAIN'))throw new Error('Closed Context Supply Chain guide remains visible');
 const docsSource=fs.readFileSync(path.join(root,'public/docs/kontur-architecture.html'),'utf8');
 for(const expected of ['#/context-supply-chain','#/accreditive','#/context-service-api','Промышленная архитектура','POST /api/context/compile','Neo4j','Принципиальные гарантии','Глоссарий','Источники'])if(!docsSource.includes(expected))throw new Error(`Documentation missing ${expected}`);
 
@@ -129,8 +150,8 @@ const peopleMarkup=renderToStaticMarkup(React.createElement(KonturContext.Provid
 if(!peopleMarkup.includes('Permissions')||peopleMarkup.includes('>Assignments<'))throw Error('People must use Permissions wording');
 const Messenger=require('../components/kontur/messenger.tsx').Messenger;
 const inboxMarkup=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...flowValue,screen:'messenger',tab:'inbox'}},React.createElement(Messenger)));
-if(inboxMarkup.includes('Lifecycle notifications')||inboxMarkup.includes('HUMAN INPUT')||inboxMarkup.includes('HUMAN APPROVAL')||inboxMarkup.includes('Ask Assistant'))throw Error('Messenger must contain messages rather than lifecycle/gate controls');
-if(!inboxMarkup.includes('Каналы')||!inboxMarkup.includes('Поиск сообщений')||!inboxMarkup.includes('Сообщение в Messenger'))throw Error('Messenger channels/search/composer missing');
+if(inboxMarkup.includes('Lifecycle notifications')||inboxMarkup.includes('Ask Assistant'))throw Error('Messenger must contain messages rather than notification or assistant controls');
+for(const expected of ['Каналы','Поиск сообщений','Сообщение в Messenger','КОНТУР · Automation','Approval required','Ожидает решения','Открыть в автоматизации'])if(!inboxMarkup.includes(expected))throw Error(`Messenger missing ${expected}`);
 count+=3;
 
 const {Automation,RunView}=require('../components/kontur/runs.tsx');

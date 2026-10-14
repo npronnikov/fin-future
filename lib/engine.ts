@@ -49,7 +49,13 @@ function taskAssignee(s:State,teamId:string,assigneeId:unknown){
  return person.id;
 }
 function notify(s:State,kind:string,title:string,text:string,teamId:string,productId:string,target='capability',ref=''){s.notifications.unshift({id:uid('notice'),kind,title,text,teamId,productId,target,ref,time:new Date().toISOString(),read:false})}
-function gateNotice(s:State,r:Run){const g=r.gates.at(-1);if(g?.status==='pending')notify(s,g.type==='input'?'Human Input':'Human Approval',`${r.taskId} · ${g.type==='input'?'Input':'Approval'} required`,g.question,r.teamId,r.productId,'run',r.id)}
+function gateNotice(s:State,r:Run){
+ const g=r.gates.at(-1);
+ if(g?.status!=='pending')return;
+ const kind=g.type==='input'?'Human Input':'Human Approval',title=`${r.taskId} · ${g.type==='input'?'Input':'Approval'} required`;
+ notify(s,kind,title,g.question,r.teamId,r.productId,'run',r.id);
+ if(!s.messages.some(message=>message.gateId===g.id))s.messages.push({id:uid('message'),thread:r.id,teamId:r.teamId,productId:r.productId,actor:'automation',kind:'gate',title,text:g.question,runId:r.id,gateId:g.id,assigneeId:g.assignee,time:g.createdAt});
+}
 export function pathAllowed(path:string,grants:string){return grants.split(/[\n,]+/).map(s=>s.trim()).some(g=>g==='/**'||g===path||(g.endsWith('/**')&&path.startsWith(g.slice(0,-2))))}
 function validateFlowConfiguration(s:State,cap:Capability,cfg:Config,allowLegacyExecutors=false){
  const problems=flowIssues(cfg,{allowLegacyExecutors});must(!problems.length,problems.join(' '));
