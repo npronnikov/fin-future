@@ -47,15 +47,20 @@ export default function ContextDelivery(){
  const defaultTaskId=tasks[0]?.id||'';
  const[taskId,setTaskId]=useState(defaultTaskId);
  const sourceSignature=useMemo(()=>traceSourceSignature(state,team,product.id,taskId),[state,team,product.id,taskId]);
- const[trace,setTrace]=useState<ContextDeliveryTrace|null>(()=>defaultTaskId?compileContextDeliveryTrace(state,defaultTaskId):null);
- const[generatedSignature,setGeneratedSignature]=useState(sourceSignature);
- const[phase,setPhase]=useState<'idle'|'request'|'planning'|'resolving'|'ready'>(defaultTaskId?'ready':'idle');
- const[selectedStageId,setSelectedStageId]=useState(()=>trace?.stages[0]?.id||'');
+ const scopePreview=useMemo(()=>taskId?compileContextDeliveryTrace(state,taskId).task:null,[state,taskId]);
+ const[trace,setTrace]=useState<ContextDeliveryTrace|null>(null);
+ const[generatedSignature,setGeneratedSignature]=useState('');
+ const[phase,setPhase]=useState<'idle'|'request'|'planning'|'resolving'|'ready'>('idle');
+ const[selectedStageId,setSelectedStageId]=useState('');
  const[verificationOpen,setVerificationOpen]=useState(false);
  const[historyId,setHistoryId]=useState('');
  const[showCompare,setShowCompare]=useState(false);
  const timers=useRef<ReturnType<typeof setTimeout>[]>([]);
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
+ useEffect(()=>{
+  if(tasks.some(item=>item.id===taskId))return;
+  timers.current.forEach(clearTimeout);timers.current=[];setTaskId(tasks[0]?.id||'');setTrace(null);setGeneratedSignature('');setPhase('idle');setSelectedStageId('');setVerificationOpen(false);setHistoryId('');setShowCompare(false);
+ },[tasks,taskId]);
  const stale=!!trace&&generatedSignature!==sourceSignature;
  const selectedStage=trace?.stages.find(item=>item.id===selectedStageId)||trace?.stages[0];
  const history=state.contextBundles.filter(item=>item.input.productId===product.id&&item.input.teamId===team.id);
@@ -86,7 +91,7 @@ export default function ContextDelivery(){
   <div className="context-trace-top">
    <Card title="1 · Task и technical scope" action={<Pill tone="blue">{phaseLabel}</Pill>}><div className="stack">
     <label className="form-field field-wide"><span>Задача текущей команды</span><Pick label="Task для Delivery Trace" value={taskId} onChange={changeTask} options={tasks.map(item=>({value:item.id,label:`${item.id} · ${item.title}`}))}/></label>
-    {trace?<div className="context-scope-grid"><div><span>Repository</span><strong>{trace.task.repository}</strong></div><div><span>System</span><strong>{trace.task.system||'не определена'}</strong></div><div><span>Segment</span><strong>{trace.task.segment||'не определён'}</strong></div><div><span>Task tag</span><strong>#{trace.task.tag||'без тега'}</strong></div><div><span>Work types</span><strong>{trace.task.workTypes.join(' · ')}</strong></div><div><span>Flow</span><strong>{trace.task.capabilityName} · v{trace.task.flowVersion}</strong></div></div>:<p className="subtext">Scope будет выведен из Task → Repository Binding → System → Segment.</p>}
+    {scopePreview?<div className="context-scope-grid"><div><span>Repository</span><strong>{scopePreview.repository}</strong></div><div><span>System</span><strong>{scopePreview.system||'не определена'}</strong></div><div><span>Segment</span><strong>{scopePreview.segment||'не определён'}</strong></div><div><span>Task tag</span><strong>#{scopePreview.tag||'без тега'}</strong></div><div><span>Work types</span><strong>{scopePreview.workTypes.join(' · ')}</strong></div><div><span>Flow</span><strong>{scopePreview.capabilityName} · v{scopePreview.flowVersion}</strong></div></div>:<p className="subtext">Scope будет выведен из Task → Repository Binding → System → Segment.</p>}
     <Button onClick={generate} disabled={busy||phase==='request'||phase==='planning'||phase==='resolving'}>{phase==='ready'?<RefreshCw size={15}/>:<Sparkles size={15}/>}Сформировать Context Request</Button>
    </div></Card>
 

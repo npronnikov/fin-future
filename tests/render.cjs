@@ -97,12 +97,13 @@ const knowledgeStages={
  ontology:['Онтология продукта','Что такое аккредитив'],
  publication:['Продуктовое и командное знание','Аккредитив · каноническая модель продукта'],
  graph:['Исследователь графа','Готовые Cypher-запросы'],
- delivery:['Delivery Trace','LLM simulation','Сформировать Context Request','DETERMINISTIC RESOLVER','Product Knowledge','Team Knowledge','Regulatory Policy','Analyze','Checks','Result','Инспектор узла','Regulatory Verification','Simulation snapshot','не создаёт Run, Gate или фактическую доставку'],
+ delivery:['Delivery Trace','LLM simulation','Сформировать Context Request','Repository','System','Segment','Task tag','Flow','не создаёт Run, Gate или фактическую доставку'],
 };
 for(const [tab,expectedItems] of Object.entries(knowledgeStages)){
  const value={...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab};
  const html=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value},React.createElement(Knowledge)));
  for(const expected of expectedItems)if(!html.includes(expected))throw new Error(`Knowledge stage ${tab} missing ${expected}`);
+ if(tab==='delivery'&&(html.includes('STRUCTURED RESPONSE')||html.includes('DETERMINISTIC RESOLVER')))throw new Error('Delivery Trace must wait for an explicit Context Request before showing generated results');
  for(const expected of ['МАРШРУТ CONTEXT SUPPLY CHAIN','На главную','Назад','Дальше'])if(!html.includes(expected))throw new Error(`Knowledge guide ${tab} missing ${expected}`);
  if(html.indexOf('context-journey-guide')<html.indexOf('context-route-layout'))throw new Error(`Knowledge guide ${tab} must render below the route content`);
  for(const step of ['Обзор','Сегментация систем','Policy Package','Онтология аккредитива','Публикация знаний','Граф знаний','Доставка агенту'])if(!html.includes(step))throw new Error(`Knowledge route ${tab} missing step ${step}`);
