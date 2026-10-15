@@ -833,7 +833,9 @@ test('Context Delivery Trace restricts Product and Team fragments to planned sta
  assert.ok(!trace.fragments.some(item=>item.sourceId.startsWith('IS-retail-backend')),'Policy selection must respect Repository segment.');
  assert.ok(trace.unknown.some(item=>item.includes('Deprecating')));
  const wrongTag=d.createSeed();for(const policy of wrongTag.policies.filter(item=>item.id==='IS-corporate-backend'))for(const rule of policy.applicability)rule.tag='statement-doc';
- assert.ok(!c.compileContextDeliveryTrace(wrongTag,'BANK-1842').fragments.some(item=>item.sourceId.startsWith('IS-corporate-backend')),'Policy selection must respect task tag.');
+ const mismatched=c.compileContextDeliveryTrace(wrongTag,'BANK-1842');
+ assert.ok(!mismatched.fragments.some(item=>item.sourceId.startsWith('IS-corporate-backend')),'Policy selection must respect task tag.');
+ assert.ok(mismatched.task.notApplicable.some(item=>item.sourceId.startsWith('IS-corporate-backend')),'Excluded requirements must retain an explainable applicability reason.');
 });
 
 test('Context Delivery Trace keeps an artifact-conditioned Policy when Task artifact type is not known yet',()=>{
@@ -864,6 +866,11 @@ test('Context Delivery Trace exposes incomplete, blocked, deprecating and inconc
  const noEvidence=d.createSeed();for(const policy of noEvidence.policies)policy.evidence=[];
  const verification=c.compileContextDeliveryTrace(noEvidence,'BANK-1842').verification;
  assert.equal(verification.status,'INCONCLUSIVE');assert.equal(verification.route,'Human Approval Gate');assert.equal(verification.simulation,true);
+
+ const missingArtifact=d.createSeed();
+ missingArtifact.policies.find(item=>d.policyKey(item)==='IS-corporate-backend@8').evidence[0].artifacts='signed attestation';
+ const failed=c.compileContextDeliveryTrace(missingArtifact,'BANK-1842').verification;
+ assert.equal(failed.status,'FAIL');assert.equal(failed.route,'Rework');
 });
 
 test('Context Delivery Trace action persists an immutable simulation snapshot without mutating runtime',()=>{

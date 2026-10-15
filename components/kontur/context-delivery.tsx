@@ -108,6 +108,7 @@ export default function ContextDelivery(){
 
    <section className="context-resolver" aria-label="Deterministic Resolver"><div className="row between wrap"><div><span className="eyebrow">3 · DETERMINISTIC RESOLVER</span><h3>Точные опубликованные fragments</h3></div><Pill tone="green">{trace.fragments.length} resolved</Pill></div>
     <div className="context-source-lanes"><div className="product"><Box size={18}/><span>Product Knowledge</span><strong>{trace.fragments.filter(item=>item.kind==='product').length}</strong><small>Только stages из Planner</small></div><div className="team"><Box size={18}/><span>Team Knowledge</span><strong>{trace.fragments.filter(item=>item.kind==='team').length}</strong><small>Только stages из Planner</small></div><div className="policy"><ShieldCheck size={18}/><span>Regulatory Policy</span><strong>{trace.fragments.filter(item=>item.kind==='policy').length}</strong><small>Обязательно · независимо от LLM</small></div></div>
+    {!!trace.task.notApplicable?.length&&<details className="context-exclusions"><summary>Исключено по Applicability Rules · {trace.task.notApplicable.length}</summary>{trace.task.notApplicable.map((item:{sourceId:string;requirement:string;reason:string})=><div key={`${item.sourceId}:${item.requirement}`}><strong>{item.requirement}</strong><span>{item.sourceId} · {item.reason}</span></div>)}</details>}
    </section>
 
    <div className="context-trace-workspace">

@@ -858,6 +858,10 @@ button.item-row:hover { background: #fafcf6; }
 .context-source-lanes span { font-size: 11px; font-weight: 650; }
 .context-source-lanes strong { color: #36583f; font-size: 19px; }
 .context-source-lanes small { grid-column: 2 / -1; color: #88948b; font-size: 10px; }
+.context-exclusions { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--muted); font-size: 12px; }
+.context-exclusions summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+.context-exclusions > div { display: grid; grid-template-columns: minmax(120px,.45fr) 1fr; gap: 10px; padding-top: 8px; }
+.context-exclusions > div span { overflow-wrap: anywhere; }
 .context-trace-workspace { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(310px, .75fr); gap: 18px; align-items: start; }
 .context-flow-cubes { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
 .context-flow-step { min-width: 0; flex: 1 1 150px; display: flex; align-items: center; gap: 7px; }
