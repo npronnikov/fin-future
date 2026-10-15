@@ -215,6 +215,26 @@ test('Node API persists a compiled Context Bundle with its immutable receipt', a
   assert.equal(JSON.stringify((await f.request()).body.state.contextBundles[0]), receipt);
 });
 
+test('Node API persists a task-driven Context Delivery Trace as simulation data only', async t => {
+  const f = await fixture(t);
+  const first = await f.request();
+  const saved = await f.request({
+    action: 'save_context_bundle', revision: first.body.state.revision,
+    payload: {teamId: 'growth', productId: 'accreditive', taskId: 'BANK-1842'},
+  });
+  assert.equal(saved.status, 200, saved.body.error);
+  assert.match(saved.body.result.bundle.id, /^SIM-/);
+  assert.equal(saved.body.result.bundle.simulation, true);
+  assert.equal(saved.body.result.bundle.taskId, 'BANK-1842');
+  assert.ok(saved.body.result.bundle.stageSlices.every(stage => stage.policy.length > 0));
+  assert.equal(saved.body.result.bundle.verificationPreview.route, 'Result');
+  assert.equal(saved.body.state.runs.length, first.body.state.runs.length);
+  assert.equal(saved.body.state.capabilities.length, first.body.state.capabilities.length);
+  const snapshot = JSON.stringify(saved.body.state.contextBundles[0]);
+  await f.restart();
+  assert.equal(JSON.stringify((await f.request()).body.state.contextBundles[0]), snapshot);
+});
+
 test('Assistant replies do not mutate state or approve a Gate', async t => {
   const f = await fixture(t);
   const first = await f.request();

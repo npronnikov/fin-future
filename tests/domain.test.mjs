@@ -856,6 +856,18 @@ test('Context Delivery Trace exposes incomplete, blocked, deprecating and inconc
  assert.equal(verification.status,'INCONCLUSIVE');assert.equal(verification.route,'Human Approval Gate');assert.equal(verification.simulation,true);
 });
 
+test('Context Delivery Trace action persists an immutable simulation snapshot without mutating runtime',()=>{
+ const before=d.createSeed(),runtime=JSON.stringify({runs:before.runs,capabilities:before.capabilities});
+ const output=e.applyAction(before,before.people.find(item=>item.id==='engineer'),'save_context_bundle',{teamId:'growth',productId:'accreditive',taskId:'BANK-1842'},'trace-test');
+ const saved=output.state.contextBundles[0];
+ assert.match(saved.id,/^SIM-/);assert.equal(saved.simulation,true);assert.equal(saved.taskId,'BANK-1842');
+ assert.ok(saved.plannerResult?.simulation);assert.ok(saved.stageSlices?.length);assert.equal(saved.verificationPreview?.route,'Result');
+ assert.ok(saved.stageSlices.every(stage=>stage.policy.length>0));assert.equal(JSON.stringify({runs:output.state.runs,capabilities:output.state.capabilities}),runtime);
+ const frozen=JSON.stringify(saved);output.state.knowledge[0].content='Changed live';output.state.policies[0].requirements[0].text='Changed live';
+ assert.equal(JSON.stringify(saved),frozen);
+ assert.throws(()=>e.applyAction(before,before.people.find(item=>item.id==='platform'),'save_context_bundle',{teamId:'growth',productId:'accreditive',taskId:'BANK-1842'},'trace-test'),/knowledge.contribute/);
+});
+
 test('Context actions classify systems by role and persist immutable delivery snapshots',()=>{
  let s=d.createSeed();
  assert.throws(()=>act(s,'engineer','classify_system',{system:'Trade Finance LC',segment:'retail.backend'}),/Platform Engineer/);
