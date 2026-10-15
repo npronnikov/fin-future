@@ -39,11 +39,11 @@ function plannerAssignments(flowNodes:Item[]){
  };
 }
 
-function policyRuleMatches(rule:Item,scope:{segment:string;tag:string;workTypes:string[];artifactTypes:string[]}){
+function policyRuleMatches(rule:Item,scope:{segment:string;tag:string;workTypes:string[];artifactTypes:string[];artifactTypesKnown:boolean}){
  return (!rule.segment||rule.segment===scope.segment)
   &&(!(rule.tag??rule.taskClass)||(rule.tag??rule.taskClass)===scope.tag)
   &&listMatches(rule.workType,scope.workTypes)
-  &&(!rule.artifactType||scope.artifactTypes.includes(rule.artifactType));
+  &&(!rule.artifactType||!scope.artifactTypesKnown||scope.artifactTypes.includes(rule.artifactType));
 }
 
 const evidenceParts=(value:string)=>value.split(/[;,]/).map(item=>item.trim().toLowerCase()).filter(Boolean);
@@ -87,7 +87,7 @@ export function compileContextDeliveryTrace(state:State,taskId:string):ContextDe
  for(const item of productKnowledge)fragments.push({id:`product:${item.id}@${item.version}`,sourceId:item.id,version:item.version,kind:'product',title:item.title,content:item.content,reason:`Planner: ${topics.join(', ')} → ${assignments.product.join(', ')}`,stageIds:[...plannerResult.assignments.product],provenance:[...(item.sourceRefs||[])],status:item.status,details:{summary:item.summary,conceptIds:item.conceptIds||[]}});
  for(const item of teamKnowledge)fragments.push({id:`team:${item.id}@${item.version}`,sourceId:item.id,version:item.version,kind:'team',title:item.title,content:item.content,reason:`Planner: Team ${team?.name||task.teamId} → ${assignments.team.join(', ')}`,stageIds:[...plannerResult.assignments.team],provenance:[...(item.sourceRefs||[])],status:item.status,details:{summary:item.summary}});
  const allStageIds=flowNodes.map(node=>node.id),notApplicable:Item[]=[];
- const policyScope={segment,tag:task.tag,workTypes,artifactTypes};
+ const policyScope={segment,tag:task.tag,workTypes,artifactTypes,artifactTypesKnown:workTypes.includes('dependency_change')};
  for(const policy of state.policies.filter(item=>item.segment===segment)){
   const normalized=normalizePolicyStatus(policy.status);
   for(const requirement of policy.requirements){

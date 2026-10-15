@@ -831,6 +831,16 @@ test('Context Delivery Trace restricts Product and Team fragments to planned sta
  assert.ok(trace.fragments.filter(item=>item.kind==='policy').every(item=>item.stageIds.length===trace.stages.length));
  assert.ok(trace.fragments.some(item=>item.sourceId==='IS-corporate-backend@8'));
  assert.ok(!trace.fragments.some(item=>item.sourceId.startsWith('IS-retail-backend')),'Policy selection must respect Repository segment.');
+ assert.ok(trace.unknown.some(item=>item.includes('Deprecating')));
+ const wrongTag=d.createSeed();for(const policy of wrongTag.policies.filter(item=>item.id==='IS-corporate-backend'))for(const rule of policy.applicability)rule.tag='statement-doc';
+ assert.ok(!c.compileContextDeliveryTrace(wrongTag,'BANK-1842').fragments.some(item=>item.sourceId.startsWith('IS-corporate-backend')),'Policy selection must respect task tag.');
+});
+
+test('Context Delivery Trace keeps an artifact-conditioned Policy when Task artifact type is not known yet',()=>{
+ const s=d.createSeed();
+ s.policies.push({id:'OBS-corporate-backend',version:1,direction:'Reliability',segment:'corporate.backend',status:'Current',sunset:'',effective:'2026-10-01',owner:'Reliability',supersedes:'',requirements:[{id:'OBS-METRIC-001',version:1,text:'Приложить отчёт по метрикам.'}],applicability:[{requirement:'OBS-METRIC-001@1',tag:'telemetry',workType:'implementation',artifactType:'metrics report'}],skills:['code-diff-analysis@4'],evidence:[{requirement:'OBS-METRIC-001@1',artifacts:'metrics report',verificationSkill:'dependency-evidence-check@3'}],changelog:'Telemetry evidence.'});
+ const trace=c.compileContextDeliveryTrace(s,'BANK-2103');
+ assert.ok(trace.fragments.some(item=>item.sourceId==='OBS-corporate-backend@1'),'Unknown artifact type must stay applicable and be verified later.');
 });
 
 test('Context Delivery Trace exposes incomplete, blocked, deprecating and inconclusive states without changing runtime',()=>{
