@@ -812,6 +812,50 @@ test('Context Bundle follows team/system segmentation and reports incomplete or 
  assert.equal(blocked.receiptStatus,'blocked');assert.ok(blocked.blocking.some(item=>item.includes('IS-corporate-backend@8')));
 });
 
+test('Context Delivery Trace derives task scope and LLM simulation assignments from the selected task',()=>{
+ const s=d.createSeed(),trace=c.compileContextDeliveryTrace(s,'BANK-1842');
+ assert.equal(trace.simulation,true);assert.match(trace.simulationId,/^SIM-/);
+ assert.equal(trace.task.repository,'bank/lc-trade-api');assert.equal(trace.task.system,'Trade Finance LC');assert.equal(trace.task.segment,'corporate.backend');
+ assert.equal(trace.task.tag,'dep-update');assert.ok(trace.task.workTypes.includes('dependency_change'));
+ assert.ok(trace.plannerResult.topics.includes('foundation'));assert.ok(trace.plannerResult.assignments.product.length);assert.ok(trace.plannerResult.assignments.team.length);
+ assert.equal(trace.request.flowNodes.length,trace.stages.length);assert.equal(trace.verification.status,'PASS');assert.equal(trace.verification.route,'Result');
+ assert.equal(trace.hash,c.compileContextDeliveryTrace(d.copy(s),'BANK-1842').hash);assert.equal(trace.simulationId,c.compileContextDeliveryTrace(d.copy(s),'BANK-1842').simulationId);
+});
+
+test('Context Delivery Trace restricts Product and Team fragments to planned stages while Policy is mandatory everywhere',()=>{
+ const trace=c.compileContextDeliveryTrace(d.createSeed(),'BANK-1842');
+ const productIds=new Set(trace.plannerResult.assignments.product),teamIds=new Set(trace.plannerResult.assignments.team);
+ assert.ok(trace.stages.every(stage=>stage.policy.length>0),'Applicable Policy must be present in every Flow node.');
+ assert.ok(trace.stages.every(stage=>stage.product.length===0||productIds.has(stage.id)));
+ assert.ok(trace.stages.every(stage=>stage.team.length===0||teamIds.has(stage.id)));
+ assert.ok(trace.fragments.filter(item=>item.kind==='policy').every(item=>item.stageIds.length===trace.stages.length));
+ assert.ok(trace.fragments.some(item=>item.sourceId==='IS-corporate-backend@8'));
+ assert.ok(!trace.fragments.some(item=>item.sourceId.startsWith('IS-retail-backend')),'Policy selection must respect Repository segment.');
+});
+
+test('Context Delivery Trace exposes incomplete, blocked, deprecating and inconclusive states without changing runtime',()=>{
+ const missingBinding=d.createSeed();missingBinding.tasks[0].repo='bank/unknown';
+ const incomplete=c.compileContextDeliveryTrace(missingBinding,'BANK-1842');
+ assert.ok(incomplete.blocking.some(item=>item.includes('Repository Binding')||item.includes('сегмент')));
+
+ const noTopic=d.createSeed();noTopic.tasks.find(item=>item.id==='BANK-2120').title='Opaque maintenance request';
+ const unknown=c.compileContextDeliveryTrace(noTopic,'BANK-2120');
+ assert.equal(unknown.plannerResult.topics.length,0);assert.ok(unknown.unknown.some(item=>item.includes('Planner')));
+
+ const noTeam=d.createSeed();noTeam.knowledge=noTeam.knowledge.filter(item=>item.layer!=='Team');
+ assert.ok(c.compileContextDeliveryTrace(noTeam,'BANK-1842').unknown.some(item=>item.includes('Team Knowledge')));
+
+ const retired=d.createSeed();retired.policies.find(item=>d.policyKey(item)==='IS-corporate-backend@8').status='Retired';
+ assert.ok(c.compileContextDeliveryTrace(retired,'BANK-1842').blocking.some(item=>item.includes('IS-corporate-backend@8')));
+
+ const noPolicy=d.createSeed();noPolicy.policies=noPolicy.policies.filter(item=>item.segment!=='corporate.backend');
+ assert.ok(c.compileContextDeliveryTrace(noPolicy,'BANK-1842').blocking.some(item=>item.includes('Policy')));
+
+ const noEvidence=d.createSeed();for(const policy of noEvidence.policies)policy.evidence=[];
+ const verification=c.compileContextDeliveryTrace(noEvidence,'BANK-1842').verification;
+ assert.equal(verification.status,'INCONCLUSIVE');assert.equal(verification.route,'Human Approval Gate');assert.equal(verification.simulation,true);
+});
+
 test('Context actions classify systems by role and persist immutable delivery snapshots',()=>{
  let s=d.createSeed();
  assert.throws(()=>act(s,'engineer','classify_system',{system:'Trade Finance LC',segment:'retail.backend'}),/Platform Engineer/);

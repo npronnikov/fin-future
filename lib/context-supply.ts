@@ -1,4 +1,4 @@
-import {copy,isRetiredPolicyStatus,normalizePolicyStatus,policyKey,type ContextBundle,type ContextBundleInput,type Item,type State} from './domain.ts';
+import {capabilityForTag,copy,currentRelease,defaultConfig,getFlowNodes,isDependencyFlow,isRetiredPolicyStatus,normalizePolicyStatus,policyKey,type ContextBundle,type ContextBundleInput,type ContextDeliveryTrace,type ContextFragment,type ContextPlannerResult,type Item,type RegulatoryVerificationPreview,type State} from './domain.ts';
 
 function stable(value:unknown):unknown{
  if(Array.isArray(value))return value.map(stable);
@@ -17,6 +17,116 @@ export function contextBundleHash(payload:unknown):string{
 }
 
 const workMatches=(value:string|undefined,workType:string)=>!value||String(value).split(',').map(item=>item.trim()).includes(workType);
+const listMatches=(value:string|undefined,expected:string[])=>!value||String(value).split(',').map(item=>item.trim()).some(item=>expected.includes(item));
+
+function plannerTopics(state:State,task:Item):string[]{
+ const text=`${task.tag} ${task.title}`.toLowerCase(),topics:string[]=[];
+ if(task.tag==='dep-update')topics.push('foundation');
+ if(/document|condition|statement|payment|beneficiary|presentation|услов|документ|плат[её]ж/.test(text))topics.push('settlement');
+ if(/document|beneficiary|presentation|parser|документ/.test(text))topics.push('attributes');
+ if(/commission|fee|комис/.test(text))topics.push('fees');
+ if(/client|portal|retail|клиент/.test(text))topics.push('variants');
+ const available=new Set(state.conceptCategories.filter(item=>item.productId===task.productId).map(item=>item.id));
+ return [...new Set(topics)].filter(topic=>available.has(topic));
+}
+
+function plannerAssignments(flowNodes:Item[]){
+ const productTypes=new Set(['task','analysis','specification','implementation']);
+ const teamTypes=new Set(['implementation','checks','result']);
+ return {
+  product:flowNodes.filter(node=>productTypes.has(node.type)).map(node=>node.id),
+  team:flowNodes.filter(node=>teamTypes.has(node.type)).map(node=>node.id),
+ };
+}
+
+function policyRuleMatches(rule:Item,scope:{segment:string;tag:string;workTypes:string[];artifactTypes:string[]}){
+ return (!rule.segment||rule.segment===scope.segment)
+  &&(!(rule.tag??rule.taskClass)||(rule.tag??rule.taskClass)===scope.tag)
+  &&listMatches(rule.workType,scope.workTypes)
+  &&(!rule.artifactType||scope.artifactTypes.includes(rule.artifactType));
+}
+
+const evidenceParts=(value:string)=>value.split(/[;,]/).map(item=>item.trim().toLowerCase()).filter(Boolean);
+
+export function compileContextDeliveryTrace(state:State,taskId:string):ContextDeliveryTrace{
+ const task=state.tasks.find(item=>item.id===taskId),unknown:string[]=[],blocking:string[]=[];
+ if(!task){
+  const plannerResult:ContextPlannerResult={simulation:true,topics:[],layers:{product:false,team:false},assignments:{product:[],team:[]},rationale:[],unknown:['Task не найдена.']};
+  const request={taskId,taskTitle:'Task не найдена',taskTag:'',repository:'',system:'',segment:'',workTypes:[],flowNodes:[]};
+  const canonical={task:{id:taskId},request,plannerResult,fragments:[],stages:[],verification:{status:'INCONCLUSIVE',route:'Human Approval Gate'},unknown:['Task не найдена.'],blocking:['Task не найдена.']};
+  const hash=contextBundleHash(canonical);
+  return {simulation:true,simulationId:`SIM-${hash.slice(4).toUpperCase()}`,task:{id:taskId,title:'Task не найдена',tag:'',repository:'',system:'',segment:'',workTypes:[]},request,plannerResult,fragments:[],stages:[],verification:{simulation:true,status:'INCONCLUSIVE',route:'Human Approval Gate',artifacts:[],results:[]},unknown:['Task не найдена.'],blocking:['Task не найдена.'],hash};
+ }
+ const product=state.products.find(item=>item.id===task.productId),team=state.teams.find(item=>item.id===task.teamId);
+ const binding=team?.bindings.find(item=>item.type==='Repository'&&item.name===task.repo);
+ const system=binding?.system||'',segment=binding?.segment||'';
+ if(!binding)blocking.push(`Repository Binding для ${task.repo} не найден.`);
+ if(binding&&!system)blocking.push(`Для Repository ${task.repo} не определена техническая система.`);
+ if(!segment)blocking.push(`Для Repository ${task.repo} не определён IT-сегмент.`);
+ const capability=capabilityForTag(state,task.productId,task.tag);
+ const release=currentRelease(capability),config=release?.snapshot.config||capability?.draft||defaultConfig(task.tag||'custom','HG SDLC','custom');
+ if(!capability)unknown.push(`Для тега #${task.tag||'—'} не найден Flow; используется демонстрационный fallback.`);
+ const flowNodes=getFlowNodes(config);
+ const workTypes=isDependencyFlow(config,task.tag)?['dependency_change','implementation','verification']:['implementation','verification'];
+ const artifactTypes=['diff','test report','registry reference',...(workTypes.includes('dependency_change')?['dependency manifest']:[])];
+ const topics=plannerTopics(state,task),assignments=plannerAssignments(flowNodes);
+ const plannerUnknown:string[]=[];
+ if(!topics.length)plannerUnknown.push('Planner не определил тему Product Knowledge.');
+ const plannerResult:ContextPlannerResult={simulation:true,topics,layers:{product:!!topics.length,team:true},assignments:{product:topics.length?assignments.product:[],team:assignments.team},rationale:[topics.length?`Темы выведены из Task #${task.tag||'без тега'} и названия задачи.`:'Product Knowledge не назначено без уверенно определённой темы.','Team Knowledge назначено узлам Implementation, Checks и Result.','Policy не выбирается Planner и разрешается отдельно по техническому scope.'],unknown:plannerUnknown};
+ unknown.push(...plannerUnknown);
+ const request={taskId:task.id,taskTitle:task.title,taskTag:task.tag,repository:task.repo,system,segment,workTypes:[...workTypes],flowNodes:flowNodes.map(node=>({id:node.id,name:node.name,type:node.type,revision:node.revision}))};
+ const variant=segment.startsWith('corporate')?'corporate':'individual';
+ const concepts=state.concepts.filter(item=>item.productId===task.productId&&item.status==='approved'&&topics.includes(item.categoryId)&&(item.variant==='all'||item.variant===variant));
+ const conceptIds=new Set(concepts.map(item=>item.id));
+ const approved=state.knowledge.filter(item=>item.productId===task.productId&&item.status==='approved');
+ const productKnowledge=topics.length?approved.filter(item=>item.layer==='Product'&&(!item.conceptIds?.length||item.conceptIds.some(id=>conceptIds.has(id)))):[];
+ const teamKnowledge=approved.filter(item=>item.layer==='Team'&&item.teamId===task.teamId);
+ if(topics.length&&!productKnowledge.length)unknown.push(`Нет опубликованного Product Knowledge для тем Planner: ${topics.join(', ')}.`);
+ if(!teamKnowledge.length)unknown.push('Для команды нет опубликованного Team Knowledge.');
+ const fragments:ContextFragment[]=[];
+ for(const item of productKnowledge)fragments.push({id:`product:${item.id}@${item.version}`,sourceId:item.id,version:item.version,kind:'product',title:item.title,content:item.content,reason:`Planner: ${topics.join(', ')} → ${assignments.product.join(', ')}`,stageIds:[...plannerResult.assignments.product],provenance:[...(item.sourceRefs||[])],status:item.status,details:{summary:item.summary,conceptIds:item.conceptIds||[]}});
+ for(const item of teamKnowledge)fragments.push({id:`team:${item.id}@${item.version}`,sourceId:item.id,version:item.version,kind:'team',title:item.title,content:item.content,reason:`Planner: Team ${team?.name||task.teamId} → ${assignments.team.join(', ')}`,stageIds:[...plannerResult.assignments.team],provenance:[...(item.sourceRefs||[])],status:item.status,details:{summary:item.summary}});
+ const allStageIds=flowNodes.map(node=>node.id),notApplicable:Item[]=[];
+ const policyScope={segment,tag:task.tag,workTypes,artifactTypes};
+ for(const policy of state.policies.filter(item=>item.segment===segment)){
+  const normalized=normalizePolicyStatus(policy.status);
+  for(const requirement of policy.requirements){
+   const requirementKey=`${requirement.id}@${requirement.version}`;
+   const rules=policy.applicability.filter(rule=>!rule.requirement||rule.requirement===requirementKey);
+   const applies=!rules.length||rules.some(rule=>policyRuleMatches(rule,policyScope));
+   if(!applies){notApplicable.push({sourceId:policyKey(policy),requirement:requirementKey,reason:'tag / work type / artifact type не соответствует Applicability Rules'});continue;}
+   if(isRetiredPolicyStatus(policy.status)){blocking.push(`${policyKey(policy)} выведена из эксплуатации для применимого scope ${segment}.`);continue;}
+   if(!['Current','Deprecating'].includes(normalized))continue;
+   const evidence=policy.evidence.find(item=>item.requirement===requirementKey);
+   fragments.push({id:`policy:${policyKey(policy)}:${requirementKey}`,sourceId:policyKey(policy),version:policy.version,kind:'policy',title:requirementKey,content:requirement.text,reason:`Resolver: ${task.repo} → ${system||'system unresolved'} → ${segment||'segment unresolved'} · #${task.tag||'—'} · ${workTypes.join(', ')}`,stageIds:[...allStageIds],provenance:[requirement.references,policy.changelog].filter(Boolean),status:normalized,details:{direction:policy.direction,sunset:policy.sunset,skills:[...policy.skills],subagents:[...(policy.subagents||[])],evidence:evidence?copy(evidence):null,applicability:copy(rules)}});
+  }
+ }
+ const policyFragments=fragments.filter(item=>item.kind==='policy');
+ if(segment&&!policyFragments.length)blocking.push(`Нет применимых Current или Deprecating Policy Package для ${segment}.`);
+ for(const fragment of policyFragments)if(fragment.status==='Deprecating')unknown.push(`${fragment.sourceId} имеет статус Deprecating${fragment.details?.sunset?` до ${fragment.details.sunset}`:''}.`);
+ const stages=flowNodes.map(node=>({id:node.id,name:node.name,type:node.type,product:fragments.filter(item=>item.kind==='product'&&item.stageIds.includes(node.id)),team:fragments.filter(item=>item.kind==='team'&&item.stageIds.includes(node.id)),policy:policyFragments.filter(item=>item.stageIds.includes(node.id)),unknown:[...plannerUnknown]}));
+ const artifacts=[
+  {id:'diff',title:'diff',present:true,detail:`${task.repo} · ${task.base||'working revision'}`},
+  {id:'manifest',title:'final dependency manifest',present:workTypes.includes('dependency_change'),detail:'Демонстрационный manifest выбранной версии'},
+  {id:'registry',title:'approved registry reference',present:workTypes.includes('dependency_change'),detail:'Approved Component Registry · simulated reference'},
+  {id:'compatibility',title:'compatibility report',present:true,detail:'compatibility-suite · 148 / 148 passed'},
+ ];
+ const observed=artifacts.filter(item=>item.present).map(item=>item.title.toLowerCase());
+ const requirementFragments=[...new Map(policyFragments.map(item=>[item.title,item])).values()];
+ const results=requirementFragments.map(fragment=>{
+  const evidence=fragment.details?.evidence as Item|null|undefined,expected=evidence?.artifacts?evidenceParts(evidence.artifacts):[];
+  const missing=expected.filter(item=>!observed.some(actual=>actual.includes(item)||item.includes(actual)));
+  const status=!evidence||!evidence.verificationSkill?'INCONCLUSIVE':missing.length?'FAIL':'PASS';
+  return {requirement:fragment.title,status,expected,observed:status==='PASS'?expected.filter(item=>!missing.includes(item)):observed,missing,verificationSkill:evidence?.verificationSkill||'',sourceId:fragment.sourceId};
+ });
+ const verificationStatus:RegulatoryVerificationPreview['status']=results.some(item=>item.status==='FAIL')?'FAIL':results.some(item=>item.status==='INCONCLUSIVE')||!results.length?'INCONCLUSIVE':'PASS';
+ const route:RegulatoryVerificationPreview['route']=verificationStatus==='PASS'?'Result':verificationStatus==='FAIL'?'Rework':'Human Approval Gate';
+ const verification:RegulatoryVerificationPreview={simulation:true,status:verificationStatus,route,artifacts,results};
+ const taskScope={id:task.id,title:task.title,tag:task.tag,repository:task.repo,system,segment,workTypes:[...workTypes],productId:task.productId,teamId:task.teamId,capabilityId:capability?.id||'',capabilityName:capability?.name||'Fallback Flow',flowVersion:config.version,notApplicable};
+ const canonical={task:taskScope,request,plannerResult,fragments,stages,verification,unknown,blocking};
+ const hash=contextBundleHash(canonical);
+ return {simulation:true,simulationId:`SIM-${hash.slice(4).toUpperCase()}`,task:taskScope,request,plannerResult,fragments:copy(fragments),stages:copy(stages),verification:copy(verification),unknown:[...unknown],blocking:[...new Set(blocking)],hash};
+}
 
 export function compileContextBundle(state:State,input:ContextBundleInput,meta:{id?:string;createdAt?:string;createdBy?:string}={}):ContextBundle{
  const product=state.products.find(item=>item.id===input.productId);
