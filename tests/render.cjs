@@ -111,7 +111,7 @@ for(const [tab,expectedItems] of Object.entries(knowledgeStages)){
 const hiddenKnowledgeGuide=renderToStaticMarkup(React.createElement(KonturContext.Provider,{value:{...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab:'overview'}},React.createElement(Knowledge,{guideOpen:false})));
 if(hiddenKnowledgeGuide.includes('МАРШРУТ CONTEXT SUPPLY CHAIN'))throw new Error('Closed Context Supply Chain guide remains visible');
 const docsSource=fs.readFileSync(path.join(root,'public/docs/kontur-architecture.html'),'utf8');
-for(const expected of ['#/context-supply-chain','#/accreditive','#/context-service-api','Промышленная архитектура','POST /api/context/compile','Neo4j','Принципиальные гарантии','Глоссарий','Источники'])if(!docsSource.includes(expected))throw new Error(`Documentation missing ${expected}`);
+for(const expected of ['#/context-supply-chain','#/accreditive','#/context-service-api','Промышленная архитектура','POST /api/context/compile','Neo4j','Принципиальные гарантии','Глоссарий','Источники','LLM Context Planner','deterministic Resolver','Context Stage Slice','PASS → Result','FAIL → Rework','INCONCLUSIVE → Human Approval Gate','демонстрация без runtime-интеграции','не создаёт Run или Gate'])if(!docsSource.includes(expected))throw new Error(`Documentation missing ${expected}`);
 
 
 const {copy,defaultConfig,getFlowNodes,currentRelease}=require('../lib/domain.ts');
