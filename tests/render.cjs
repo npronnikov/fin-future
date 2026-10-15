@@ -91,7 +91,7 @@ count++;
 
 const Knowledge=require('../components/kontur/knowledge.tsx').default;
 const knowledgeStages={
- overview:['Контекст с происхождением','Product variant не равен IT-сегменту'],
+ overview:['Task → Planner → Resolver → Flow → Verification','Probabilistic planning','Deterministic Policy resolution','Product variant не равен IT-сегменту'],
  segmentation:['Техническая система','Как возник сегмент'],
  policy:['POLICY SELECTION','IS-corporate-backend@8'],
  ontology:['Онтология продукта','Что такое аккредитив'],
