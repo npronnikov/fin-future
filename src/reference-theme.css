@@ -554,6 +554,11 @@ button.item-row:hover { background: #fafcf6; }
   .breadcrumb { gap: 9px; }
   .breadcrumb > span { max-width: 150px; }
 }
+@media (min-width: 768px) and (max-width: 1000px) {
+  .scenario-indicator { display: none; }
+  .topbar-right [data-slot="select-trigger"] { width: 108px; min-width: 0; max-width: 108px; overflow: hidden; }
+  .topbar-right [data-slot="select-value"] { overflow: hidden; text-overflow: ellipsis; }
+}
 @media (max-width: 767px) {
   h1 { font-size: 25px; letter-spacing: -.65px; }
   .page { padding: 25px 18px 38px; }
