@@ -97,7 +97,7 @@ const knowledgeStages={
  ontology:['Онтология продукта','Что такое аккредитив'],
  publication:['Продуктовое и командное знание','Аккредитив · каноническая модель продукта'],
  graph:['Исследователь графа','Готовые Cypher-запросы'],
- delivery:['Запрос от оркестратора','Context Bundle'],
+ delivery:['Delivery Trace','LLM simulation','Сформировать Context Request','DETERMINISTIC RESOLVER','Product Knowledge','Team Knowledge','Regulatory Policy','Analyze','Checks','Result','Инспектор узла','Regulatory Verification','Simulation snapshot','не создаёт Run, Gate или фактическую доставку'],
 };
 for(const [tab,expectedItems] of Object.entries(knowledgeStages)){
  const value={...zeroValue,state:s,actor:s.people[2],team:s.teams[0],product:s.products[0],screen:'knowledge',tab};
