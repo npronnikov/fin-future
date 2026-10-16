@@ -63,14 +63,14 @@ for (const [Component, props] of [
 }
 const intro = render('onboarding', 'JourneyOverview');
 includes(intro, ['Последовательность демосценария', 'Product Owner', 'Product Engineer', 'Platform Engineer', 'Regulator'], 'Journey');
-const platforms = render('environment', 'default', {screen: 'environment', tab: 'automation', actor: seed.people.find(p => p.id === 'platform')});
+const platforms = render('environment', 'default', {screen: 'environment', tab: 'automation', actor: seed.people.find(p => p.id === 'platform'), team: emptyTeam});
 includes(platforms, ['HG SDLC', 'Maestro', 'AI Conductor', 'AI Manager', 'Платформа исполнения'], 'Execution platforms');
 const automation = render('runs', 'Automation', {screen: 'automation'});
-includes(automation, ['Создать Workflow', 'Открыть Workflow', 'Workflows продукта'], 'Automation entry');
+includes(automation, ['Создать Workflow', 'Открыть DEV', 'Мониторинг PROD', 'Workflows продукта'], 'Automation entry');
 for (const [tab, expected] of Object.entries({
   ontology: ['Как знание попадает в продукт', 'Дерево и граф'],
   publication: ['Workflow публикации', 'Предложено', 'Проверено', 'Опубликовано'],
-  graph: ['Граф опубликованных знаний', 'Онтология продукта'],
+  graph: ['Граф опубликованных знаний', 'Готовые запросы к графу', 'JavaScript-эмуляция Cypher'],
   delivery: ['Способ 1 · Knowledge MCP', 'Способ 2 · API', 'Implementation', 'Jenkins'],
 })) {
   const html = render('knowledge', 'default', {screen: 'knowledge', tab});

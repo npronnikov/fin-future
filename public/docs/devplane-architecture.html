@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f7faf5">
-<title>КОНТУР · Архитектура доверенной автономности</title>
+<title>DevPlane · Архитектура доверенной автономности</title>
 <!--
   Один автономный файл, без CDN и внешних библиотек.
   Информационные подстраницы для встраивания:
@@ -14,7 +14,7 @@
   #/knowledge  — граф знаний и публикация
   #/assistant  — контекстный ассистент и интеграция оркестратора
   #/capability — Trusted Capability и доверенная автономность
-  Программная навигация: window.KonturInfoPages.open('context-supply-chain' | 'accreditive' | 'context-service-api' | 'regulator' | 'flow' | 'sandbox' | 'knowledge' | 'assistant' | 'capability')
+  Программная навигация: window.DevPlaneInfoPages.open('context-supply-chain' | 'accreditive' | 'context-service-api' | 'regulator' | 'flow' | 'sandbox' | 'knowledge' | 'assistant' | 'capability')
 -->
 <style>
 :root {
@@ -505,7 +505,7 @@ a.side-item {text-decoration:none}
   .main-shell{display:block}
 }
 
-/* Match the documentation navigation to the main КОНТУР application. */
+/* Match the documentation navigation to the main DevPlane application. */
 .sidebar{
   background:#121d31;
   border-right-color:#2b374e;
@@ -588,7 +588,7 @@ a.side-item {text-decoration:none}
   <aside class="sidebar" id="kontur-sidebar" aria-label="Навигация по архитектуре">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-      <div class="brand-text"><strong>КОНТУР</strong><small>документация</small></div>
+      <div class="brand-text"><strong>DevPlane</strong><small>документация</small></div>
     </div>
     <nav class="sidebar-menu" aria-label="Разделы и подразделы">
       <div class="side-label">НАВИГАЦИЯ</div>
@@ -688,7 +688,7 @@ a.side-item {text-decoration:none}
         <button type="button" class="mobile-menu-btn" id="kontur-menu-btn" aria-controls="kontur-sidebar" aria-expanded="false" aria-label="Открыть боковое меню">
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Меню</span>
         </button>
-        <div class="crumb"><span>КОНТУР</span><svg class="ico sm"><use href="#ic-arrow"/></svg><strong id="page-breadcrumb">Как устроена платформа</strong></div>
+        <div class="crumb"><span>DevPlane</span><svg class="ico sm"><use href="#ic-arrow"/></svg><strong id="page-breadcrumb">Как устроена платформа</strong></div>
       </div>
       <div class="topbar-right"><span class="topbar-label">Информационные материалы</span><span class="pill"><svg class="ico sm"><use href="#ic-file"/></svg> 9 страниц</span></div>
     </header>
@@ -696,7 +696,7 @@ a.side-item {text-decoration:none}
       <div class="hero">
         <div class="hero-copy">
           <span class="pill ink">REGULATION · KNOWLEDGE · EXECUTION · TRUST</span>
-          <h1>Как КОНТУР управляет<br>автономной разработкой</h1>
+          <h1>Как DevPlane управляет<br>автономной разработкой</h1>
           <p>Девять связанных тем: Context Supply Chain и аккредитив, регулирование и применение политик, изолированная среда, граф знаний, контекстный ассистент и жизненный цикл Trusted Capability.</p>
         </div>
         <div class="hero-visual" aria-hidden="true"><div class="hero-orbit"></div><div class="hero-orbit second"></div><div class="orbital main"><svg class="ico xl"><use href="#ic-shield"/></svg></div><div class="orbital one"><svg class="ico xl"><use href="#ic-file"/></svg></div><div class="orbital two"><svg class="ico xl"><use href="#ic-flow"/></svg></div><div class="orbital three"><svg class="ico xl"><use href="#ic-box"/></svg></div><div class="orbital four"><svg class="ico xl"><use href="#ic-code"/></svg></div></div>
@@ -750,7 +750,7 @@ a.side-item {text-decoration:none}
         </article>
       </div>
       <div class="under-note"><svg class="ico"><use href="#ic-info"/></svg><span>Это <strong>справочная визуализация целевой архитектуры</strong>. Каждая тема открывается отдельной подстраницей. Существующие требования сохранены; рекомендуемые архитектурные решения помечены как предложения. Реальные политики, интеграции, агенты и изолированная среда в этом HTML не исполняются.</span></div>
-      <footer class="page-footer"><span>КОНТУР · Архитектура платформы</span><span>Автономный HTML · CSS и JavaScript внутри файла</span></footer>
+      <footer class="page-footer"><span>DevPlane · Архитектура платформы</span><span>Автономный HTML · CSS и JavaScript внутри файла</span></footer>
     </main>
 
 
@@ -807,7 +807,7 @@ selection:
   Team → «Trade Finance · инженерные практики»
   Policy → corporate.backend + integration_change
   Concepts → «Отсроченный платёж», «Комплект документов»</pre><div class="note"><svg class="ico"><use href="#ic-check"/></svg><span><strong>Каждый элемент объясним.</strong> Bundle хранит ID, версию и строку selection reason, поэтому состав можно воспроизвести без чтения reasoning модели.</span></div></section>
-      <section id="lc-boundaries"><div class="section-head"><span class="section-no">04</span><div><h3>Границы учебного примера</h3><p>Что является демонстрацией, а что — архитектурной гарантией.</p></div></div><div class="guarantee-grid"><div><strong>Синтетические продуктовые знания</strong><p>Формулировки нужны для демонстрации графа и не являются тарифами или юридической консультацией.</p></div><div><strong>Настоящий lifecycle приложения</strong><p>Proposal, review, версии, RBAC и immutable snapshot работают через общий state КОНТУРа.</p></div><div><strong>Эмуляция Neo4j/Cypher</strong><p>Граф вычисляется в браузере. Запросы показывают смысл будущего API без соединения с базой.</p></div><div><strong>Детерминированный Policy selection</strong><p>Применимость основана на segment/work type, а не на семантической близости.</p></div></div></section>
+      <section id="lc-boundaries"><div class="section-head"><span class="section-no">04</span><div><h3>Границы учебного примера</h3><p>Что является демонстрацией, а что — архитектурной гарантией.</p></div></div><div class="guarantee-grid"><div><strong>Синтетические продуктовые знания</strong><p>Формулировки нужны для демонстрации графа и не являются тарифами или юридической консультацией.</p></div><div><strong>Настоящий lifecycle приложения</strong><p>Proposal, review, версии, RBAC и immutable snapshot работают через общий state DevPlane.</p></div><div><strong>Эмуляция Neo4j/Cypher</strong><p>Граф вычисляется в браузере. Запросы показывают смысл будущего API без соединения с базой.</p></div><div><strong>Детерминированный Policy selection</strong><p>Применимость основана на segment/work type, а не на семантической близости.</p></div></div></section>
     </div></div>
     <footer class="article-foot"><small>Аккредитив — единый Product Knowledge и разные runtime-контексты.</small><div class="article-foot-actions"><a class="btn" href="#/context-supply-chain">Предыдущая тема</a><a class="btn primary" href="#/context-service-api">API и гарантии <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
   </div>
@@ -943,7 +943,7 @@ FOR (r:Requirement) REQUIRE (r.id, r.version) IS UNIQUE;
             <div class="pipeline-node dark"><div class="eyebrow">POLICY SNAPSHOT</div><strong>IS@7 · REL@4 · RISK@3</strong><small>зафиксированные версии</small></div>
           </div></div>
           <div class="context-grid" style="margin-top:14px"><div class="context-group"><div class="eyebrow">WORK CONTEXT</div><div class="context-list"><span>Task и тег</span><span>Product / Team</span><span>Repository / revision</span><span>System / Segment</span><span>тип изменения</span></div></div><div class="context-group"><div class="eyebrow">EXECUTION SNAPSHOT</div><div class="context-list"><span>версия Flow</span><span>Policy Packages</span><span>Skills / Subagents</span><span>Model / Runtime</span><span>Knowledge</span><span>Environment</span></div></div></div>
-          <div class="note"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Snapshot создаёт HG SDLC или AI Manager в момент Run.</strong> КОНТУР отображает и хранит его. Последующее редактирование конфигурации не меняет активный Run.</span></div>
+          <div class="note"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Snapshot создаёт HG SDLC или AI Manager в момент Run.</strong> DevPlane отображает и хранит его. Последующее редактирование конфигурации не меняет активный Run.</span></div>
         </section>
         <section id="flow-before" aria-labelledby="flow-before-title">
           <div class="section-head"><span class="section-no">02</span><div><h3 id="flow-before-title">Before Run: Regulatory Evaluator</h3><p>Применимость оценивается до исполнения пользовательских узлов.</p></div></div>
@@ -1045,7 +1045,7 @@ Required: compatibility suite report</pre>
 <main class="main-content info-page" id="kontur-page-knowledge" data-page="knowledge" aria-labelledby="knowledge-title" hidden>
   <nav class="page-crumbline" aria-label="Путь страницы"><a href="#/" class="back-link"><svg class="ico sm back-arrow"><use href="#ic-arrow"/></svg>Все материалы</a><span class="crumb-split">/</span><span>Управление знаниями</span><span class="chapter-count">04 / 06</span></nav>
   <div class="article-frame">
-    <header class="article-header"><div class="article-heading"><div class="eyebrow">04 / KNOWLEDGE · ONTOLOGY · CONTEXT</div><h2 id="knowledge-title">Как КОНТУР <em>управляет знаниями</em></h2></div><div class="article-head-right"><span class="article-count">04 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
+    <header class="article-header"><div class="article-heading"><div class="eyebrow">04 / KNOWLEDGE · ONTOLOGY · CONTEXT</div><h2 id="knowledge-title">Как DevPlane <em>управляет знаниями</em></h2></div><div class="article-head-right"><span class="article-count">04 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
     <div class="article-layout">
 <div class="article-scroll">
         <div class="article-lead"><div class="eyebrow">ЕДИНАЯ ПРОДУКТОВАЯ ИСТИНА</div><h3>Граф связывает факты, документы объясняют их</h3><p>У каждого продукта один Product Knowledge Graph с контролируемой публикацией. Командные знания дополняют его, а Regulatory Context хранится в отдельном контуре. Для реализации предлагается гибрид: версия документа + маленькая онтология + граф связей + retrieval с правами доступа.</p></div>
@@ -1119,12 +1119,12 @@ Required: compatibility suite report</pre>
     <header class="article-header"><div class="article-heading"><div class="eyebrow">05 / ASSISTANT · SKILLS · PROVIDER INTEGRATION</div><h2 id="assistant-title">Как работает <em>контекстный ассистент</em></h2></div><div class="article-head-right"><span class="article-count">05 / 06</span><a class="icon-btn" href="#/" aria-label="К обзору" title="К обзору"><svg class="ico back-arrow"><use href="#ic-arrow"/></svg></a></div></header>
     <div class="article-layout">
 <div class="article-scroll">
-        <div class="article-lead"><div class="eyebrow">КОНТЕКСТ И ПРОИСХОЖДЕНИЕ</div><h3>Один чат — два уровня понимания</h3><p>КОНТУР предоставляет контекстный чат и общие Skills. Если вопрос требует понимания внутренних узлов, логов и состояния Run, чат передаёт запрос Deep Run Assistant выбранного оркестратора, а не выдумывает ответ. Все запросы и результаты ограничиваются эффективными Permissions пользователя.</p></div>
+        <div class="article-lead"><div class="eyebrow">КОНТЕКСТ И ПРОИСХОЖДЕНИЕ</div><h3>Один чат — два уровня понимания</h3><p>DevPlane предоставляет контекстный чат и общие Skills. Если вопрос требует понимания внутренних узлов, логов и состояния Run, чат передаёт запрос Deep Run Assistant выбранного оркестратора, а не выдумывает ответ. Все запросы и результаты ограничиваются эффективными Permissions пользователя.</p></div>
         <section id="asst-surface" aria-labelledby="asst-surface-title">
       <div class="section-head"><span class="section-no">01</span><div><h3 id="asst-surface-title">Ассистент — полноценный контекстный чат</h3><p>Всплывающий bubble открывает переписку, связанную с текущим экраном и ролью пользователя.</p></div></div>
       
     <div class="assistant-chat" aria-label="Пример интерфейса контекстного ассистента">
-      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>КОНТУР Assistant</strong><small>Product: Аккредитив · Team: Trade Finance Engineering · Automation / Run</small></div><span class="pill ink" style="margin-left:auto">Контекст учтён</span></div>
+      <div class="chat-top"><span class="chat-avatar"><svg class="ico"><use href="#ic-bot"/></svg></span><div><strong>DevPlane Assistant</strong><small>Product: Аккредитив · Team: Trade Finance Engineering · Automation / Run</small></div><span class="pill ink" style="margin-left:auto">Контекст учтён</span></div>
       <div class="chat-thread"><div class="chat-bubble user">Что мне делать дальше с этой capability?</div><div class="chat-bubble">Вы на экране настройки <strong>Dependency Update v1.3</strong>. Environment готов, Flow связан с тегом <code>dep-update</code>, но история этой версии ещё не собрана. Следующий шаг — запустить задачи в <strong>Supervised</strong> режиме и изучить результаты.<span class="source">Контекст: Product / Team / Capability / Environment / текущий экран</span></div></div>
       <div class="chat-action"><svg class="ico sm"><use href="#ic-chat"/></svg>Это информационный пример. Ответ не меняет статус и не запускает Flow.</div>
     </div>
@@ -1141,17 +1141,17 @@ Required: compatibility suite report</pre>
     </section><section id="asst-delegation" aria-labelledby="asst-delegation-title">
       <div class="section-head"><span class="section-no">03</span><div><h3 id="asst-delegation-title">Skills и интеграция с выбранным оркестратором</h3><p>Глубокая диагностика Run должна поступать от HG SDLC или AI Manager, если они предоставляют такую возможность.</p></div></div>
       
-    <div class="delegation-diagram" aria-label="Маршрут запроса: чат КОНТУРа передаёт глубокий запрос провайдеру оркестратора">
-      <div class="delegation-block"><div class="eyebrow">UI / IDENTITY</div><strong>КОНТУР Assistant</strong><small>Пользователь, экран, права</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
+    <div class="delegation-diagram" aria-label="Маршрут запроса: чат DevPlane передаёт глубокий запрос провайдеру оркестратора">
+      <div class="delegation-block"><div class="eyebrow">UI / IDENTITY</div><strong>DevPlane Assistant</strong><small>Пользователь, экран, права</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
       <div class="delegation-block"><div class="eyebrow">ROUTER</div><strong>Выбор Skills</strong><small>Общие knowledge/task навыки или Run диагностика</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
       <div class="delegation-block main"><div class="eyebrow">PROVIDER CONTRACT</div><strong>HG SDLC / AI Manager</strong><small>Deep Run Assistant · provider-specific tools</small></div><span class="delegation-next"><svg class="ico"><use href="#ic-arrow"/></svg></span>
       <div class="delegation-block"><div class="eyebrow">RESPONSE</div><strong>Объяснение с evidence</strong><small>Run logs / diff / Plan / Evidence</small></div>
     </div>
     <div class="split-2">
-      <div class="pane soft"><h4>Общие Skills КОНТУРа</h4><p>Поиск в Knowledge, объяснение lifecycle, анализ задач по тегам, рекомендации по Flow, подготовка Knowledge Proposal. Skills имеют версии и работают в пределах контекста и прав пользователя.</p></div>
+      <div class="pane soft"><h4>Общие Skills DevPlane</h4><p>Поиск в Knowledge, объяснение lifecycle, анализ задач по тегам, рекомендации по Flow, подготовка Knowledge Proposal. Skills имеют версии и работают в пределах контекста и прав пользователя.</p></div>
       <div class="pane blue"><h4>Deep Run Assistant провайдера</h4><p>Например, <code>hg-sdlc-run-diagnostics@version</code> и инструменты <code>get_run_state</code>, <code>get_node_logs</code>, <code>read_git_diff</code>, <code>get_regulatory_plan</code>, <code>get_evidence_report</code>.</p></div>
     </div>
-    <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>Deep Assistant принадлежит orchestration provider.</strong> КОНТУР предоставляет единый чат, identity и контекст, но не притворяется, что знает внутреннюю структуру любого Flow. Интеграция провайдера подключается только при наличии реального соответствующего контракта.</span></div>
+    <div class="note"><svg class="ico"><use href="#ic-spark"/></svg><span><strong>Deep Assistant принадлежит orchestration provider.</strong> DevPlane предоставляет единый чат, identity и контекст, но не притворяется, что знает внутреннюю структуру любого Flow. Интеграция провайдера подключается только при наличии реального соответствующего контракта.</span></div>
     </section><section id="asst-example" aria-labelledby="asst-example-title">
       <div class="section-head"><span class="section-no">04</span><div><h3 id="asst-example-title">Пример: вопрос по Approval Gate</h3><p>Узнать причину можно в чате, но formal approval остаётся отдельным действием в Automation.</p></div></div>
       
@@ -1165,7 +1165,7 @@ Required: compatibility suite report</pre>
       <div class="section-head"><span class="section-no">05</span><div><h3 id="asst-contract-title">Кто за что отвечает и как передаётся запрос</h3><p>Контекстный роутинг должен сохранять права пользователя и прозрачное происхождение ответа.</p></div></div>
       
     <div class="contract">
-      <div class="pane soft"><h4><svg class="ico sm"><use href="#ic-layers"/></svg> КОНТУР</h4><ul class="plain-list"><li>Единый UI bubble-чата, переписка и навигация.</li><li>Identity, Product, Team, текущий экран, ссылки на Task / Run / Gate.</li><li>Контроль доступа при сборке Context Supply Chain.</li><li>Общие Skills, рекомендации и открытие профильных экранов.</li></ul></div>
+      <div class="pane soft"><h4><svg class="ico sm"><use href="#ic-layers"/></svg> DevPlane</h4><ul class="plain-list"><li>Единый UI bubble-чата, переписка и навигация.</li><li>Identity, Product, Team, текущий экран, ссылки на Task / Run / Gate.</li><li>Контроль доступа при сборке Context Supply Chain.</li><li>Общие Skills, рекомендации и открытие профильных экранов.</li></ul></div>
       <div class="pane blue"><h4><svg class="ico sm"><use href="#ic-flow"/></svg> Оркестратор / Provider</h4><ul class="plain-list"><li>Собственная модель внутреннего Run и workflow states.</li><li>Provider-specific Skills, MCP/tools, чтение workspace.</li><li>Диагностика node logs, artifacts, checkpoints и regulatory evidence.</li><li>Ответ с provenance без изменения Gate decision из свободного текста.</li></ul></div>
     </div>
     <pre class="mini-code" style="margin-top:13px"><b>ASSISTANT INTEGRATION CONTEXT</b>
@@ -1179,7 +1179,7 @@ response: message + source references + available actions</pre>
     </section>
       </div>
     </div>
-    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span></span><span></span><span class="current"></span><span></span></span>Общий Assistant в КОНТУРе; глубокая диагностика — у выбранного orchestration provider.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn" href="#/knowledge">Предыдущая тема</a><a class="btn primary" href="#/capability">Следующая тема <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
+    <footer class="article-foot"><small><span class="dot-pagination"><span></span><span></span><span></span><span></span><span class="current"></span><span></span></span>Общий Assistant в DevPlane; глубокая диагностика — у выбранного orchestration provider.</small><div class="article-foot-actions"><a class="btn ghost" href="#/">К обзору</a><a class="btn" href="#/knowledge">Предыдущая тема</a><a class="btn primary" href="#/capability">Следующая тема <svg class="ico sm"><use href="#ic-arrow"/></svg></a></div></footer>
   </div>
 </main>
 
@@ -1226,7 +1226,7 @@ response: message + source references + available actions</pre>
       
     <div class="pane soft"><div class="eyebrow">EXAMPLE · POLICY UPDATE</div><div class="inject-flow" style="margin:12px 0 0"><div class="inject-node"><strong>Release v1.4</strong><small>IS-corporate-backend@7 · active</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node active"><strong>Impact analysis</strong><small>Новая политика @8 затрагивает capability</small></div><div class="inject-bridge"><svg class="ico"><use href="#ic-arrow"/></svg></div><div class="inject-node"><strong>Release v1.5</strong><small>Новая оценка · UAT · риск</small></div></div></div>
     <div class="status-rail"><span class="active">ACTIVE</span><span>MIGRATION REQUIRED</span><span>SUSPENDED</span><span>REVOKED</span><span>SUPERSEDED</span></div>
-    <div class="work-steps"><div class="work-step"><span class="num">1</span><div><strong>Изменился Policy Package</strong><p>КОНТУР находит затронутые репозитории, команды и релизы по dependency graph.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Создаётся новая версия</strong><p>Копируется выпущенная конфигурация; Policy @7 → @8 без изменения предыдущего snapshot.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Переоценка</strong><p>Применимые тесты, optional Benchmark, UAT того же snapshot и Risk Decision.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Замена или приостановка</strong><p>После нового релиза прежний становится Superseded. При Withdrawn/Revoked приём новых автономных задач может блокироваться.</p></div></div></div>
+    <div class="work-steps"><div class="work-step"><span class="num">1</span><div><strong>Изменился Policy Package</strong><p>DevPlane находит затронутые репозитории, команды и релизы по dependency graph.</p></div></div><div class="work-step"><span class="num">2</span><div><strong>Создаётся новая версия</strong><p>Копируется выпущенная конфигурация; Policy @7 → @8 без изменения предыдущего snapshot.</p></div></div><div class="work-step"><span class="num">3</span><div><strong>Переоценка</strong><p>Применимые тесты, optional Benchmark, UAT того же snapshot и Risk Decision.</p></div></div><div class="work-step"><span class="num">4</span><div><strong>Замена или приостановка</strong><p>После нового релиза прежний становится Superseded. При Withdrawn/Revoked приём новых автономных задач может блокироваться.</p></div></div></div>
     <div class="note warning"><svg class="ico"><use href="#ic-lock"/></svg><span><strong>Хорошая статистика старой версии не доказывает новую.</strong> Она остаётся контекстом для решения, но изменение политики, модели или runtime должно быть проверено отдельно. Новое поведение никогда не подменяет опубликованный snapshot.</span></div>
     </section>
       </div>
@@ -1330,7 +1330,7 @@ response: message + source references + available actions</pre>
     });
     if(changed){groups.forEach(group=>showGroup(group,group.dataset.group===route));}
     if(crumb)crumb.textContent=titles[route];
-    document.title='КОНТУР · '+titles[route];
+    document.title='DevPlane · '+titles[route];
     closeMenu();
     if(section && sectionIsValid(route,section)){
       setSubsectionSelected(route,section);
@@ -1371,7 +1371,7 @@ response: message + source references + available actions</pre>
     requestAnimationFrame(()=>{scrollPending=false;syncSection();});
   },{passive:true});
   window.addEventListener('resize',()=>{if(window.innerWidth>780)closeMenu();},{passive:true});
-  window.KonturInfoPages=Object.freeze({
+  window.DevPlaneInfoPages=Object.freeze({
     open(name,subsection){
       if(!titles[name])return false;
       const path='#/'+(name==='home'?'':name+(subsection&&sectionIsValid(name,subsection)?'/'+subsection:''));
@@ -1382,6 +1382,7 @@ response: message + source references + available actions</pre>
     home(){location.hash='#/';},
     sections(name){return subsectionLinks.filter(link=>link.dataset.sectionPage===name).map(link=>({id:link.dataset.sectionLink,title:link.textContent.trim()}));}
   });
+  window.KonturInfoPages=window.DevPlaneInfoPages;
   display(true);
 })();
 </script>

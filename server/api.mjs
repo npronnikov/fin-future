@@ -146,7 +146,7 @@ export async function handleApi(request, response, store) {
     json(response, 200, {...output.body, scenario: output.session.scenario, scenarioChosen: output.session.scenarioChosen});
   } catch (error) {
     if (error instanceof DomainError) return json(response, error.status, {error: error.message});
-    console.error('KONTUR API error:', error);
+    console.error('DevPlane API error:', error);
     json(response, 503, {error: 'Не удалось сохранить данные. Повторите попытку.'});
   }
 }

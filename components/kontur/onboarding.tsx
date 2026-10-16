@@ -6,7 +6,7 @@ import {useKontur} from './context';
 import {Button, Card, Field, Input, Textarea, Pick, Notice, Pill, Modal} from './ui';
 
 export function Brand() {
-  return <><span className="brand-mark" aria-hidden="true"><i/><i/><i/><i/></span><span className="brand-copy"><strong>КОНТУР</strong><small>TEAM SPACE</small></span></>;
+  return <><span className="brand-mark" aria-hidden="true"><i/><i/><i/><i/></span><span className="brand-copy"><strong>DevPlane</strong><small>ENGINEERING CONTROL PLANE</small></span></>;
 }
 
 export function ResetSetupButton({busy, reset, menu = false}: {busy: boolean; reset: () => Promise<boolean>; menu?: boolean}) {
@@ -91,7 +91,7 @@ export function ScenarioScreen({busy, choose, onBack}: {busy: boolean; choose: (
   return <div className="entry-shell">
     <aside className="entry-aside"><div className="brand"><Brand/></div><div className="entry-aside-copy"><span className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</span><h2>Выберите сценарий работы</h2><p>Демонстрация возможностей или последовательная настройка своей команды.</p></div><div className="entry-aside-foot"><ShieldCheck size={17}/><span>Локальное приложение<br/>React + Node.js</span></div></aside>
     <main className="entry-main"><header className="entry-topbar"><span>Командная среда <i>/</i> <strong>Сценарии</strong></span>{onBack && <Button variant="ghost" onClick={onBack}>Вернуться в пространство</Button>}</header><div className="entry-content">
-      <p className="eyebrow">КОНТУР / НАЧАЛО РАБОТЫ</p><h1>Как начнём?</h1><p className="entry-description">Оба сценария доступны в одном приложении. Данные и прогресс каждого сохраняются отдельно.</p>
+      <p className="eyebrow">DevPlane / НАЧАЛО РАБОТЫ</p><h1>Как начнём?</h1><p className="entry-description">Оба сценария доступны в одном приложении. Данные и прогресс каждого сохраняются отдельно.</p>
       <div className="scenario-grid">
         <section className="scenario-card"><div className="scenario-symbol"><Database size={26}/></div><Pill tone="green">Данные готовы</Pill><h2>С демонстрационными данными</h2><p>Продукт «Аккредитив», команды Trade Finance и LC Retail, задачи, знания, политики и история запусков.</p><ul><li><Check size={15}/>Связанный Context Supply Chain</li><li><Check size={15}/>Input, Approval, Rework и Takeover</li><li><Check size={15}/>Benchmarks, Releases и Monitoring</li></ul><Button disabled={busy} onClick={() => choose('demo')} data-scenario="demo">Открыть с данными</Button></section>
         <section className="scenario-card"><div className="scenario-symbol outline"><Plus size={28}/></div><Pill>Пошаговая настройка</Pill><h2>С нуля</h2><p>Создайте продукт и команду, выберите платформу, настройте доступы и пройдите путь до выпуска автономности.</p><ul><li><Check size={15}/>Без готовых продуктов, задач и запусков</li><li><Check size={15}/>Общий каталог и policies доступны</li><li><Check size={15}/>Продолжение с сохранённого шага</li></ul><Button variant="outline" disabled={busy} onClick={() => choose('empty')} data-scenario="empty">Открыть настройку с нуля</Button></section>

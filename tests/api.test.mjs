@@ -283,12 +283,16 @@ test('Node serves the built React client and keeps server files outside the stat
   const response = await fetch(f.base);
   assert.equal(response.status, 200, 'Run npm run build before npm test when dist is absent.');
   const html = await response.text();
-  assert.match(html, /КОНТУР/);
+  assert.match(html, /DevPlane/);
   const asset = html.match(/src="([^"]+\.js)"/)?.[1];
   assert.ok(asset);
   const js = await fetch(`${f.base}${asset}`);
   assert.equal(js.status, 200);
   assert.match(js.headers.get('content-type'), /javascript/);
+  const docs = await fetch(`${f.base}/docs/devplane-architecture.html`);
+  assert.equal(docs.status, 200);
+  assert.match(await docs.text(), /DevPlane/);
+  assert.equal((await fetch(`${f.base}/docs/kontur-architecture.html`)).status, 404);
   assert.equal((await fetch(`${f.base}/server/store.mjs`)).status, 404);
   assert.equal((await fetch(`${f.base}/data/kontur.sqlite`)).status, 404);
 });

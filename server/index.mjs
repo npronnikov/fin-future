@@ -63,7 +63,7 @@ try {
       appType: 'spa',
     });
   }
-  console.log(`КОНТУР: http://${host.includes(':') ? `[${host}]` : host}:${port}`);
+  console.log(`DevPlane: http://${host.includes(':') ? `[${host}]` : host}:${port}`);
   console.log(`Режим: ${dev ? 'разработка' : 'локальное приложение'}. Данные: ${dataFile}`);
 } catch (error) {
   await vite?.close();

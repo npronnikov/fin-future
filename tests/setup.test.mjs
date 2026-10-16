@@ -90,7 +90,7 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   for (const key of workspaceCollections) assert.deepEqual(empty[key], [], key);
   assert.equal(Object.hasOwn(empty, 'classes'), false);
   assert.equal(empty.revision, 1);
-  assert.equal(empty.people.length, 5);
+  assert.equal(empty.people.length, 6);
   assert.ok(empty.people.every(person => person.teams.length === 0));
   assert.ok(empty.people.find(person => person.id === 'po').assignments.includes('team.admin'));
   assert.ok(empty.policies.length > 0, 'Platform policies remain available for setup.');

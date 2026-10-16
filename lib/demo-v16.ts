@@ -1,4 +1,5 @@
 import type {State, Runtime, Run, Item, Knowledge} from './domain.ts';
+import {KNOWLEDGE_GRAPH_QUERIES,knowledgeGraphQueryParams} from './knowledge-graph-queries.ts';
 
 export const DEFAULT_JUDGE_SCHEMA = {
   completeness: 'number', correctness: 'number', test_coverage: 'number',
@@ -15,9 +16,9 @@ export const DEFAULT_SECURITY_RULE = 'При обновлении зависим
 export const DEFAULT_TEAM_KNOWLEDGE = 'При обновлении зависимостей не выполняй локальную сборку. Отправь изменение в Jenkins, дождись сборки и тестов pipeline и используй их результат для проверки. Это знание должно поступать на этапе Implementation.';
 const RUNTIMES: Runtime[] = ['HG SDLC','Maestro','AI Conductor','AI Manager'];
 
-/** Additive, idempotent migration. Frozen executions, reports and release snapshots stay untouched. */
+/** Additive, idempotent migration. Release snapshots stay untouched; RUN-912 receives demo delivery evidence once. */
 export function upgradeDemoState(state: State): void {
-  if ((state.demoVersion || 0) >= 19) return;
+  if ((state.demoVersion || 0) >= 21) return;
   state.people ||= [];
   const productOwner = state.people.find(person => person.id === 'po');
   if (productOwner) productOwner.name = 'Владелец продукта';
@@ -28,8 +29,8 @@ export function upgradeDemoState(state: State): void {
   const security = state.people.find(person => person.id === 'regulator');
   if (security) Object.assign(security,{name:'Эксперт безопасности',role:'Regulator',teams:[],assignments:[],directions:['Information Security']});
   const risk = state.people.find(person => person.id === 'regulator-reviewer');
-  if (risk) Object.assign(risk,{name:'Эксперт рисков',role:'Regulator',teams:[],assignments:[],directions:['Risk']});
-  else state.people.push({id:'regulator-reviewer',name:'Эксперт рисков',role:'Regulator',teams:[],assignments:[],directions:['Risk']});
+  if (risk) Object.assign(risk,{name:'Эксперт рисков',role:'Regulator',teams:[],assignments:[],directions:['Risk','Information Security']});
+  else state.people.push({id:'regulator-reviewer',name:'Эксперт рисков',role:'Regulator',teams:[],assignments:[],directions:['Risk','Information Security']});
   const reliability = state.people.find(person => person.id === 'regulator-reliability');
   if (reliability) Object.assign(reliability,{name:'Эксперт надежности',role:'Regulator',teams:[],assignments:[],directions:['Reliability']});
   else state.people.push({id:'regulator-reliability',name:'Эксперт надежности',role:'Regulator',teams:[],assignments:[],directions:['Reliability']});
@@ -52,7 +53,21 @@ export function upgradeDemoState(state: State): void {
     for (const binding of team.bindings) if (!binding.platform && team.automation) binding.platform = team.automation;
     team.environment.name = team.environment.name.replace(/\sSandbox$/, ' · инфраструктура');
   }
-  state.demoVersion = 19;
+  const demoRun = state.runs?.find(run => run.id === 'RUN-912');
+  if (demoRun && !demoRun.execution.knowledgeDelivery) {
+    const receipt = buildKnowledgeReceipt(state,demoRun);
+    const gateIndex = demoRun.events.findIndex(item => item.title === 'Human Input requested');
+    const gateTime = demoRun.gates.find(gate => gate.phase === 'Implementation')?.createdAt;
+    const deliveredAt = gateTime ? new Date(Date.parse(gateTime) - 60_000).toISOString() : demoRun.startedAt;
+    receipt.delivered = true;
+    receipt.nodeId = 'implementation';
+    receipt.deliveredAt = deliveredAt;
+    demoRun.execution.knowledgeDelivery = receipt;
+    const deliveryEvent = {time:deliveredAt,title:'Implementation · знания доставлены',detail:'Context Supply Chain → Implementation',kind:'green'};
+    if (gateIndex >= 0) demoRun.events.splice(gateIndex,0,deliveryEvent);
+    else demoRun.events.push(deliveryEvent);
+  }
+  state.demoVersion = 21;
 }
 
 /** Build an immutable receipt for this run, not a page-level context delivery mock. */
@@ -67,11 +82,13 @@ export function buildKnowledgeReceipt(state: State, run: Run): Item {
   const keys = new Set((run.plans.at(-1)?.applicable || []).map((item: Item) => item.requirement));
   const policies = run.snapshot.policyPackages.filter(item => item.segment === binding?.segment && item.status !== 'Draft').flatMap(policy => policy.requirements.filter(req => keys.has(`${req.id}@${req.version}`)).map(req => ({id:`${req.id}@${req.version}`,package:`${policy.id}@${policy.version}`,title:policy.direction,content:req.text,segment:policy.segment,stage:'Implementation',kind:'policy'})));
   const fragment = (item:Knowledge) => ({id:item.id,version:item.version,title:item.title,content:item.content,kind:item.layer.toLowerCase(),stage:'Implementation',sourceRefs:item.sourceRefs || []});
-  const query = `${task.title}. Нужны: ${dependency ? 'командные правила обновления зависимостей, Jenkins, сертифицированные версии библиотек' : 'понятия продукта и инженерные правила команды'}. product=${task.productId}; team=${task.teamId}; segment=${binding?.segment || 'unknown'}; stage=Implementation`;
+  const plannerRequest = `${task.title}. Нужны: ${dependency ? 'командные правила обновления зависимостей, Jenkins, сертифицированные версии библиотек' : 'понятия продукта и инженерные правила команды'}.`;
+  const graphQuery = KNOWLEDGE_GRAPH_QUERIES.implementation.cypher;
+  const queryParams = knowledgeGraphQueryParams(task.productId,task.teamId,binding?.segment||'','Implementation');
   return {
     simulation:true,transport:'MCP',skill:'knowledge-mcp@1',service:'Context Supply Chain',taskId:task.id,request:task.title,
     planner:{model:'LLM Context Planner · demo',needs:dependency?['Team knowledge','Security segment policies']:['Product knowledge','Team knowledge','Segment policies'],productReason:dependency?'Продуктовые знания не нужны для этой задачи обновления зависимости.':'Требуются продуктовые понятия.',mandatoryPolicies:true},
-    query,product:product.map(fragment),team:team.map(fragment),policies,
+    plannerRequest,query:graphQuery,graphQuery,queryParams,product:product.map(fragment),team:team.map(fragment),policies,
     fragments:[...product.map(fragment),...team.map(fragment),...policies],
     targetStage:'Implementation',delivered:false,attempt:run.attempt,
     steps:['Текст задачи','LLM: какие знания нужны','Запрос через Knowledge MCP','Context Supply Chain: опубликованные версии','Инъекция в Implementation'],

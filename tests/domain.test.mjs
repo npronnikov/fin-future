@@ -3,10 +3,26 @@ import assert from 'node:assert/strict';
 import * as d from '../lib/domain.ts';
 import * as e from '../lib/engine.ts';
 import * as c from '../lib/context-supply.ts';
+import * as q from '../lib/knowledge-graph-queries.ts';
 const act=(s,who,action,p={})=>e.applyAction(s,s.people.find(x=>x.id===who),action,{teamId:'growth',productId:'accreditive',...p},'test-owner').state;
 const decision=(s,id,kind,more={})=>{const r=s.runs.find(r=>r.id===id),g=r.gates.at(-1);return act(s,'engineer','gate_decision',{runId:id,gateId:g.id,gateRevision:g.revision,artifactRevision:g.artifactRevision,decision:kind,...more})};
 const depId='cap-dep';
 function finishSeedRun(s,id){for(let i=0;i<8;i++){const run=s.runs.find(r=>r.id===id);if(run.completedAt)return s;const gate=run.gates.find(g=>g.status==='pending');assert.ok(gate);s=decision(s,id,gate.type==='input'?'input':'approve',gate.type==='input'?{value:'2.17.4'}:{});}throw new Error('Run did not finish');}
+
+test('ready graph queries keep product and team knowledge inside the selected scope',()=>{
+ const s=d.createSeed();
+ const product=q.runKnowledgeGraphQuery(s,'product','accreditive','growth');
+ const team=q.runKnowledgeGraphQuery(s,'team','accreditive','growth');
+ const relations=q.runKnowledgeGraphQuery(s,'relations','accreditive','growth');
+ const implementation=q.runKnowledgeGraphQuery(s,'implementation','accreditive','growth');
+ assert.ok(product.length>0&&product.every(row=>row.type==='knowledge'&&row.layer==='Product'));
+ assert.deepEqual(team.map(row=>row.sourceId),['tk-trade-lc']);
+ assert.ok(relations.some(row=>row.type==='concept')&&relations.some(row=>row.type==='knowledge'));
+ assert.ok(implementation.some(row=>row.sourceId==='tk-trade-lc'));
+ assert.ok(!implementation.some(row=>row.sourceId==='tk-retail-lc'));
+ assert.match(q.KNOWLEDGE_GRAPH_QUERIES.implementation.cypher,/\$teamId/);
+ assert.match(s.runs.find(run=>run.id==='RUN-912').execution.knowledgeDelivery.graphQuery,/MATCH \(owner\)/);
+});
 
 function migration(){let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.policies=cfg.policies.map(x=>x==='IS-corporate-backend@7'?'IS-corporate-backend@8':x);s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});return s}
 function frozen(){let s=migration();s=act(s,'engineer','freeze_release',{capabilityId:depId});return s}
@@ -74,7 +90,7 @@ test('UAT executes the exact SDD frozen graph automatically without gates or tas
  assert.equal(saved.uat.report.tests.passed,148);assert.equal(s.notifications.length,notifications+1);
 });
 test('risk rejection blocks promotion',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id;s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:false,comment:'Риск отклонён.'});assert.throws(()=>act(s,'engineer','promote',{capabilityId:depId,releaseId:id}),/UAT/)});
-test('release without Benchmark succeeds after same-snapshot UAT and explicit risk acceptance',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id,snapshot=JSON.stringify(s.capabilities[0].releases[0].snapshot);s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,s.capabilities[0].releases[0]).risks.map(risk=>risk.id),comment:'Риск принят в указанном scope.'});s=act(s,'engineer','promote',{capabilityId:depId,releaseId:id});assert.equal(s.capabilities[0].releases[0].stage,'production');assert.equal(s.capabilities[0].releases[1].status,'superseded');assert.equal(JSON.stringify(s.capabilities[0].releases[0].snapshot),snapshot);assert.equal(s.capabilities[0].releases[1].snapshot.config.policies[0],'IS-corporate-backend@7')});
+test('release without Benchmark succeeds after same-snapshot UAT, risk acceptance and security approval',()=>{let s=frozen();const id=s.capabilities[0].releases[0].id,snapshot=JSON.stringify(s.capabilities[0].releases[0].snapshot);s=act(s,'engineer','run_uat',{capabilityId:depId,releaseId:id});s=act(s,'po','risk_decision',{capabilityId:depId,releaseId:id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,s.capabilities[0].releases[0]).risks.map(risk=>risk.id),comment:'Риск принят в указанном scope.'});assert.throws(()=>act(s,'engineer','promote',{capabilityId:depId,releaseId:id}),/ИБ-допуск/);s=act(s,'regulator','security_decision',{capabilityId:depId,releaseId:id,accepted:true,comment:'ИБ-проверка frozen snapshot пройдена.'});s=act(s,'engineer','promote',{capabilityId:depId,releaseId:id});assert.equal(s.capabilities[0].releases[0].stage,'production');assert.equal(s.capabilities[0].releases[1].status,'superseded');assert.equal(JSON.stringify(s.capabilities[0].releases[0].snapshot),snapshot);assert.equal(s.capabilities[0].releases[1].snapshot.config.policies[0],'IS-corporate-backend@7')});
 test('Production Run uses released snapshot despite newer Draft',()=>{let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.instructions='New draft instructions';s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});s=act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'});assert.equal(s.runs.at(-1).snapshot.id,'SNAP-DEP-1.4');assert.notEqual(s.runs.at(-1).snapshot.config.instructions,cfg.instructions)});
 test('current Platform grants cannot be bypassed by an older release',()=>{const s=d.createSeed();s.teams[0].bindings[0].write='';assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/grants/)});
 test('retired policy suspends capability and stops new autonomous runs',()=>{const s=act(d.createSeed(),'regulator','policy_status',{policyKey:'IS-corporate-backend@7',status:'Retired'});assert.equal(s.capabilities[0].releases[0].status,'suspended');assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/запрещён/);assert.ok(s.runs.length>0);assert.equal(s.capabilities[0].releases[0].snapshot.config.policies[0],'IS-corporate-backend@7')});
@@ -354,7 +370,7 @@ test('node configuration changes require fresh exact-history while UAT uses the 
  s=act(s,'engineer','run_uat',{capabilityId:id,releaseId:release.id});cap=s.capabilities.find(cap=>cap.id===id);release=cap.releases.find(item=>item.id===release.id);
  const uat=s.runs.find(run=>run.id===release.uat.runId);assert.equal(uat.status,'accepted');assert.equal(JSON.stringify(release.snapshot),frozen);assert.equal(uat.snapshot.id,release.snapshot.id);
  assert.notEqual(uat.execution.flow.trace.find(node=>node.type==='checks').criteria,cfg.nodeConfigs.find(node=>node.type==='checks').criteria);
- s=act(s,'po','risk_decision',{capabilityId:id,releaseId:release.id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,release).risks.map(risk=>risk.id),comment:'Согласованный scope.'});s=act(s,'engineer','promote',{capabilityId:id,releaseId:release.id});
+ s=act(s,'po','risk_decision',{capabilityId:id,releaseId:release.id,accepted:true,acknowledgements:d.releaseRiskAssessment(s,release).risks.map(risk=>risk.id),comment:'Согласованный scope.'});s=act(s,'regulator','security_decision',{capabilityId:id,releaseId:release.id,accepted:true,comment:'ИБ-проверка frozen snapshot пройдена.'});s=act(s,'engineer','promote',{capabilityId:id,releaseId:release.id});
  s.teams[0].bindings=s.teams[0].bindings.filter(binding=>binding.type!=='CI');
  assert.throws(()=>act(s,'engineer','start_run',{capabilityId:id,taskId:'BANK-1924',mode:'production'}),/CI binding/);
 });

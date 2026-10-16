@@ -95,7 +95,7 @@ test('npm run dev ignores generated files, keeps HMR, reloads source once, and s
     children.add(state.pid);
     return state.revision === 'server-one';
   }, () => `Development server did not start:\n${output}`);
-  const starts = () => (output.match(/КОНТУР: http:/g) || []).length;
+  const starts = () => (output.match(/DevPlane: http:/g) || []).length;
   await delay(1800);
   assert.equal(starts(), 1, `Startup restarted itself:\n${output}`);
   assert.equal((await fetch(`${base}/api/state`)).status, 200);
