@@ -1,0 +1,118 @@
+<style>
+  .direction-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
+  .direction-card{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .direction-card .card-image{padding:0;overflow:hidden;background:#f6f8f3}
+  .mini-app{font-family:Inter,system-ui,sans-serif;color:#253128;background:#f7f9f5;min-height:360px;padding:12px}
+  .mini-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:11px;color:#647269}
+  .mini-head strong{font-size:13px;color:#26342b}
+  .mini-pill{padding:3px 7px;border-radius:5px;background:#e7efe1;color:#3a6545;font-size:9px;white-space:nowrap}
+  .mini-panel{border:1px solid #dfe6dc;border-radius:8px;background:#fff;padding:10px;margin-bottom:9px}
+  .mini-label{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#879288;margin-bottom:6px}
+  .mini-row{display:flex;align-items:center;gap:6px;font-size:9px;line-height:1.35}
+  .mini-row+.mini-row{margin-top:6px}
+  .mini-dot{width:7px;height:7px;border-radius:50%;background:#5e8b68;flex:0 0 auto}
+  .mini-dot.policy{background:#81709d}.mini-dot.team{background:#99a981}.mini-dot.system{background:#68849d}
+  .mini-counts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+  .mini-counts span{padding:7px 2px;background:#f0f4ed;text-align:center;border-radius:5px;font-size:8px}
+  .mini-lanes{display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:center}
+  .mini-source{display:grid;gap:5px}
+  .mini-source span{display:block;padding:6px;border-radius:5px;background:#fff;border:1px solid #e0e6dd;font-size:8px}
+  .mini-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;position:relative}
+  .mini-flow:before{content:"";position:absolute;left:-13px;right:8px;top:50%;height:1px;background:#b9c8b7}
+  .mini-node{position:relative;padding:9px 4px;background:#eef4e9;border:1px solid #d3dfcf;border-radius:6px;text-align:center;font-size:8px}
+  .mini-node b{display:block;font-size:9px;margin-bottom:3px}
+  .mini-receipt{margin-top:7px;padding:8px;border-left:3px solid #547c5c;background:#fff;font-size:8px;display:flex;justify-content:space-between}
+  .story-strip{display:grid;gap:7px}
+  .story-scene{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;padding:8px;background:#fff;border:1px solid #e0e6dd;border-radius:7px}
+  .story-scene i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#eaf1e5;color:#42664b;font-size:9px}
+  .story-scene strong{display:block;font-size:9px}.story-scene small{font-size:8px;color:#7d887f}
+  .recommended{display:inline-flex;align-items:center;gap:5px;color:#3e6848;font-weight:600;font-size:12px;margin-top:4px}
+  @media(max-width:900px){.direction-grid{grid-template-columns:1fr}.mini-app{min-height:auto}}
+</style>
+
+<h2>Как показать настоящий Context Supply Chain в демо</h2>
+<p class="subtitle">Выберите направление: все варианты остаются локальной симуляцией и не меняют runtime.</p>
+
+<div class="cards direction-grid">
+  <div class="card direction-card" data-choice="bundle-inspector" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-app">
+        <div class="mini-head"><strong>Context Bundle Inspector</strong><span class="mini-pill">Preview</span></div>
+        <div class="mini-panel">
+          <div class="mini-label">Scope</div>
+          <div class="mini-row"><span class="mini-dot system"></span>Trade Finance LC · dependency_change</div>
+        </div>
+        <div class="mini-counts"><span>2 Product</span><span>1 Team</span><span>2 Policy</span><span>15 Concepts</span></div>
+        <div class="mini-panel" style="margin-top:9px">
+          <div class="mini-label">Implementation slice</div>
+          <div class="mini-row"><span class="mini-dot"></span>Product rules · 2 fragments</div>
+          <div class="mini-row"><span class="mini-dot team"></span>Team practices · 1 fragment</div>
+          <div class="mini-row"><span class="mini-dot policy"></span>Obligations · 1 fragment</div>
+        </div>
+        <div class="mini-panel"><div class="mini-label">Agent fragment</div><div class="mini-row">Grouped, collapsible, with provenance and versions</div></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Bundle Inspector</h3>
+      <p>Минимальный фикс текущего экрана: честные stage-срезы, группировка источников и раскрываемое содержимое.</p>
+    </div>
+  </div>
+
+  <div class="card direction-card" data-choice="delivery-trace" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-app">
+        <div class="mini-head"><strong>Context Delivery Trace</strong><span class="mini-pill">Simulated Run</span></div>
+        <div class="mini-panel">
+          <div class="mini-label">Context Request</div>
+          <div class="mini-row"><b>BANK-1842</b> · LC Dependency Update · RUN-DEMO</div>
+        </div>
+        <div class="mini-lanes">
+          <div class="mini-source">
+            <span>● Product</span><span>● Team</span><span>● Policy</span>
+          </div>
+          <div>
+            <div class="mini-flow">
+              <div class="mini-node"><b>Analysis</b>цель + понятия</div>
+              <div class="mini-node"><b>Implementation</b>практики + rules</div>
+              <div class="mini-node"><b>Checks</b>evidence + skills</div>
+            </div>
+            <div class="mini-receipt"><span>Delivery Receipt</span><b>3 / 3 delivered</b></div>
+          </div>
+        </div>
+        <div class="mini-panel" style="margin-top:9px">
+          <div class="mini-label">Selected node · Implementation</div>
+          <div class="mini-row"><span class="mini-dot"></span>Product: документарные условия</div>
+          <div class="mini-row"><span class="mini-dot team"></span>Team: compatibility suite</div>
+          <div class="mini-row"><span class="mini-dot policy"></span>Policy: SEC-DEP-014@3</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Delivery Trace</h3>
+      <p>Показывает главное: откуда контекст взялся, в какой узел Flow попал и что получил агент.</p>
+      <span class="recommended">Рекомендую этот вариант</span>
+    </div>
+  </div>
+
+  <div class="card direction-card" data-choice="guided-story" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mini-app">
+        <div class="mini-head"><strong>Guided Context Journey</strong><span class="mini-pill">Step 3 of 4</span></div>
+        <div class="story-strip">
+          <div class="story-scene"><i>1</i><span><strong>Publish</strong><small>Product, Team, Policy</small></span></div>
+          <div class="story-scene"><i>2</i><span><strong>Select</strong><small>Scope resolves applicable fragments</small></span></div>
+          <div class="story-scene"><i>3</i><span><strong>Inject</strong><small>Context enters Flow stages</small></span></div>
+          <div class="story-scene"><i>4</i><span><strong>Verify</strong><small>Receipt and evidence close the loop</small></span></div>
+        </div>
+        <div class="mini-panel" style="margin-top:9px">
+          <div class="mini-label">Current scene</div>
+          <div class="mini-row">Implementation receives Team practices and exact obligations</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Guided Journey</h3>
+      <p>Самый понятный рассказ для презентации: четыре последовательные сцены вместо рабочего инспектора.</p>
+    </div>
+  </div>
+</div>

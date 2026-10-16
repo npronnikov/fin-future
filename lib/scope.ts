@@ -53,6 +53,7 @@ export function projectStateForActor(source:State,actor:Person):State{
  state.initiatives=state.initiatives.filter(item=>item.teamId?teamIds.has(item.teamId):(item.taskIds||[]).some((id:string)=>taskIds.has(id)));
  for(const item of state.initiatives)item.taskIds=(item.taskIds||[]).filter((id:string)=>taskIds.has(id));
  state.audit=state.audit.filter(item=>item.scope?.teamId?teamIds.has(item.scope.teamId):item.actor===actor.id);
+ if(actor.role==='Regulator')state.policies=state.policies.filter(policy=>actor.directions?.includes(policy.direction));
  return state;
 }
 /** Bulk completion counts span the product; individual task links stay within team membership. */

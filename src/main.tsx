@@ -16,3 +16,5 @@ import './policy-v15.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Не найден корневой элемент приложения.');
 createRoot(root).render(<KonturApp />);
+
+import './demo-v16.css';

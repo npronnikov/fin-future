@@ -50,7 +50,7 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
       if (result?.id) {onClose(); go('run', result.id);}
     } finally {setLaunching(false);}
   }
-  return <Modal open={open} onClose={() => {if (!launching) onClose();}} title="Запустить задачу" description={`${cap.name} · #${cap.tag} · ${product.name} / ${team.name}`} wide>
+  return <Modal open={open} onClose={() => {if (!launching) onClose();}} title="Запустить задачу · Supervised" className="flow-launch-dialog" description={`${cap.name} · #${cap.tag} · ${product.name} / ${team.name}`} wide>
     <div className="flow-launch-grid">
       <div className="stack"><Field label="Доска задач"><Pick label="Доска запуска" value={boardId} onChange={value => {setBoardId(value); if (value !== 'all' && task?.boardId !== value) setTaskId('');}} options={[{value: 'all', label: 'Все доски моей команды'}, ...boards.map(board => ({value: board.id, label: board.name}))]} disabled={launching}/></Field>
         <div className="flow-launch-task-list" aria-label="Задачи для запуска Flow">{filtered.map(item => {
@@ -59,12 +59,8 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
         })}{!filtered.length && <div className="flow-launch-empty"><FolderKanban size={24}/><h3>Нет задач для этого тега</h3><p>Добавьте задачи с тегом #{cap.tag} на доску вашей команды.</p></div>}</div>
         <Button type="button" variant="outline" disabled={launching} onClick={() => {onClose(); go('tasks', boardId === 'all' ? '' : boardId);}}>Открыть доску задач<ArrowRight size={15}/></Button>
       </div>
-      <div className="flow-launch-summary stack"><div><p className="flow-launch-mode-label">Режим запуска</p><div className="flow-launch-mode"><ShieldCheck size={17}/><strong>Supervised</strong></div><p className="flow-inspector-hint">Запуск выбранной задачи с участием человека.</p></div>
-        <div className="row wrap"><Pill tone="green"><Tag size={12}/>#{cap.tag}</Pill><Pill>{executionConfig.runtime}</Pill></div>
-        <div><KV label="Конфигурация">{shortConfig(executionConfig)}</KV><KV label="Шаги">{getFlowNodes(executionConfig).length}</KV><KV label="Ответственный за проверку">{gateAssignee?.name || 'Не назначен'}</KV><KV label="Environment">{team.environment.name}</KV></div>
-        {saveBeforeRun && <Notice tone="blue" title="Flow изменён">Перед запуском будут сохранены текущие настройки Flow и узлов. Запуск получит снимок сохранённой конфигурации.</Notice>}
-        {reasons.length > 0 && <div className="flow-launch-reasons" role="status"><strong>Для запуска:</strong><ul>{reasons.map((reason, index) => <li key={`${reason}-${index}`}>{reason}</li>)}</ul></div>}
-        <p className="flow-launch-note">Демонстрационное исполнение. После запуска откроется запуск с Timeline, Human Gates и артефактами.</p>
+      <div className="flow-launch-summary stack"><div><KV label="Ответственный за проверку">{gateAssignee?.name || 'Не назначен'}</KV></div>
+        {reasons.length > 0 && <div className="flow-launch-reasons" role="status"><strong>Для запуска:</strong><ul>{reasons.map((reason,index)=><li key={index}>{reason}</li>)}</ul></div>}
       </div>
     </div>
     <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : saveBeforeRun ? 'Сохранить и запустить сценарий' : 'Запустить сценарий'}</Button></div>

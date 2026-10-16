@@ -90,7 +90,7 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   for (const key of workspaceCollections) assert.deepEqual(empty[key], [], key);
   assert.equal(Object.hasOwn(empty, 'classes'), false);
   assert.equal(empty.revision, 1);
-  assert.equal(empty.people.length, 4);
+  assert.equal(empty.people.length, 5);
   assert.ok(empty.people.every(person => person.teams.length === 0));
   assert.ok(empty.people.find(person => person.id === 'po').assignments.includes('team.admin'));
   assert.ok(empty.policies.length > 0, 'Platform policies remain available for setup.');
@@ -101,11 +101,12 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   const second = createEmptyState();
   assert.deepEqual(second.people[0].teams, []);
   assert.notEqual(second.assets[0].name, 'not-shared');
-  assert.equal(createSeed().tasks.length, 12);
+  assert.equal(createSeed().tasks.length, 16);
 });
 
 test('Tracker only binds a resource; mock tasks are explicitly added to their project', () => {
   const w = domainWorkspace();
+  w.act('platform','save_environment',{...w.state.teams[0].environment,automation:'HG SDLC'});
   assert.equal(w.state.tasks.length, 0);
   w.act('platform', 'save_binding', {type: 'Task Tracker', name: 'Task Tracker'});
   w.act('platform', 'save_binding', {type: 'Task Tracker', name: 'Task Tracker'});
@@ -117,7 +118,7 @@ test('Tracker only binds a resource; mock tasks are explicitly added to their pr
   w.act('engineer', 'add_mock_tasks', {projectId, template: 'mixed', count: 12, assigneeId: 'engineer'});
   const first = w.state.tasks.filter(task => task.teamId === w.teamId);
   assert.equal(first.length, 12);
-  assert.deepEqual(first.map(task => [task.title, task.tag]), trackerTaskTemplates().map(task => [task.title, task.tag]));
+  assert.deepEqual(first.map(task => [task.title, task.tag]), trackerTaskTemplates().slice(0,12).map(task => [task.title, task.tag]));
   assert.ok(first.every(task => task.productId === w.productId && task.boardId === projectId && task.status === 'backlog'));
   assert.ok(first.every(task => task.assigneeId === 'engineer' && task.mock));
   assert.ok(first.every(task => task.id !== task.externalId));
@@ -127,6 +128,7 @@ test('Tracker only binds a resource; mock tasks are explicitly added to their pr
 
   const secondTeamId = w.act('po', 'create_team', {name: 'Вторая команда', scope: 'Activation'}).id;
   w.act('po', 'add_person', {teamId: secondTeamId, personId: 'platform', role: 'Platform Engineer'});
+  w.act('platform','save_environment',{teamId:secondTeamId,...w.state.teams.find(t=>t.id===secondTeamId).environment,automation:'HG SDLC'});
   w.act('platform', 'save_binding', {teamId: secondTeamId, type: 'Task Tracker', name: 'Task Tracker'});
   w.act('platform', 'save_binding', {teamId: secondTeamId, type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/pom.xml', createPr: true});
   assert.equal(w.state.tasks.filter(task => task.teamId === secondTeamId).length, 0);
@@ -180,7 +182,7 @@ test('setup preserves role, required resources, topology and repository scope ga
   assert.equal(w.state.runs.length, 0, 'Rejected startup does not leave a partial Run.');
 });
 
-for (const runtime of ['HG SDLC', 'AI Manager']) {
+for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor']) {
   test(`${runtime}: complete empty setup through Node API reaches an approved supervised Run`, async t => {
     const f = await fixture(t);
     let current;
@@ -213,6 +215,7 @@ for (const runtime of ['HG SDLC', 'AI Manager']) {
     await act('add_person', {personId: 'engineer', role: 'Product Engineer'});
     await act('select_actor', {actorId: 'platform'});
     assert.ok(current.actor.teams.includes(teamId));
+    await act('save_environment', {...team.environment, automation: runtime});
     await act('save_binding', {
       type: 'Repository', name: 'bank/lc-trade-api', read: '/**',
       write: '/pom.xml\n/src/letters-of-credit/**', createPr: true, merge: false,
@@ -273,7 +276,7 @@ for (const runtime of ['HG SDLC', 'AI Manager']) {
     assert.equal(run.metrics.approval, 1);
     assert.equal(run.gates.filter(gate => gate.status === 'pending').length, 0);
     assert.equal(current.state.tasks.find(task => task.id === taskId).status, 'done');
-    assert.equal(current.state.knowledge.length, 0, 'A successful Run does not publish Knowledge automatically.');
+    assert.equal(current.state.knowledge.length, 1, 'Only the initial Jenkins environment knowledge exists; runs do not auto-publish.');
     assert.equal(current.state.benchmarks.length, 0);
     assert.equal(current.state.capabilities[0].releases.length, 0);
     const stats = getStats(current.state.runs.filter(value => snapshotTag(value.snapshot) === 'dep-update'));

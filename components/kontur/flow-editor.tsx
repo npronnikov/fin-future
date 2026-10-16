@@ -49,7 +49,11 @@ export default function FlowEditor({config, savedConfig, flowName, ownerTeam, on
   }
   function add() {
     const node = createFlowNode(addType, `node-${crypto.randomUUID()}`, config);
-    const index = Math.min(Math.max(1, nodes.findIndex(item => item.id === selected?.id) + 1), Math.max(0, nodes.length - 1));
+    let index = Math.min(Math.max(1, nodes.findIndex(item => item.id === selected?.id) + 1), Math.max(0, nodes.length - 1));
+    // New verification steps must follow implementation; implementation keeps a final checks step.
+    if(addType==='checks')index=Math.max(index,nodes.map(n=>n.type).lastIndexOf('implementation')+1);
+    if(addType==='implementation'){const lastChecks=nodes.map(n=>n.type).lastIndexOf('checks');if(lastChecks>0)index=Math.min(index,lastChecks);}
+    index=Math.min(index,nodes.length-1);
     const next = [...nodes]; next.splice(index, 0, node); updateNodes(next); setSelectedId(node.id); setInspectorTab('settings'); setAdding(false);
   }
   const selectedIndex = nodes.findIndex(node => node.id === selected?.id);

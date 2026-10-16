@@ -6,9 +6,11 @@ import * as c from '../lib/context-supply.ts';
 const act=(s,who,action,p={})=>e.applyAction(s,s.people.find(x=>x.id===who),action,{teamId:'growth',productId:'accreditive',...p},'test-owner').state;
 const decision=(s,id,kind,more={})=>{const r=s.runs.find(r=>r.id===id),g=r.gates.at(-1);return act(s,'engineer','gate_decision',{runId:id,gateId:g.id,gateRevision:g.revision,artifactRevision:g.artifactRevision,decision:kind,...more})};
 const depId='cap-dep';
+function finishSeedRun(s,id){for(let i=0;i<8;i++){const run=s.runs.find(r=>r.id===id);if(run.completedAt)return s;const gate=run.gates.find(g=>g.status==='pending');assert.ok(gate);s=decision(s,id,gate.type==='input'?'input':'approve',gate.type==='input'?{value:'2.17.4'}:{});}throw new Error('Run did not finish');}
+
 function migration(){let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.policies=cfg.policies.map(x=>x==='IS-corporate-backend@7'?'IS-corporate-backend@8':x);s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});return s}
 function frozen(){let s=migration();s=act(s,'engineer','freeze_release',{capabilityId:depId});return s}
-test('demo has nine-domain separation, exact mixed backlog and both SDD/non-SDD flows linked by tag',()=>{const s=d.createSeed();assert.equal(s.tasks.length,12);assert.equal(s.teams[0].spaceId,'space-trade-finance');assert.equal(s.teams[0].environment.status,'ready');assert.equal(s.people.filter(p=>p.role!=='Regulator').length,3);assert.equal(s.capabilities[1].draft.mode,'SDD');assert.equal(s.capabilities[0].releases[0].snapshot.config.mode,'non-SDD')});
+test('demo has nine-domain separation, exact mixed backlog and both SDD/non-SDD flows linked by tag',()=>{const s=d.createSeed();assert.equal(s.tasks.length,16);assert.equal(s.teams[0].spaceId,'space-trade-finance');assert.equal(s.teams[0].environment.status,'ready');assert.equal(s.people.filter(p=>p.role!=='Regulator').length,3);assert.equal(s.capabilities[1].draft.mode,'SDD');assert.equal(s.capabilities[0].releases[0].snapshot.config.mode,'non-SDD')});
 test('stored original demo migrates to Accreditive without losing execution history',()=>{
  const old=d.createSeed(),history=old.runs.length;
  old.products[0]={...old.products[0],id:'savings',name:'Копилка',description:'Legacy demo'};
@@ -32,11 +34,12 @@ test('new Product and Team stay empty until explicit project and mock-task creat
  s=act(s,'po','create_team',{productId,name:'Team',scope:'Activation'});const teamId=s.teams.at(-1).id;
  assert.ok(s.teams.at(-1).spaceId);assert.equal(s.teams.at(-1).environment.status,'not_configured');
  s=act(s,'po','add_person',{teamId,productId,personId:'platform',role:'Platform Engineer'});
+ s=act(s,'platform','save_environment',{teamId,productId,...s.teams.at(-1).environment,automation:'HG SDLC'});
  s=act(s,'platform','save_binding',{teamId,productId,type:'Task Tracker',name:'Task Tracker'});
  assert.equal(s.tasks.filter(task=>task.teamId===teamId&&task.productId===productId).length,0);
  s=act(s,'platform','save_binding',{teamId,productId,type:'Repository',name:'bank/lc-trade-api',read:'/**',write:'/pom.xml'});
  s=act(s,'po','create_project',{teamId,productId,name:'Новый проект'});const projectId=s.boards.at(-1).id;
- s=act(s,'po','add_mock_tasks',{teamId,productId,projectId,template:'mixed'});
+ s=act(s,'po','add_mock_tasks',{teamId,productId,projectId,template:'mixed',count:12});
  const tasks=s.tasks.filter(task=>task.boardId===projectId);
  assert.equal(tasks.length,12);assert.ok(tasks.every(task=>task.mock&&task.status==='backlog'&&task.repo==='bank/lc-trade-api'));
  assert.equal(new Set(s.tasks.map(task=>task.id)).size,s.tasks.length);
@@ -52,10 +55,16 @@ test('Regulatory Plan derives obligations only from frozen Policy Packages',()=>
 test('editing Draft cannot change an in-flight execution snapshot',()=>{let s=d.createSeed();const r=s.runs.find(r=>r.id==='RUN-913');const saved=JSON.stringify(r.snapshot);const cfg=d.copy(s.capabilities[1].draft);cfg.instructions+=' New instruction';s=act(s,'engineer','save_config',{capabilityId:'cap-statement',expectedRevision:1,config:cfg});assert.equal(JSON.stringify(s.runs.find(r=>r.id==='RUN-913').snapshot),saved)});
 test('release requires history from exact current runtime and bindings',()=>{let s=d.createSeed();s.teams[0].environment.runtimeVersion='2.0';assert.throws(()=>act(s,'engineer','freeze_release',{capabilityId:'cap-statement'}),/история запусков/);s=migration();s.teams[0].environment.runtimeVersion='2.0';assert.throws(()=>act(s,'engineer','freeze_release',{capabilityId:depId}),/история запусков/)});
 test('policy migration can freeze with baseline history without a Benchmark',()=>{const s=frozen(),r=s.capabilities[0].releases[0];assert.equal(r.stage,'frozen');assert.equal(r.snapshot.benchmarkRefs.length,0);assert.equal(r.snapshot.baselineReleaseId,'REL-DEP-1.4');assert.equal(r.snapshot.historyRefs.length,0)});
-test('Benchmark receives no Golden in execution input and never admits capability',()=>{let s=d.createSeed();s=act(s,'engineer','benchmark',{capabilityId:depId,suiteId:'dep-update-suite',suiteVersion:3,releaseId:'REL-DEP-1.4'});const b=s.benchmarks[0];assert.ok(b.reports.every(r=>!JSON.stringify(r.runtimeInput).includes('93f20a')));assert.ok(b.reports.every(r=>r.judgeInput.goldenRevision==='93f20a'));assert.equal(s.capabilities[0].releases.length,1);assert.equal(b.passed,2)});
+test('Benchmark receives no Golden in execution input and never admits capability',()=>{
+ let s=finishSeedRun(d.createSeed(),'RUN-912');
+ s=act(s,'engineer','save_suite',{name:'Accepted runs',tag:'dep-update',cases:[{taskId:'BANK-1842'}],judgeId:'dependency-judge@2'});
+ const suite=s.suites.at(-1);s=act(s,'engineer','benchmark',{capabilityId:depId,suiteId:suite.id,suiteVersion:suite.version,releaseId:'REL-DEP-1.4'});
+ const b=s.benchmarks[0];assert.ok(b.reports.every(r=>!JSON.stringify(r.runtimeInput).includes(suite.cases[0].golden)));
+ assert.ok(b.reports.every(r=>r.judgeInput.goldenRevision===suite.cases[0].golden));assert.equal(s.capabilities[0].releases.length,1);assert.equal(b.passed,1);
+});
 test('Benchmark selected release preserves released environment rather than current Team',()=>{let s=d.createSeed();s.teams[0].environment.runtimeVersion='2.0';s=act(s,'engineer','benchmark',{capabilityId:depId,suiteId:'dep-update-suite',suiteVersion:3,releaseId:'REL-DEP-1.4'});assert.equal(s.benchmarks[0].snapshot.runtimeVersion,'1.0');assert.equal(s.benchmarks[0].snapshot.id,'SNAP-DEP-1.4')});
 test('UAT executes the exact SDD frozen graph automatically without gates or task status changes',()=>{
- let s=d.createSeed();s=act(s,'engineer','freeze_release',{capabilityId:'cap-statement'});
+ let s=finishSeedRun(d.createSeed(),'RUN-913');s=act(s,'engineer','freeze_release',{capabilityId:'cap-statement'});
  const release=s.capabilities[1].releases[0],frozenSnapshot=JSON.stringify(release.snapshot),tasks=JSON.stringify(s.tasks),notifications=s.notifications.length;
  s=act(s,'engineer','run_uat',{capabilityId:'cap-statement',releaseId:release.id});
  const saved=s.capabilities[1].releases[0],run=s.runs.find(run=>run.id===saved.uat.runId);
@@ -509,7 +518,7 @@ test('released emulation solves all eligible product-tag tasks across teams with
  const frozen=JSON.stringify(s.capabilities[0].releases[0].snapshot),historical=JSON.stringify(s.runs);
  let output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'},'test');
  s=output.state;
- assert.equal(output.result.completed,2);assert.equal(output.result.skipped,4);
+ assert.equal(output.result.completed,6);assert.equal(output.result.skipped,4);
  assert.ok(output.result.results.some(row=>row.taskId==='DELIVERY-1'&&row.status==='completed'));
  assert.match(output.result.results.find(row=>row.taskId==='DELIVERY-OUT').reason,/Repository/);
  assert.match(output.result.results.find(row=>row.taskId==='BANK-1842').reason,/активный запуск/);
@@ -583,8 +592,8 @@ test('notification read actions are isolated to current team/product and never c
 });
 
 test('offered catalog combinations create and supervise from API/web repositories without hidden configuration edits',()=>{
- for(const runtime of ['HG SDLC','AI Manager'])for(const repository of d.REPOSITORIES)for(const template of d.FLOW_TEMPLATES){
-  let s=d.createSeed();s.capabilities=[];s.runs=[];s.teams[0].automation=runtime;
+ for(const runtime of ['HG SDLC','Maestro','AI Conductor'])for(const repository of d.REPOSITORIES)for(const template of d.FLOW_TEMPLATES){
+  let s=d.createSeed();s.capabilities=[];s.runs=[];s.teams[0].automation=runtime;for(const binding of s.teams[0].bindings)binding.platform=runtime;
   s.teams[0].bindings=s.teams[0].bindings.filter(binding=>binding.type!=='Repository'||binding.name===repository.name);
   const binding=s.teams[0].bindings.find(binding=>binding.type==='Repository');binding.read='/**';binding.write='/**';
   const task={...d.copy(s.tasks[1]),id:'MATRIX-TASK',tag:'custom-catalog-tag',repo:repository.name,status:'todo'};s.tasks=[task];
@@ -766,8 +775,8 @@ test('risk assessment reports no basket and less-than-100 statistics from frozen
 });
 
 test('a persisted old UAT waiting on a gate resumes automatically on the same snapshot once',()=>{
- let s=d.createSeed();s=act(s,'engineer','freeze_release',{capabilityId:'cap-statement'});const cap=s.capabilities[1],release=cap.releases[0];
- const run=d.makeRun(s,cap,release.snapshot.config,s.tasks[4],'UAT-LEGACY','2026-10-07T10:00:00Z','uat',release);run.uat=true;run.plans.push(d.makePlan(run));d.addGate(run,'approval','Specification');
+ let s=finishSeedRun(d.createSeed(),'RUN-913');s=act(s,'engineer','freeze_release',{capabilityId:'cap-statement'});const cap=s.capabilities[1],release=cap.releases[0];
+ const run=d.makeRun(s,cap,release.snapshot.config,s.tasks.find(task=>task.id==='BANK-2012'),'UAT-LEGACY','2026-10-07T10:00:00Z','uat',release);run.uat=true;run.plans.push(d.makePlan(run));d.addGate(run,'approval','Specification');
  s.runs.push(run);release.stage='uat_running';release.uat={status:'RUNNING',snapshotId:release.snapshot.id,binding:release.snapshot.uatBindings,runId:run.id,time:run.startedAt};
  const frozenSnapshot=JSON.stringify(release.snapshot),tasks=JSON.stringify(s.tasks);e.refreshHealth(s);
  assert.equal(release.stage,'uat_passed');assert.equal(run.status,'accepted');assert.equal(run.execution.uatAutoMigrated,true);
@@ -887,8 +896,8 @@ test('Context Delivery Trace action persists an immutable simulation snapshot wi
 
 test('Context actions classify systems by role and persist immutable delivery snapshots',()=>{
  let s=d.createSeed();
- assert.throws(()=>act(s,'engineer','classify_system',{system:'Trade Finance LC',segment:'retail.backend'}),/Platform Engineer/);
- s=act(s,'platform','classify_system',{system:'Trade Finance LC',segment:'corporate.backend'});
+ assert.throws(()=>act(s,'engineer','classify_system',{system:'Trade Finance LC',segment:'retail.backend'}),/Regulator/);
+ s=act(s,'regulator','classify_system',{system:'Trade Finance LC',segment:'corporate.backend'});
  assert.ok(s.teams[0].bindings.filter(item=>item.system==='Trade Finance LC').every(item=>item.segment==='corporate.backend'));
  const input={teamId:'growth',productId:'accreditive',system:'Trade Finance LC',productTopic:'foundation',workType:'dependency_change',stage:'implementation'};
  const output=e.applyAction(s,s.people.find(item=>item.id==='engineer'),'save_context_bundle',input,'context-test');s=output.state;

@@ -1,0 +1,116 @@
+<style>
+  #delivery-trace-design{font-family:Inter,system-ui,sans-serif;color:#29342c;background:#f7f9f5;border:1px solid #dfe6dc;border-radius:14px;overflow:hidden}
+  #delivery-trace-design *{box-sizing:border-box}
+  .dt-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;background:#fff;border-bottom:1px solid #e3e8e1}
+  .dt-top h3{margin:0 0 4px;font-size:18px}.dt-top p{margin:0;color:#748078;font-size:12px}
+  .dt-badge{padding:6px 9px;border-radius:6px;background:#e8f0e3;color:#3f6748;font-size:11px;white-space:nowrap}
+  .dt-body{padding:18px}
+  .dt-request{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:8px;margin-bottom:16px}
+  .dt-field{padding:10px 11px;border:1px solid #dee5db;border-radius:8px;background:#fff;min-width:0}
+  .dt-field span{display:block;margin-bottom:4px;color:#8a948c;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+  .dt-field strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt-stage{display:grid;grid-template-columns:155px minmax(0,1fr);gap:14px;align-items:start}
+  .dt-sources{display:grid;gap:8px}
+  .dt-source{padding:11px;border:1px solid #dfe5dc;border-radius:8px;background:#fff}
+  .dt-source-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:600}
+  .dt-source small{display:block;margin-top:5px;color:#7b887e;font-size:9px;line-height:1.45}
+  .dt-mark{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;background:#5e8968}
+  .dt-source.team .dt-mark{background:#98a77d}.dt-source.policy .dt-mark{background:#7d6c99}
+  .dt-source em{font-style:normal;color:#68756b;font-size:9px}
+  .dt-main{min-width:0}
+  .dt-flow-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#77827a;font-size:10px}
+  .dt-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
+  .dt-flow:before{content:"";position:absolute;left:5%;right:5%;top:24px;height:1px;background:#bcc9ba}
+  .dt-node{position:relative;z-index:1;min-height:112px;padding:11px 9px;border:1px solid #dce4d9;border-radius:9px;background:#fff;text-align:left;color:#2c382f}
+  .dt-node.active{border-color:#7b9a7a;background:#edf4e8;box-shadow:0 0 0 2px rgba(85,124,91,.09)}
+  .dt-node b{display:block;margin-bottom:3px;font-size:11px}.dt-node>small{display:block;color:#7b887f;font-size:9px}
+  .dt-slices{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
+  .dt-slice{padding:3px 5px;border-radius:4px;font-size:8px;background:#e9f1e5;color:#42634a}
+  .dt-slice.team{background:#eff2e6;color:#647046}.dt-slice.policy{background:#f0ecf4;color:#6d5a83}.dt-slice.muted{background:#f0f2ef;color:#7a847c}
+  .dt-lower{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:12px;margin-top:12px}
+  .dt-inspector,.dt-receipt{padding:13px;border:1px solid #dfe5dc;border-radius:9px;background:#fff}
+  .dt-section-label{display:block;margin-bottom:9px;color:#879187;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+  .dt-inspector-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.dt-inspector-head strong{font-size:12px}.dt-inspector-head span{font-size:9px;color:#52705a}
+  .dt-fragment{display:grid;grid-template-columns:74px minmax(0,1fr) auto;gap:7px;align-items:start;padding:7px 0;border-top:1px solid #edf0eb;font-size:9px}
+  .dt-fragment:first-of-type{border-top:0}.dt-fragment b{font-weight:600}.dt-fragment p{margin:0;color:#657168;line-height:1.45}.dt-fragment code{color:#7d887f;font-size:8px}
+  .dt-receipt{border-left:3px solid #5b7f62}.dt-receipt strong{display:block;font-size:13px;margin-bottom:5px}.dt-receipt p{margin:0 0 10px;color:#6f7c72;font-size:9px;line-height:1.5}
+  .dt-check{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:9px}.dt-check i{font-style:normal;color:#4c7857}
+  .dt-note{margin-top:12px;padding:9px 11px;background:#eef3ea;color:#647167;border-radius:7px;font-size:9px}
+  @media(max-width:760px){.dt-request{grid-template-columns:1fr 1fr}.dt-stage{grid-template-columns:1fr}.dt-sources{grid-template-columns:repeat(3,1fr)}.dt-flow{grid-template-columns:1fr 1fr}.dt-flow:before{display:none}.dt-lower{grid-template-columns:1fr}}
+  @media(max-width:520px){.dt-request,.dt-sources,.dt-flow{grid-template-columns:1fr}.dt-top{align-items:flex-start}.dt-fragment{grid-template-columns:1fr}.dt-body{padding:12px}}
+</style>
+
+<h2>Delivery Trace · целевая композиция</h2>
+<p class="subtitle">Нажмите на узел Flow: нижний инспектор показывает только тот контекст, который демонстрационно «получает» этот шаг.</p>
+
+<div id="delivery-trace-design">
+  <div class="dt-top">
+    <div><h3>Доставка контекста</h3><p>Context Supply Chain · симуляция без изменения authoritative runtime</p></div>
+    <span class="dt-badge">Simulated Run · RUN-DEMO-1842</span>
+  </div>
+  <div class="dt-body">
+    <div class="dt-request">
+      <div class="dt-field"><span>Задача</span><strong>BANK-1842 · Update document validation dependency</strong></div>
+      <div class="dt-field"><span>Система</span><strong>Trade Finance LC</strong></div>
+      <div class="dt-field"><span>Work type</span><strong>dependency_change</strong></div>
+      <div class="dt-field"><span>Scope</span><strong>corporate.backend</strong></div>
+    </div>
+
+    <div class="dt-stage">
+      <aside class="dt-sources" aria-label="Источники контекста">
+        <div class="dt-source"><div class="dt-source-head"><span><i class="dt-mark"></i>Product</span><em>v3</em></div><small>Цель продукта, понятия и документарные условия.</small></div>
+        <div class="dt-source team"><div class="dt-source-head"><span><i class="dt-mark"></i>Team</span><em>v2</em></div><small>Runbook команды, ограничения и практики проверки.</small></div>
+        <div class="dt-source policy"><div class="dt-source-head"><span><i class="dt-mark"></i>Policy</span><em>3 packages</em></div><small>Обязательства, evidence rules и verification skills.</small></div>
+      </aside>
+
+      <section class="dt-main">
+        <div class="dt-flow-label"><span>КОНТЕКСТ ПО УЗЛАМ FLOW</span><span>выберите узел</span></div>
+        <div class="dt-flow" role="group" aria-label="Узлы демонстрационного Flow">
+          <button type="button" class="dt-node" data-node="Analysis" data-status="2 fragments" onclick="selectTraceNode(this)"><b>Analysis</b><small>Понять задачу</small><div class="dt-slices"><span class="dt-slice">Product · 2</span><span class="dt-slice muted">Scope</span></div></button>
+          <button type="button" class="dt-node" data-node="Specification" data-status="3 fragments" onclick="selectTraceNode(this)"><b>Specification</b><small>Описать изменение</small><div class="dt-slices"><span class="dt-slice">Product · 2</span><span class="dt-slice team">Team · 1</span></div></button>
+          <button type="button" class="dt-node active" data-node="Implementation" data-status="4 fragments" onclick="selectTraceNode(this)"><b>Implementation</b><small>Изменить код</small><div class="dt-slices"><span class="dt-slice">Product · 1</span><span class="dt-slice team">Team · 1</span><span class="dt-slice policy">Policy · 2</span></div></button>
+          <button type="button" class="dt-node" data-node="Checks" data-status="3 fragments" onclick="selectTraceNode(this)"><b>Checks</b><small>Собрать evidence</small><div class="dt-slices"><span class="dt-slice team">Team · 1</span><span class="dt-slice policy">Evidence · 2</span></div></button>
+        </div>
+
+        <div class="dt-lower">
+          <div class="dt-inspector">
+            <span class="dt-section-label">Что получает выбранный узел</span>
+            <div class="dt-inspector-head"><strong id="dt-node-title">Implementation</strong><span id="dt-node-status">4 fragments · simulated</span></div>
+            <div id="dt-fragments">
+              <div class="dt-fragment"><b>Product</b><p>Не менять правила исполнения платежа вне условий задачи.</p><code>pk-lc-foundation@2</code></div>
+              <div class="dt-fragment"><b>Team</b><p>Выполнить compatibility suite и сохранить результат в PR.</p><code>tk-trade-lc@2</code></div>
+              <div class="dt-fragment"><b>Policy</b><p>Использовать только сертифицированную версию зависимости.</p><code>SEC-DEP-014@3</code></div>
+            </div>
+          </div>
+          <div class="dt-receipt">
+            <span class="dt-section-label">Delivery Receipt</span>
+            <strong>Delivered · Implementation</strong>
+            <p>Квитанция демонстрирует состав, версии и назначение контекста, но не утверждает реальную доставку.</p>
+            <div class="dt-check"><i>✓</i> 4 fragments selected</div>
+            <div class="dt-check"><i>✓</i> Provenance resolved</div>
+            <div class="dt-check"><i>✓</i> Unknowns: 0</div>
+            <div class="dt-check"><i>✓</i> Hash: ctx-demo-1842</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="dt-note">Сохранение создаёт демонстрационный snapshot и историю сравнения; оно не прикрепляет пакет к настоящему Run.</div>
+  </div>
+</div>
+
+<script>
+  const traceContent={
+    Analysis:[['Product','Цель продукта, основные понятия и границы предметной темы.','pk-lc-foundation@2'],['Scope','Task, repository и допустимые пути изменения.','RUN-DEMO-1842']],
+    Specification:[['Product','Документарные условия и ограничения клиентского сценария.','pk-lc-settlement@3'],['Team','Шаблон Specification и правила review команды.','tk-trade-lc@2'],['Policy','Обязательные ограничения до реализации.','REL-COMPAT-004@5']],
+    Implementation:[['Product','Не менять правила исполнения платежа вне условий задачи.','pk-lc-foundation@2'],['Team','Выполнить compatibility suite и сохранить результат в PR.','tk-trade-lc@2'],['Policy','Использовать только сертифицированную версию зависимости.','SEC-DEP-014@3']],
+    Checks:[['Team','Запустить compatibility suite и приложить отчёт.','tk-trade-lc@2'],['Evidence','Проверить manifest и запись Approved Component Registry.','SEC-DEP-014@3'],['Skill','Выполнить dependency-evidence-check.','dependency-evidence-check@3']]
+  };
+  function selectTraceNode(button){
+    document.querySelectorAll('#delivery-trace-design .dt-node').forEach(node=>node.classList.remove('active'));
+    button.classList.add('active');
+    const name=button.dataset.node;
+    document.getElementById('dt-node-title').textContent=name;
+    document.getElementById('dt-node-status').textContent=`${button.dataset.status} · simulated`;
+    document.getElementById('dt-fragments').innerHTML=traceContent[name].map(item=>`<div class="dt-fragment"><b>${item[0]}</b><p>${item[1]}</p><code>${item[2]}</code></div>`).join('');
+  }
+</script>

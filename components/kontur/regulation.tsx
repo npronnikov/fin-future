@@ -1,4 +1,6 @@
 'use client';
+import {DEFAULT_SECURITY_RULE} from '@/lib/demo-v16';
+import ContextSegmentation from './context-segmentation';
 import {useEffect, useState} from 'react';
 import {Check, ChevronDown, FileCheck, FileText, Layers, Lock, Plus, Search, Trash2, Users} from 'lucide-react';
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle} from '@/components/ui/alert-dialog';
@@ -28,7 +30,7 @@ interface PackageDraft {
   sharedEvidence: Item[];
 }
 let nextRule = 0;
-const newRule = (): RuleDraft => ({key: `new-rule-${++nextRule}`, text: '', references: '', applicability: [], evidence: []});
+const newRule = (): RuleDraft => ({key: `new-rule-${++nextRule}`, text: DEFAULT_SECURITY_RULE, references: 'Approved Component Registry', applicability: [{tag:'dep-update',workType:'dependency_change',artifactType:'dependency manifest'}], evidence: [{artifacts:'Итоговый manifest; approved registry reference; Jenkins test report; vulnerability report',verificationSkill:''}]});
 const assetKey = (asset: Asset) => `${asset.id}@${asset.version}`;
 const directionLabels: Record<string, string> = {'Information Security': 'Информационная безопасность', Reliability: 'Надёжность', Risk: 'Риск'};
 const assetTypeLabels: Record<string, string> = {Skills: 'Скиллы', Subagents: 'Сабагенты'};
@@ -75,14 +77,15 @@ export default function Regulation() {
   const {state, actor, go, ref, act, can, busy} = useKontur();
   const referenced = state.policies.find(policy => policyKey(policy) === ref);
   const [segment, setSegment] = useState(referenced?.segment || 'retail.backend');
-  const [direction, setDirection] = useState(referenced?.direction || 'Information Security');
+  const allowedDirections=actor.role==='Regulator'?(actor.directions||[]):['Information Security','Reliability','Risk'];
+  const [direction, setDirection] = useState(referenced?.direction || allowedDirections[0] || 'Information Security');
   const [selected, setSelected] = useState(ref || 'IS-corporate-backend@7');
   const [statusForm, setStatusForm] = useState<Item | null>(null);
   const [editor, setEditor] = useState<PackageDraft | null>(null);
   const [editorTab, setEditorTab] = useState('rules');
   const [error, setError] = useState('');
   const [critical, setCritical] = useState(false);
-  useEffect(() => {if (referenced) {setSegment(referenced.segment); setDirection(referenced.direction); setSelected(policyKey(referenced));}}, [ref]);
+  useEffect(() => {if (referenced&&allowedDirections.includes(referenced.direction)) {setSegment(referenced.segment); setDirection(referenced.direction); setSelected(policyKey(referenced));}else if(!allowedDirections.includes(direction)&&allowedDirections[0])setDirection(allowedDirections[0]);}, [ref,actor.id]);
   const policies = state.policies.filter(policy => policy.segment === segment && policy.direction === direction);
   const policy = policies.find(policy => policyKey(policy) === selected) || policies[0];
   const editable = can('Regulator') && actor.directions?.includes(direction);
@@ -97,7 +100,7 @@ export default function Regulation() {
     const references = new Set((source?.requirements || []).map(requirement => `${requirement.id}@${requirement.version}`));
     setError(''); setEditorTab('rules');
     setEditor({
-      id: source?.id || '', existing: !!source, direction, segment, effective: new Date().toISOString().slice(0, 10), changelog: '',
+      id: source?.id || `IS-DEPENDENCY-${Date.now().toString(36).toUpperCase()}`, existing: !!source, direction, segment, effective: new Date().toISOString().slice(0, 10), changelog: '',
       rules: source?.requirements.length ? source.requirements.map(requirement => {
         const key = `${requirement.id}@${requirement.version}`;
         return {key, original: copy(requirement), text: requirement.text || '', references: requirement.references || '', applicability: copy(source.applicability.filter(rule => rule.requirement === key)), evidence: copy(source.evidence.filter(rule => rule.requirement === key))};
@@ -139,9 +142,15 @@ export default function Regulation() {
     if (result?.ok) {setStatusForm(null); setCritical(false);}
   }
 
-  return <div className="page policy-page"><PageHead title="Регуляторы" description="Контрольные функции · сегменты и политики" actions={<Button disabled={!editable} onClick={() => edit()}><Plus size={16}/>Пакет политик</Button>}/>
+  const statusPolicy = state.policies.find(item=>policyKey(item)===statusForm?.policyKey);
+  const peerReviewer = state.people.find(person=>person.role==='Regulator'&&person.id!==statusPolicy?.createdBy&&person.directions?.includes(statusPolicy?.direction||direction));
+  const selfApproval = statusPolicy?.createdBy===actor.id&&!!peerReviewer;
+  const reviewer = peerReviewer;
+  const {tab:regTab} = useKontur();
+  if(regTab==='segmentation')return <div className="page"><PageHead title="Регуляторы · сегментация систем" actions={<Button variant="outline" onClick={()=>go('regulation')}>Пакеты политик</Button>}/><ContextSegmentation/></div>;
+  return <div className="page policy-page"><PageHead title="Регуляторы" description={actor.role==='Regulator'?`${actor.name} · персональный контур «${directionLabels[direction]}»`:'Все политики безопасности, рисков и надёжности · только чтение'} actions={<>{(actor.role!=='Regulator'||actor.directions?.includes('Information Security'))&&<Button variant="outline" onClick={()=>go('regulation','','segmentation')}>Сегментация систем</Button>}<Button disabled={!editable} onClick={() => edit()}><Plus size={16}/>Новый пакет политик</Button></>}/>
     <div className="row wrap mb-6"><Pick label="Бизнес-направление" value={segment.split('.')[0]} onChange={value => setSegment(`${value}.${segment.split('.')[1]}`)} options={[{value: 'retail', label: 'Розница'}, {value: 'corporate', label: 'Корпоративный'}]}/><span className="muted">/</span><Pick label="Тип платформы" value={segment.split('.')[1]} onChange={value => setSegment(`${segment.split('.')[0]}.${value}`)} options={[{value: 'frontend', label: 'Фронтенд'}, {value: 'backend', label: 'Бэкенд'}, {value: 'data', label: 'Данные'}]}/><Pill><Lock size={12}/>{segment}</Pill><div className="flex-1"/><span className="task-sub">{editable ? 'Рабочее пространство регулятора' : 'Только чтение'}</span></div>
-    <Tabs value={direction} onValueChange={setDirection} className="section-tabs"><TabsList>{['Information Security', 'Reliability', 'Risk'].map(item => <TabsTrigger key={item} value={item}>{directionLabels[item]}</TabsTrigger>)}</TabsList></Tabs>
+    <Tabs value={direction} onValueChange={setDirection} className="section-tabs"><TabsList>{allowedDirections.map(item => <TabsTrigger key={item} value={item}>{directionLabels[item]}</TabsTrigger>)}</TabsList></Tabs>
     <div className="mt-6">{policy ? <div className="main-grid"><div className="stack">
       <Card title="Пакет политик" action={<Status value={policy.status}/>}><div className="row between wrap"><Pick label="Версия пакета политик" value={key || ''} onChange={setSelected} options={policies.map(policy => ({value: policyKey(policy), label: `${policyKey(policy)} · ${statusLabels[policy.status] || policy.status}`}))}/><Button variant="outline" size="sm" disabled={!editable} onClick={() => edit(policy)}>Новая версия</Button></div>
         <div className="policy-composition-summary"><div><FileText size={18}/><strong>{policy.requirements.length}</strong><span>Текстовые правила</span></div><div><FileCheck size={18}/><strong>{policy.skills.length}</strong><span>Скиллы</span></div><div><Users size={18}/><strong>{policy.subagents?.length || 0}</strong><span>Сабагенты</span></div></div>
@@ -163,8 +172,8 @@ export default function Regulation() {
       <Card title="Жизненный цикл политики"><div className="stack gap-3">{POLICY_STATUSES.map(status => <div key={status} className="row"><span className={`step-circle ${normalizePolicyStatus(policy.status) === status ? 'bg-[#628057]! text-white!' : ''}`}>{normalizePolicyStatus(policy.status) === status ? <Check size={13}/> : <span className="w-1 h-1 rounded-full bg-[#ccd8c3]"/>}</span><span className="text-sm">{statusLabels[status]}</span></div>)}</div></Card><Notice tone="blue" title="Закрепление версии политики">Новая версия пакета не заменяет версию действующего выпуска. Для изменения нужна новая конфигурация возможности.</Notice>
     </div></div> : <Card><Blank title={`Нет пакетов политик · ${segment}`} text={`${directionLabels[direction] || direction}: соберите пакет из текстовых политик, скиллов и сабагентов.`} action={<Button disabled={!editable} onClick={() => edit()}>Создать пакет политик</Button>}/></Card>}</div>
 
-    <Modal open={!!statusForm} onClose={() => setStatusForm(null)} title="Жизненный цикл политики" description={statusForm?.policyKey}>{statusForm && <div className="stack"><Field label="Статус"><Pick label="Статус жизненного цикла политики" value={statusForm.status} onChange={value => setStatusForm({...statusForm, status: value})} options={POLICY_STATUSES.map(value => ({value, label: statusLabels[value]}))}/></Field>{statusForm.status === 'Deprecating' && <Field label="Дата прекращения"><Input type="date" value={statusForm.sunset} onChange={event => setStatusForm({...statusForm, sunset: event.target.value})}/></Field>}{statusForm.status === 'Retired' && <Notice tone="red" title="Новые автономные запуски будут запрещены">Зависимые доверенные возможности будут приостановлены. Исторические запуски и выпуски останутся доступны.</Notice>}<div className="actions"><Button variant="outline" onClick={() => setStatusForm(null)}>Отмена</Button><Button disabled={busy} onClick={() => statusForm.status === 'Retired' ? setCritical(true) : statusSave()}>Применить статус</Button></div></div>}</Modal>
-    <AlertDialog open={critical} onOpenChange={setCritical}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{statusForm ? statusLabels[statusForm.status] || statusForm.status : ''} · {statusForm?.policyKey}</AlertDialogTitle><AlertDialogDescription>Действие приостановит зависимые возможности и запретит новые автономные запуски. Затронуто возможностей: {affected.length}.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Отмена</AlertDialogCancel><AlertDialogAction onClick={statusSave}>Подтвердить изменение</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <Modal open={!!statusForm} onClose={() => setStatusForm(null)} title="Жизненный цикл политики" description={statusForm?.policyKey}>{statusForm && <div className="stack"><Notice tone={selfApproval?'amber':'blue'} title={selfApproval?'4-eyes check':'Контроль направления'}>{selfApproval?'Автор пакета не может менять его жизненный цикл, пока в направлении есть второй регулятор.':`Направление закреплено за ролью «${actor.name}». Решение и личность регулятора сохраняются в аудите.`}</Notice>{selfApproval&&reviewer&&<Button variant="outline" onClick={()=>act('select_actor',{actorId:reviewer.id})}>Переключиться: {reviewer.name}</Button>}<Field label="Статус"><Pick label="Статус жизненного цикла политики" value={statusForm.status} onChange={value => setStatusForm({...statusForm, status: value})} options={POLICY_STATUSES.map(value => ({value, label: statusLabels[value]}))}/></Field>{statusForm.status === 'Deprecating' && <Field label="Дата прекращения"><Input type="date" value={statusForm.sunset} onChange={event => setStatusForm({...statusForm, sunset: event.target.value})}/></Field>}{statusForm.status === 'Retired' && <Notice tone="red" title="Новые автономные запуски будут запрещены">Зависимые доверенные возможности будут приостановлены. Исторические запуски и выпуски останутся доступны.</Notice>}<div className="actions"><Button variant="outline" onClick={() => setStatusForm(null)}>Отмена</Button><Button disabled={busy||selfApproval||!can('Regulator')} onClick={() => statusForm.status === 'Retired' ? setCritical(true) : statusSave()}>Применить статус</Button></div></div>}</Modal>
+    <AlertDialog open={critical} onOpenChange={setCritical}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{statusForm ? statusLabels[statusForm.status] || statusForm.status : ''} · {statusForm?.policyKey}</AlertDialogTitle><AlertDialogDescription>Действие приостановит зависимые возможности и запретит новые автономные запуски. Затронуто возможностей: {affected.length}.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Отмена</AlertDialogCancel><AlertDialogAction disabled={selfApproval} onClick={statusSave}>Подтвердить изменение</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 
     <Modal open={!!editor} onClose={() => setEditor(null)} title={editor?.existing ? 'Пакет политик · новая версия' : 'Собрать пакет политик'} description="Текстовые политики, скиллы и сабагенты" wide>{editor && <form onSubmit={savePolicy} className="stack policy-composer">
       <div className="form-grid"><Field label="Идентификатор политики"><Input value={editor.id} readOnly={editor.existing} onChange={event => setEditor({...editor, id: event.target.value})} required/></Field><Field label="Дата вступления"><Input type="date" value={editor.effective} onChange={event => setEditor({...editor, effective: event.target.value})} required/></Field></div>
@@ -184,7 +193,7 @@ export default function Regulation() {
         <TabsContent value="skills"><AssetPicker type="Skills" assets={state.assets} selected={editor.skills} onChange={skills => setEditor({...editor, skills})} disabled={busy}/></TabsContent>
         <TabsContent value="subagents"><AssetPicker type="Subagents" assets={state.assets} selected={editor.subagents} onChange={subagents => setEditor({...editor, subagents})} disabled={busy}/></TabsContent>
       </Tabs>
-      <Field label="История изменений"><Textarea rows={2} value={editor.changelog} onChange={event => setEditor({...editor, changelog: event.target.value})} required placeholder="Что изменилось в этой версии пакета"/></Field>
+      <Field label="История изменений"><Textarea rows={2} value={editor.changelog} onChange={event => setEditor({...editor, changelog: event.target.value})} placeholder="Необязательно"/></Field>
       {error && <p className="form-error" role="alert">{error}</p>}<div className="actions"><Button variant="outline" type="button" onClick={() => setEditor(null)}>Отмена</Button><Button disabled={busy}><Layers size={15}/>Сохранить черновик</Button></div>
     </form>}</Modal>
   </div>;

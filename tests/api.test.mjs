@@ -55,7 +55,7 @@ test('Node API creates the seed and a persistent local browser session', async t
   const f = await fixture(t);
   const first = await f.request();
   assert.equal(first.status, 200);
-  assert.equal(first.body.state.tasks.length, 12);
+  assert.equal(first.body.state.tasks.length, 16);
   assert.equal(first.body.state.boards.length, 2);
   assert.equal(Object.hasOwn(first.body.state, 'classes'), false);
   assert.ok(first.body.state.capabilities.every(capability => capability.tag && !Object.hasOwn(capability, 'classId')));
@@ -140,7 +140,7 @@ test('Kanban edits, custom Flow and Benchmark Suite use the task tag while prese
   const report = current.state.benchmarks.find(value => value.id === benchmarkId);
   assert.equal(snapshotTag(report.snapshot), task.tag);
   assert.equal(report.reports.length, 1);
-  assert.equal(report.reports[0].judgeInput.goldenRevision, task.golden);
+  assert.equal(report.reports[0].judgeInput.goldenRevision, suite.cases[0].golden);
   assert.equal(Object.hasOwn(report.reports[0].runtimeInput, 'goldenRevision'), false);
   const runId = (await act('start_run', {capabilityId, taskId: task.id, mode: 'supervised'})).id;
   assert.equal(snapshotTag(current.state.runs.find(run => run.id === runId).snapshot), task.tag);
@@ -320,7 +320,7 @@ test('API projects private boards/tasks/runs and references on every response wh
  const storedSnapshot=JSON.stringify(f.store.readState().capabilities[0].releases[0].snapshot);
  let current=(await f.request()).body;
  assert.ok(current.state.teams.some(team=>team.id==='delivery'),'Shared Flow can still display authorized-product team metadata.');
- assert.equal(current.state.boards.length,2);assert.equal(current.state.tasks.length,12);
+ assert.equal(current.state.boards.length,2);assert.equal(current.state.tasks.length,16);
  assert.equal(JSON.stringify(current).includes('DELIVERY-SECRET'),false);
  assert.equal(JSON.stringify(current).includes('RUN-DELIVERY-PRIVATE'),false);
  assert.equal(current.state.capabilities[0].releases[0].snapshot.historyRefs.length,42);

@@ -1,0 +1,114 @@
+<style>
+  #llm-trace{font-family:Inter,system-ui,sans-serif;color:#29342c;background:#f7f9f5;border:1px solid #dfe6dc;border-radius:14px;overflow:hidden}
+  #llm-trace *{box-sizing:border-box}
+  .lt-head{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;background:#fff;border-bottom:1px solid #e3e8e1}
+  .lt-head h3{margin:0 0 3px;font-size:17px}.lt-head p{margin:0;color:#758078;font-size:11px}.lt-demo{padding:5px 8px;border-radius:6px;background:#e9f1e4;color:#466a4d;font-size:10px;white-space:nowrap}
+  .lt-body{padding:16px}
+  .lt-request-flow{display:grid;grid-template-columns:1fr 34px 1.15fr 34px 1fr;gap:6px;align-items:stretch;margin-bottom:14px}
+  .lt-request-box{padding:10px 11px;border:1px solid #dfe5dc;border-radius:8px;background:#fff;min-width:0}
+  .lt-request-box.llm{border-color:#cddcc9;background:#f0f5ed}
+  .lt-kicker{display:block;margin-bottom:5px;color:#879188;font-size:8px;letter-spacing:.08em;text-transform:uppercase}
+  .lt-request-box strong{display:block;font-size:10px;margin-bottom:4px}.lt-request-box small{display:block;color:#758078;font-size:8px;line-height:1.45}
+  .lt-arrow{display:grid;place-items:center;color:#77907a;font-size:18px}
+  .lt-query{margin-top:7px;padding:6px;border-radius:5px;background:#fff;color:#4f5e53;font:8px/1.45 ui-monospace,monospace}
+  .lt-workspace{display:grid;grid-template-columns:142px minmax(0,1fr);gap:13px;align-items:start}
+  .lt-sources{display:grid;gap:7px}
+  .lt-source{padding:9px;border:1px solid #dee5db;border-radius:8px;background:#fff}
+  .lt-source-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:600}.lt-source small{display:block;margin-top:4px;color:#7b877e;font-size:8px;line-height:1.4}
+  .lt-dot{display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:#5d8967}.lt-source.team .lt-dot{background:#99a77e}.lt-source.policy .lt-dot{background:#7c6b98}
+  .lt-source em{font-style:normal;color:#7d897f;font-size:8px}.lt-source.policy{border-left:3px solid #7c6b98}
+  .lt-main{min-width:0}.lt-label-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;color:#7b867d;font-size:9px}
+  .lt-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;position:relative}
+  .lt-flow:before{content:"";position:absolute;left:4%;right:4%;top:20px;height:1px;background:#bdc9ba}
+  .lt-node{position:relative;z-index:1;min-height:104px;padding:9px 7px;border:1px solid #dce4d9;border-radius:8px;background:#fff;text-align:left;color:#2c382f}
+  .lt-node.active{border-color:#799979;background:#edf4e8;box-shadow:0 0 0 2px rgba(85,124,91,.08)}
+  .lt-node b{display:block;margin-bottom:2px;font-size:9px}.lt-node>small{display:block;color:#7d887f;font-size:8px}
+  .lt-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:9px}.lt-chip{padding:3px 4px;border-radius:4px;font-size:7px;background:#e8f0e4;color:#45634b}.lt-chip.team{background:#eff2e6;color:#657047}.lt-chip.policy{background:#f0ebf4;color:#6b5882}
+  .lt-policy-line{margin-top:5px;padding-top:5px;border-top:1px solid #eee8f1;color:#6c5a82;font-size:7px}
+  .lt-output-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,.7fr);gap:10px;margin-top:10px}
+  .lt-inspector,.lt-verifier{padding:11px;border:1px solid #dfe5dc;border-radius:8px;background:#fff}.lt-verifier{border-left:3px solid #7c6b98}
+  .lt-inspector-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}.lt-inspector-head strong,.lt-verifier strong{font-size:11px}.lt-inspector-head span{font-size:8px;color:#607765}
+  .lt-fragment{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:6px;padding:6px 0;border-top:1px solid #edf0eb;font-size:8px}.lt-fragment:first-child{border-top:0}.lt-fragment p{margin:0;color:#657168;line-height:1.4}.lt-fragment code{font-size:7px;color:#7e8980}
+  .lt-verify-step{display:flex;gap:6px;margin-top:6px;font-size:8px;line-height:1.4}.lt-verify-step i{font-style:normal;color:#4e7858}.lt-verify-step.warn i{color:#9b6f2c}
+  .lt-route{margin-top:8px;padding:7px;background:#f5f1f7;border-radius:6px;color:#675777;font-size:8px;line-height:1.45}
+  .lt-note{margin-top:11px;padding:8px 10px;background:#eef3ea;color:#647167;border-radius:7px;font-size:8px}
+  @media(max-width:760px){.lt-request-flow{grid-template-columns:1fr}.lt-arrow{transform:rotate(90deg)}.lt-workspace{grid-template-columns:1fr}.lt-sources{grid-template-columns:repeat(3,1fr)}.lt-flow{grid-template-columns:1fr 1fr}.lt-flow:before{display:none}.lt-output-row{grid-template-columns:1fr}}
+  @media(max-width:520px){.lt-sources,.lt-flow{grid-template-columns:1fr}.lt-fragment{grid-template-columns:1fr}.lt-head{align-items:flex-start}.lt-body{padding:11px}}
+</style>
+
+<h2>Task → LLM Context Request → Flow</h2>
+<p class="subtitle">LLM формирует запрос и раскладку. Обязательные Policy вычисляются отдельно по сегменту и сопровождают каждый применимый этап.</p>
+
+<div id="llm-trace">
+  <header class="lt-head">
+    <div><h3>Context Supply Chain</h3><p>Демонстрационная трассировка задачи BANK-1842</p></div>
+    <span class="lt-demo">SIM-1842 · deterministic demo</span>
+  </header>
+  <div class="lt-body">
+    <section class="lt-request-flow" aria-label="Формирование запроса контекста">
+      <div class="lt-request-box"><span class="lt-kicker">1 · Task input</span><strong>Update document validation dependency</strong><small>Repo: bank/lc-trade-api<br>Segment: corporate.backend</small></div>
+      <div class="lt-arrow">→</div>
+      <div class="lt-request-box llm"><span class="lt-kicker">2 · LLM Context Planner</span><strong>Определяет темы и этапы</strong><small>Не создаёт знания и не выбирает обязательные Policy.</small><div class="lt-query">topics: documents, compatibility<br>team: implementation, checks<br>product: analysis, specification, implementation</div></div>
+      <div class="lt-arrow">→</div>
+      <div class="lt-request-box"><span class="lt-kicker">3 · Resolver</span><strong>Возвращает точные фрагменты</strong><small>Product/Team — по запросу LLM.<br>Policy — по segment + work type.</small></div>
+    </section>
+
+    <div class="lt-workspace">
+      <aside class="lt-sources">
+        <div class="lt-source"><div class="lt-source-head"><span><i class="lt-dot"></i>Product</span><em>requested</em></div><small>Понятия, условия и продуктовые ограничения.</small></div>
+        <div class="lt-source team"><div class="lt-source-head"><span><i class="lt-dot"></i>Team</span><em>requested</em></div><small>Runbook, compatibility suite и правила PR.</small></div>
+        <div class="lt-source policy"><div class="lt-source-head"><span><i class="lt-dot"></i>Policy</span><em>mandatory</em></div><small>Определяется сегментом; LLM не может исключить.</small></div>
+      </aside>
+
+      <main class="lt-main">
+        <div class="lt-label-row"><span>КОНТЕКСТ В КУБИКАХ FLOW</span><span>нажмите этап</span></div>
+        <div class="lt-flow" role="group" aria-label="Этапы Flow">
+          <button type="button" class="lt-node" data-node="Analysis" onclick="showLlmNode(this)"><b>Analysis</b><small>Понять задачу</small><div class="lt-chips"><span class="lt-chip">Product</span><span class="lt-chip policy">Policy</span></div><div class="lt-policy-line">Policy всегда</div></button>
+          <button type="button" class="lt-node" data-node="Specification" onclick="showLlmNode(this)"><b>Specification</b><small>Описать изменение</small><div class="lt-chips"><span class="lt-chip">Product</span><span class="lt-chip policy">Policy</span></div><div class="lt-policy-line">Policy всегда</div></button>
+          <button type="button" class="lt-node active" data-node="Implementation" onclick="showLlmNode(this)"><b>Implementation</b><small>Изменить код</small><div class="lt-chips"><span class="lt-chip">Product</span><span class="lt-chip team">Team</span><span class="lt-chip policy">Policy</span></div><div class="lt-policy-line">Policy всегда</div></button>
+          <button type="button" class="lt-node" data-node="Build" onclick="showLlmNode(this)"><b>Build</b><small>Передать работу</small><div class="lt-chips"><span class="lt-chip team">Team</span><span class="lt-chip policy">Policy</span></div><div class="lt-policy-line">Policy gate</div></button>
+          <button type="button" class="lt-node" data-node="Checks" onclick="showLlmNode(this)"><b>Checks</b><small>Собрать evidence</small><div class="lt-chips"><span class="lt-chip team">Team</span><span class="lt-chip policy">Policy</span></div><div class="lt-policy-line">Policy verify</div></button>
+        </div>
+
+        <div class="lt-output-row">
+          <section class="lt-inspector">
+            <span class="lt-kicker">Результат LLM-запроса для этапа</span>
+            <div class="lt-inspector-head"><strong id="lt-title">Implementation</strong><span id="lt-count">3 source groups</span></div>
+            <div id="lt-fragments">
+              <div class="lt-fragment"><b>Product</b><p>Не менять правила исполнения платежа вне scope задачи.</p><code>pk-lc@2</code></div>
+              <div class="lt-fragment"><b>Team</b><p>Использовать compatibility suite и оформить изменение через PR.</p><code>tk-trade@2</code></div>
+              <div class="lt-fragment"><b>Policy</b><p>Выбрать сертифицированную версию зависимости.</p><code>SEC-DEP@3</code></div>
+            </div>
+          </section>
+          <section class="lt-verifier">
+            <span class="lt-kicker">После выполнения</span>
+            <strong>Regulatory Verification</strong>
+            <div class="lt-verify-step"><i>✓</i><span>Build передаёт diff, manifest и test report.</span></div>
+            <div class="lt-verify-step"><i>✓</i><span>Evidence Rules проверяются автоматически.</span></div>
+            <div class="lt-verify-step warn"><i>◇</i><span>INCONCLUSIVE создаёт Human Gate.</span></div>
+            <div class="lt-route">PASS → Result<br>FAIL → Rework<br>INCONCLUSIVE → Approval Gate</div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <div class="lt-note">Демо честно разделяет вероятностную работу LLM и детерминированные обязательства: LLM ищет и распределяет Product/Team context, Policy невозможно «не найти» или удалить из запроса.</div>
+  </div>
+</div>
+
+<script>
+  const llmStageFragments={
+    Analysis:[['Product','Цель продукта и понятия документарной проверки.','pk-lc@2'],['Policy','Общие ограничения сегмента corporate.backend.','RISK-LC@3']],
+    Specification:[['Product','Условия исполнения и допустимые изменения документации.','pk-settlement@3'],['Policy','Требования совместимости и аудита.','REL-COMPAT@5']],
+    Implementation:[['Product','Не менять правила исполнения платежа вне scope задачи.','pk-lc@2'],['Team','Использовать compatibility suite и оформить изменение через PR.','tk-trade@2'],['Policy','Выбрать сертифицированную версию зависимости.','SEC-DEP@3']],
+    Build:[['Team','Собрать manifest, diff и test report для передачи.','tk-trade@2'],['Policy','Передача работы разрешена только с обязательными артефактами.','SEC-DEP@3']],
+    Checks:[['Team','Запустить compatibility suite.','tk-trade@2'],['Policy','Проверить manifest и Approved Component Registry.','SEC-DEP@3'],['Skill','Выполнить dependency-evidence-check.','evidence-check@3']]
+  };
+  function showLlmNode(button){
+    document.querySelectorAll('#llm-trace .lt-node').forEach(node=>node.classList.remove('active'));
+    button.classList.add('active');
+    const name=button.dataset.node, rows=llmStageFragments[name];
+    document.getElementById('lt-title').textContent=name;
+    document.getElementById('lt-count').textContent=`${rows.length} source groups`;
+    document.getElementById('lt-fragments').innerHTML=rows.map(row=>`<div class="lt-fragment"><b>${row[0]}</b><p>${row[1]}</p><code>${row[2]}</code></div>`).join('');
+  }
+</script>

@@ -1,4 +1,5 @@
-import {ASSIGNMENTS,PROVISION_STEPS,REPOSITORIES,SEGMENTS,TASK_STATUSES,FLOW_TEMPLATES,POLICY_STATUSES,isDependencyFlow,isRetiredPolicyStatus,addGate,configKey,copy,currentRelease,defaultConfig,defaultEnvironment,event,finishRun,flowIssues,generateArtifacts,getFlowNodes,getEditableFlowNodes,nextFlowVersion,releaseRiskAssessment,snapshotTestBaskets,makePlan,makeRun,makeSnapshot,policyKey,sameExecutionConfiguration,snapshotTag,trackerTaskTemplates,type State,type Person,type Item,type Config,type ContextBundle,type FlowNode,type Capability,type Run,type Policy,type Binding,type Snapshot,type Task} from './domain.ts';
+import {DEFAULT_JUDGE_SCHEMA,DEFAULT_JUDGE_PROMPT,DEFAULT_TEAM_KNOWLEDGE,buildKnowledgeReceipt} from './demo-v16.ts';
+import {RUNTIME_PLATFORMS,runtimeResources,ASSIGNMENTS,PROVISION_STEPS,REPOSITORIES,SEGMENTS,TASK_STATUSES,FLOW_TEMPLATES,POLICY_STATUSES,isDependencyFlow,isRetiredPolicyStatus,addGate,configKey,copy,currentRelease,defaultConfig,defaultEnvironment,event,finishRun,flowIssues,generateArtifacts,getFlowNodes,getEditableFlowNodes,nextFlowVersion,releaseRiskAssessment,snapshotTestBaskets,makePlan,makeRun,makeSnapshot,policyKey,sameExecutionConfiguration,snapshotTag,trackerTaskTemplates,type State,type Person,type Item,type Config,type ContextBundle,type FlowNode,type Capability,type Release,type Run,type Policy,type Binding,type Snapshot,type Task} from './domain.ts';
 import {compileContextBundle,compileContextDeliveryTrace} from './context-supply.ts';
 export class DomainError extends Error {status:number;constructor(message:string,status=400){super(message);this.status=status}}
 const required=(v:any,label:string,max=20000)=>{if(typeof v!=='string'||!v.trim())throw new DomainError(`Заполните «${label}».`);if(v.length>max)throw new DomainError(`Поле «${label}» слишком длинное.`);return v.trim()};
@@ -110,7 +111,7 @@ function completeRun(s:State,r:Run){
    if(status==='FAIL'){r.status='failed';r.attempts.at(-1)!.status='failed';}
    notify(s,'UAT decisions',`${cap!.name} · UAT ${status}`,release.snapshot.id,cap!.teamId,cap!.productId,'capability',cap!.id);
   }
- }else{const task=s.tasks.find(task=>task.id===r.taskId);if(task)task.status='done';}
+ }else if(r.mode!=='benchmark'){const task=s.tasks.find(task=>task.id===r.taskId);if(task){task.status='done';task.pr=String(r.artifacts.pr||task.pr||`PR · ${task.id}`);task.golden=`accepted-${r.id.toLowerCase()}-a${r.attempt}`;}}
 }
 function traceFlowNode(r:Run,node:FlowNode,status:string){
  const flow=r.execution.flow;
@@ -131,7 +132,7 @@ function openFlowGate(s:State,r:Run,node:FlowNode,kind:'input'|'approval'|'final
 }
 /** Deterministic demo execution follows the saved sequence; it never calls external systems. */
 function advanceFlow(s:State,r:Run){
- const cfg=r.snapshot.config,flow=r.execution.flow,nodes=getFlowNodes(cfg),task=get(s.tasks,r.taskId,'Task'),automatic=r.mode==='production'||!!r.uat||r.mode==='uat';
+ const cfg=r.snapshot.config,flow=r.execution.flow,nodes=getFlowNodes(cfg),task=get(s.tasks,r.taskId,'Task'),automatic=r.mode==='production'||r.mode==='benchmark'||!!r.uat||r.mode==='uat';
  must(flow&&!flow.waiting&&r.writer!=='human','Flow не может продолжиться до решения текущего Gate.');
  r.writer='automation';r.status='running';
  while(flow.cursor<nodes.length){
@@ -167,7 +168,7 @@ function advanceFlow(s:State,r:Run){
    event(r,'Specification prepared',`${node.name} · artifact revision ${r.artifactRevision}`);
   }
   if(node.type==='implementation'){
-   event(r,'Implementation started',`${node.name} · Attempt ${r.attempt}`);
+   event(r,'Implementation started',`${node.name} · Attempt ${r.attempt}`);deliverKnowledge(s,r,node.id);
    if(flow.preserveHumanDiff&&r.artifacts.diff)event(r,'Human artifacts preserved',`${node.name} · artifact revision ${r.artifactRevision}`);
    else generateArtifacts(r);
    r.workspace.checked=false;flow.checkedArtifactRevision=0;
@@ -211,6 +212,19 @@ function reworkFlow(s:State,r:Run,comment:string){
  startExecution(s,r);
 }
 function executeToApproval(s:State,r:Run){r.writer='automation';r.status='running';event(r,'Implementation started',`Attempt ${r.attempt}`);generateArtifacts(r);event(r,'Implementation completed',`Attempt ${r.attempt} · artifact revision ${r.artifactRevision}`);r.attempts.at(-1)!.artifacts=copy(r.artifacts);event(r,'Checks completed',r.artifacts.tests,'green');if(r.mode==='supervised'||r.snapshot.config.humanApproval){addGate(r,'approval','Result');gateNotice(s,r)}else completeRun(s,r)}
+function deliverKnowledge(s:State,r:Run,nodeId='implementation'){
+ if(r.execution.knowledgeDelivery?.attempt===r.attempt&&r.execution.knowledgeDelivery.delivered)return;
+ const receipt=buildKnowledgeReceipt(s,r);
+ event(r,'Knowledge MCP · текст задачи',receipt.request);
+ event(r,'LLM Context Planner · demo',receipt.planner.productReason);
+ event(r,'Knowledge MCP → Context Supply Chain',receipt.query);
+ event(r,'Context Supply Chain → ответ',`Продукт: ${receipt.product.length}; команда: ${receipt.team.length}; политики сегмента: ${receipt.policies.length}.`);
+ for(const fragment of receipt.fragments)event(r,`Knowledge · ${fragment.kind} · ${fragment.id}`,fragment.content);
+ receipt.delivered=true;receipt.nodeId=nodeId;receipt.deliveredAt=new Date().toISOString();
+ r.execution.knowledgeDelivery=receipt;
+ r.artifacts.knowledgeContext=copy(receipt.fragments);
+ event(r,'Implementation · знания доставлены',receipt.fragments.map((item:Item)=>`${item.title}: ${item.content}`).join('\n')||'Подходящие опубликованные знания отсутствуют.');
+}
 function startExecution(s:State,r:Run){
  r.plans.push(makePlan(r,r.attempt===1?'До запуска':`До запуска · attempt ${r.attempt}`));event(r,'Regulatory Plan created',r.plans.at(-1)!.id);
  if(r.mode==='production'){r.execution.autonomous=true;event(r,'Released Flow emulation','Демонстрационный прогон опубликованного snapshot без Human Input и Human Approval.');}
@@ -219,7 +233,7 @@ function startExecution(s:State,r:Run){
  r.execution.flow={cursor:0,trace,inputSatisfied:false,specificationApproved:false,checkedArtifactRevision:0,waiting:null,completed:false};
  advanceFlow(s,r);
 }
-function executionGrants(s:State,snap:Snapshot){const t=get(s.teams,snap.teamId,'Team');must(t.environment.status==='ready','Environment не готов.');must(t.automation===snap.runtime&&t.environment.runtimeVersion===snap.runtimeVersion,'Environment не соответствует frozen runtime requirements. Требуется re-evaluation.');must(snap.config.limit<=t.environment.quota,'Frozen limits превышают текущую quota.');if(snap.config.nodeConfigs){const problems=flowIssues(snap.config,{allowLegacyExecutors:true});must(!problems.length,problems.join(' '));if(snap.config.nodeConfigs.some(node=>node.executor==='ci'||node.type==='checks'&&node.verification==='ci'))must(t.bindings.some(binding=>binding.type==='CI'&&binding.status==='connected'),'Текущий CI binding недоступен для выбранного Flow.');}for(const old of snap.bindings.filter(b=>b.type==='Repository')){const current=t.bindings.find(b=>b.type==='Repository'&&b.name===old.name&&b.status==='connected');must(current,`Resource binding ${old.name} недоступен.`);for(const path of snap.config.scope.split(/[\n,]+/).filter(Boolean))must(pathAllowed(path.trim(),current!.write),`Текущие grants запрещают ${path} в ${old.name}.`);must(!old.createPr||current!.createPr,'Текущий binding запрещает Create PR.');must(!old.merge||current!.merge,'Текущий binding запрещает Merge.')}}
+function executionGrants(s:State,snap:Snapshot){const t=get(s.teams,snap.teamId,'Team');must(t.environment.status==='ready','Environment не готов.');must(t.automation===snap.runtime&&t.environment.runtimeVersion===snap.runtimeVersion,'Environment не соответствует frozen runtime requirements. Требуется re-evaluation.');must(snap.config.limit<=t.environment.quota,'Frozen limits превышают текущую quota.');if(snap.config.nodeConfigs){const problems=flowIssues(snap.config,{allowLegacyExecutors:true});must(!problems.length,problems.join(' '));if(snap.config.nodeConfigs.some(node=>node.executor==='ci'||node.type==='checks'&&node.verification==='ci'))must(t.bindings.some(binding=>binding.type==='CI'&&binding.status==='connected'&&(!binding.platform||binding.platform===snap.runtime)),'Текущий CI binding недоступен для выбранного Flow.');}for(const old of snap.bindings.filter(b=>b.type==='Repository')){const current=t.bindings.find(b=>b.type==='Repository'&&b.name===old.name&&b.status==='connected'&&(!b.platform||b.platform===snap.runtime));must(current,`Resource binding ${old.name} недоступен.`);for(const path of snap.config.scope.split(/[\n,]+/).filter(Boolean))must(pathAllowed(path.trim(),current!.write),`Текущие grants запрещают ${path} в ${old.name}.`);must(!old.createPr||current!.createPr,'Текущий binding запрещает Create PR.');must(!old.merge||current!.merge,'Текущий binding запрещает Merge.')}}
 function configureResources(s:State,teamId:string,cfg:Config){
  const team=get(s.teams,teamId,'Team'),repositories=team.bindings.filter(binding=>binding.type==='Repository'&&binding.status==='connected'&&binding.read&&binding.write);
  must(repositories.length,'Разрешите чтение и запись Git-репозитория в Permissions ресурсов.');
@@ -231,9 +245,10 @@ function configureResources(s:State,teamId:string,cfg:Config){
   const fallback=[cfg.scope,...repositories.flatMap(binding=>binding.write.split(/[\n,]+/))].map(scope=>scope.trim()).find(scope=>scope&&common(scope));
   must(fallback,'Git-репозитории не имеют общего write scope. Настройте Permissions ресурсов.');cfg.scope=fallback!;
  }
- cfg.policies=[...new Set(repositories.map(binding=>binding.segment))].flatMap(segment=>['Information Security','Reliability','Risk'].map(direction=>{
-  const policy=s.policies.filter(policy=>policy.segment===segment&&policy.direction===direction&&['Current','Deprecating'].includes(policy.status)).sort((a,b)=>Number(b.status==='Current')-Number(a.status==='Current')||b.version-a.version)[0];
-  must(policy,`Для ${segment} отсутствует действующий Policy Package: ${direction}.`);return policyKey(policy!);
+ cfg.policies=[...new Set(repositories.map(binding=>binding.segment))].flatMap(segment=>['Information Security','Reliability','Risk'].flatMap(direction=>{
+  const policies=s.policies.filter(policy=>policy.segment===segment&&policy.direction===direction&&['Current','Deprecating'].includes(policy.status)).sort((a,b)=>Number(b.status==='Current')-Number(a.status==='Current')||b.version-a.version);
+  must(policies.length,`Для ${segment} отсутствует действующий Policy Package: ${direction}.`);
+  const latest=new Map<string,Policy>();for(const policy of policies)if(!latest.has(policy.id))latest.set(policy.id,policy);return [...latest.values()].map(policyKey);
  }));
 }
 /** Hidden inherited defaults are repaired only in editable drafts and only inside current grants. */
@@ -289,27 +304,79 @@ function createTaskRun(s:State,actor:Person,cap:Capability,task:Task,mode:'super
  s.runs.push(run);task.status='in_progress';startExecution(s,run);
  return run;
 }
+function refreshDraftDependencies(s:State,cap:Capability,cfg:Config){
+ const before={runtime:cfg.runtime,policies:[...cfg.policies],productKnowledge:cfg.productKnowledge,teamKnowledge:cfg.teamKnowledge,skills:[...cfg.skills]};
+ const team=get(s.teams,cap.teamId,'Team'),product=get(s.products,cap.productId,'Product');
+ cfg.runtime=team.automation||cfg.runtime;cfg.productKnowledge=product.knowledgeVersion;cfg.teamKnowledge=team.knowledgeVersion;
+ const segments=[...new Set(team.bindings.filter(binding=>binding.type==='Repository'&&cfg.repos.includes(binding.name)).map(binding=>binding.segment).filter(Boolean))];
+ cfg.policies=segments.flatMap(segment=>['Information Security','Reliability','Risk'].flatMap(direction=>{
+  const packages=s.policies.filter(policy=>policy.segment===segment&&policy.direction===direction&&policy.status==='Current').sort((a,b)=>b.version-a.version);
+  const latest=new Map<string,Policy>();for(const policy of packages)if(!latest.has(policy.id))latest.set(policy.id,policy);return [...latest.values()].map(policyKey);
+ }));
+ const latestSkill=(key:string)=>{const id=key.split('@')[0],items=s.assets.filter(asset=>asset.id===id&&asset.type==='Skills'&&asset.status==='Current'&&asset.runtimes.includes(cfg.runtime)).sort((a,b)=>b.version-a.version);return items[0]?`${items[0].id}@${items[0].version}`:key};
+ cfg.skills=[...new Set(cfg.skills.map(latestSkill))];
+ const changes:string[]=[];
+ if(before.runtime!==cfg.runtime)changes.push(`Runtime: ${before.runtime} → ${cfg.runtime}`);
+ if(JSON.stringify(before.policies)!==JSON.stringify(cfg.policies))changes.push(`Политики: ${before.policies.join(', ')} → ${cfg.policies.join(', ')}`);
+ if(before.productKnowledge!==cfg.productKnowledge||before.teamKnowledge!==cfg.teamKnowledge)changes.push(`Knowledge: Product @${before.productKnowledge} / Team @${before.teamKnowledge} → Product @${cfg.productKnowledge} / Team @${cfg.teamKnowledge}`);
+ if(JSON.stringify(before.skills)!==JSON.stringify(cfg.skills))changes.push(`Skills: ${before.skills.join(', ')} → ${cfg.skills.join(', ')}`);
+ return changes;
+}
+function emulateProductionRelease(s:State,actor:Person,cap:Capability,rel:Release,now:string){
+ executionGrants(s,rel.snapshot);
+ const id=uid('EMULATION'),results:Item[]=[],runIds:string[]=[];
+ const tasks=s.tasks.filter(task=>task.productId===cap.productId&&task.tag===cap.tag);
+ for(const task of tasks){
+  const row:Item={taskId:task.id,boardId:task.boardId,teamId:task.teamId};
+  if(task.status==='done'){results.push({...row,status:'skipped',reason:'Задача уже завершена.'});continue;}
+  if(s.runs.some(run=>run.taskId===task.id&&!run.completedAt&&!['cancelled','failed'].includes(run.status))){results.push({...row,status:'skipped',reason:'У задачи уже есть активный запуск.'});continue;}
+  const isolated=copy(s);
+  try{
+   const currentCap=get(isolated.capabilities,cap.id,'Capability'),currentTask=get(isolated.tasks,task.id,'Task');
+   const run=createTaskRun(isolated,actor,currentCap,currentTask,'production',now);
+   must(run.status==='accepted'&&run.gates.length===0,'Автономная эмуляция не завершила Flow.');
+   run.execution.emulationId=id;Object.assign(s,isolated);runIds.push(run.id);results.push({...row,status:'completed',runId:run.id});
+  }catch(error){if(!(error instanceof DomainError))throw error;results.push({...row,status:'skipped',reason:error.message});}
+ }
+ const output={id,capabilityId:cap.id,releaseId:rel.id,tag:cap.tag,completed:runIds.length,skipped:results.filter(row=>row.status==='skipped').length,failed:0,runIds,results};
+ notify(s,'Эмуляция Capability завершена',`${cap.name} · ${runIds.length} задач выполнено`,`Тег ${cap.tag}. Пропущено: ${output.skipped}. Демонстрационный автоматический прогон без Human Gates.`,cap.teamId,cap.productId,'capability',cap.id);
+ return output;
+}
 function onlyPolicyMigration(s:State,cap:Capability):boolean{if(!cap.migrationFrom||!cap.draft)return false;const base=cap.releases.find(r=>r.id===cap.migrationFrom);if(!base||base.stage!=='production'||!base.snapshot.historyRefs.length)return false;const candidate=makeSnapshot(s,cap,cap.draft,'comparison','');if(JSON.stringify(candidate.config.policies)===JSON.stringify(base.snapshot.config.policies))return false;candidate.config.version=base.snapshot.config.version;candidate.config.revision=base.snapshot.config.revision;candidate.config.policies=copy(base.snapshot.config.policies);return sameExecutionConfiguration(candidate,base.snapshot)}
+function saveJudgeAsset(s:State,actor:Person,p:Item):string{
+ const schema=p.schema||DEFAULT_JUDGE_SCHEMA;
+ must(schema&&typeof schema==='object'&&!Array.isArray(schema)&&Object.keys(schema).length>0,'Выходная схема должна быть объектом.');
+ for(const value of Object.values(schema))must(['number','text','array','boolean','PASS | FAIL'].includes(String(value)),'Неподдерживаемый тип поля судьи.');
+ const id=p.id||uid('judge'),versions=s.assets.filter(item=>item.id===id);
+ must(versions.every(item=>item.type==='Judge Profiles'),'Этот ID принадлежит другому виду ресурса.');
+ const version=versions.length?Math.max(...versions.map(item=>item.version))+1:1;
+ const skills=Array.isArray(p.skills)?p.skills:[];
+ must(skills.every((key:string)=>s.assets.some(item=>item.type==='Skills'&&`${item.id}@${item.version}`===key)),'Выбранный навык судьи не найден.');
+ s.assets.push({id,version,type:'Judge Profiles',name:required(p.name,'Название судьи'),owner:actor.name,status:'Current',runtimes:['HG SDLC','Maestro','AI Conductor','AI Manager'],changelog:typeof p.changelog==='string'?p.changelog:'',instruction:required(p.instruction||DEFAULT_JUDGE_PROMPT,'Промпт судьи'),skills:copy(skills),schema:copy(schema)});
+ return `${id}@${version}`;
+}
 export function applyAction(source:State,actor:Person,action:string,p:Item,identity:string):{state:State;result?:Item}{const s=copy(source);const now=new Date().toISOString();let result:Item|undefined;refreshHealth(s);
  if(p.teamId)teamAccess(actor,p.teamId);
  const cap=p.capabilityId?get(s.capabilities,p.capabilityId,'Capability'):undefined;if(cap){if(action==='start_run'){must(!p.productId||p.productId===cap.productId,'Flow не относится к выбранному Product.');must(s.responsibilities.some(link=>link.productId===cap.productId&&actor.teams.includes(link.teamId)),'Нет доступа к Product этого Flow.');}else{teamAccess(actor,cap.teamId);scopeMatch(cap,p)}}
  const run=p.runId?get(s.runs,p.runId,'Запуск'):undefined;if(run){teamAccess(actor,run.teamId);scopeMatch(run,p)}
  switch(action){
+ case 'complete_setup_intro':{role(actor,'Product Owner');s.setupIntroSeen=true;break}
  case 'create_product':{role(actor,'Product Owner');const id=uid('product');s.products.push({id,name:required(p.name,'Название',160),description:required(p.description,'Описание'),owner:actor.id,goals:p.goals||'',...(p.metrics!==undefined?{metrics:String(p.metrics)}:{}),knowledgeVersion:1});result={id};break}
  case 'update_product':{role(actor,'Product Owner');const product=get(s.products,p.productId,'Product');product.name=required(p.name,'Название',160);product.description=required(p.description,'Описание');product.goals=p.goals||'';if(p.metrics!==undefined)product.metrics=String(p.metrics);break}
- case 'create_team':{role(actor,'Product Owner');get(s.products,p.productId,'Product');const id=uid('team'),name=required(p.name,'Team',100);s.teams.push({id,name,spaceId:uid('space'),knowledgeVersion:1,people:[actor.id],bindings:[],automation:null,environment:defaultEnvironment(name)});s.responsibilities.push({productId:p.productId,teamId:id,scope:required(p.scope,'Responsibility').split(/[,\n]+/).map((s:string)=>s.trim()).filter(Boolean)});get(s.people,actor.id,'Person').teams.push(id);result={id,productId:p.productId};break}
- case 'connect_team':{role(actor,'Product Owner');get(s.products,p.productId,'Product');get(s.teams,p.connectTeamId,'Team');must(!s.responsibilities.some(r=>r.teamId===p.connectTeamId&&r.productId===p.productId),'Team уже подключена к Product.');s.responsibilities.push({productId:p.productId,teamId:p.connectTeamId,scope:required(p.scope,'Responsibility').split(/[,\n]+/).map((x:string)=>x.trim()).filter(Boolean)});result={id:p.connectTeamId};break}
- case 'update_team':{role(actor,'Product Owner');const t=get(s.teams,p.teamId,'Team');t.name=required(p.name,'Team',100);const r=s.responsibilities.find(r=>r.teamId===p.teamId&&r.productId===p.productId);must(r,'Responsibility Scope не найден.');r!.scope=required(p.scope,'Responsibility').split(/[,\n]+/).map((x:string)=>x.trim()).filter(Boolean);break}
+ case 'create_team':{role(actor,'Product Owner');get(s.products,p.productId,'Product');const id=uid('team'),name=required(p.name,'Team',100);s.teams.push({id,name,spaceId:uid('space'),knowledgeVersion:1,people:[actor.id],bindings:[],automation:null,environment:defaultEnvironment(name)});s.responsibilities.push({productId:p.productId,teamId:id,scope:required(p.scope,'Ответственность команды').split(/[,\n]+/).map((s:string)=>s.trim()).filter(Boolean)});get(s.people,actor.id,'Person').teams.push(id);result={id,productId:p.productId};break}
+ case 'connect_team':{role(actor,'Product Owner');get(s.products,p.productId,'Product');get(s.teams,p.connectTeamId,'Team');must(!s.responsibilities.some(r=>r.teamId===p.connectTeamId&&r.productId===p.productId),'Team уже подключена к Product.');s.responsibilities.push({productId:p.productId,teamId:p.connectTeamId,scope:required(p.scope,'Ответственность команды').split(/[,\n]+/).map((x:string)=>x.trim()).filter(Boolean)});result={id:p.connectTeamId};break}
+ case 'update_team':{role(actor,'Product Owner');const t=get(s.teams,p.teamId,'Team');t.name=required(p.name,'Team',100);const r=s.responsibilities.find(r=>r.teamId===p.teamId&&r.productId===p.productId);must(r,'Ответственность команды не найдена.');r!.scope=required(p.scope,'Ответственность команды').split(/[,\n]+/).map((x:string)=>x.trim()).filter(Boolean);break}
  case 'add_person':{role(actor,'Product Owner');permission(actor,'team.admin');const t=get(s.teams,p.teamId,'Team');must(['Product Owner','Platform Engineer','Product Engineer'].includes(p.role),'Выберите одну из трёх базовых ролей.');let person=p.personId?s.people.find(x=>x.id===p.personId):undefined;if(person){must(person.role!=='Regulator','Regulator находится в отдельном control functions контуре.');if(!person.teams.includes(t.id))person.teams.push(t.id);if(Array.isArray(p.assignments))person.assignments=p.assignments.filter((a:string)=>ASSIGNMENTS.includes(a));}else{person={id:uid('person'),name:required(p.name,'Имя',160),role:p.role,assignments:(p.assignments||[]).filter((a:string)=>ASSIGNMENTS.includes(a)),teams:[t.id]};s.people.push(person)}if(!t.people.includes(person.id))t.people.push(person.id);break}
  case 'update_assignments':{role(actor,'Product Owner');permission(actor,'team.admin');const person=get(s.people,p.personId,'Person');must(person.teams.includes(p.teamId),'Person не участвует в Team.');person.assignments=(p.assignments||[]).filter((a:string)=>ASSIGNMENTS.includes(a));break}
  case 'save_binding':{
   role(actor,'Platform Engineer');const t=workspaceScope(s,actor,p.teamId,p.productId);
+  must(t.automation&&RUNTIME_PLATFORMS.some(item=>item.id===t.automation&&item.available),'Сначала выберите доступную платформу исполнения.');
   const type=p.type==='Git Repository'?'Repository':p.type==='Jenkins CI'?'CI':required(p.type,'Тип');
-  must(['Repository','Task Tracker','CI'].includes(type),'Неизвестный тип Resource Binding.');
+  must(runtimeResources(t.automation).includes(type),'Этот тип Resource Binding не входит в компоненты выбранной платформы.');
   const name=required(p.name,type==='Repository'?'Git-репозиторий':type==='Task Tracker'?'Task Tracker':'CI');
   const existing=t.bindings.find(binding=>p.id?binding.id===p.id:binding.type===type&&binding.name===name);
   if(p.id)must(existing,'Resource Binding не найден в выбранной команде.');
-  let b:Binding={id:existing?.id||uid('binding'),type,name,read:p.read??existing?.read??'',write:p.write??existing?.write??'',createPr:p.createPr===undefined?!!existing?.createPr:!!p.createPr,merge:p.merge===undefined?!!existing?.merge:!!p.merge,status:'connected'};
+  let b:Binding={platform:t.automation!,id:existing?.id||uid('binding'),type,name,read:p.read??existing?.read??'',write:p.write??existing?.write??'',createPr:p.createPr===undefined?!!existing?.createPr:!!p.createPr,merge:p.merge===undefined?!!existing?.merge:!!p.merge,status:'connected'};
   if(type==='Repository'){
    const meta=REPOSITORIES.find(repo=>repo.name===name);must(meta,'Repository должен существовать в каталоге систем.');b={...b,...meta};
    if(p.permissions!==undefined){
@@ -334,7 +401,7 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
  result={id:b.id};break
  }
  case 'classify_system':{
-  role(actor,'Platform Engineer');const t=workspaceScope(s,actor,p.teamId,p.productId),system=required(p.system,'Техническая система',160),segment=required(p.segment,'Сегмент',80);
+  role(actor,'Regulator');must(actor.directions?.includes('Information Security'),'Сегментацию изменяет регулятор информационной безопасности.');const t=workspaceScope(s,actor,p.teamId,p.productId),system=required(p.system,'Техническая система',160),segment=required(p.segment,'Сегмент',80);
   must(SEGMENTS.includes(segment),'Выберите поддерживаемый сегмент.');
   const bindings=t.bindings.filter(binding=>binding.type==='Repository'&&binding.system===system);
   must(bindings.length>0,'Техническая система не найдена.');
@@ -342,8 +409,8 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
   if(t.environment.status==='ready'){t.environment.status='configured';t.environment.provisionSteps=[];}
   result={id:system,segment};break
  }
- case 'save_environment':{role(actor,'Platform Engineer');const t=get(s.teams,p.teamId,'Team');must(['HG SDLC','AI Manager'].includes(p.automation),'Выберите HG SDLC или AI Manager.');for(const k of ['cpu','ram','disk','ttl','parallel','quota'])must(Number.isFinite(Number(p[k]))&&Number(p[k])>0,`Некорректное значение ${k}.`);const changed=t.automation!==p.automation||['cpu','ram','disk','ttl','parallel','quota','isolation','network','modelGateway','internet','runtimeVersion','uatBindings'].some(k=>String((t.environment as any)[k])!==String(p[k]));t.automation=p.automation;for(const k of ['cpu','ram','disk','ttl','parallel','quota'])(t.environment as any)[k]=Number(p[k]);for(const k of ['isolation','network','modelGateway','internet','runtimeVersion','uatBindings'])(t.environment as any)[k]=required(p[k],k,1000);if(changed){t.environment.status='configured';t.environment.provisionSteps=[]}break}
- case 'provision':{role(actor,'Platform Engineer');const t=get(s.teams,p.teamId,'Team');must(t.automation,'Сначала выберите Automation.');for(const type of ['Repository','Task Tracker','CI'])must(t.bindings.some(b=>b.type===type&&b.status==='connected'),`Сначала подключите ${type}.`);must(p.topologyConfirmed===true,'Сначала просмотрите topology.');t.environment.status='ready';t.environment.provisionSteps=[...PROVISION_STEPS];notify(s,'Environment Ready',t.environment.name,`${t.automation} · Automation Ready`,t.id,p.productId,'environment');break}
+ case 'save_environment':{role(actor,'Platform Engineer');const t=get(s.teams,p.teamId,'Team');must(RUNTIME_PLATFORMS.some(item=>item.id===p.automation&&item.available),'Выберите HG SDLC, Maestro или AI Conductor. AI Manager пока недоступна.');for(const k of ['cpu','ram','disk','ttl','parallel','quota'])must(Number.isFinite(Number(p[k]))&&Number(p[k])>0,`Некорректное значение ${k}.`);const changed=t.automation!==p.automation||['cpu','ram','disk','ttl','parallel','quota','isolation','network','modelGateway','internet','runtimeVersion','uatBindings'].some(k=>String((t.environment as any)[k])!==String(p[k]));if(t.automation&&t.automation!==p.automation)for(const binding of t.bindings)binding.status='requires_rebind';t.automation=p.automation;for(const k of ['cpu','ram','disk','ttl','parallel','quota'])(t.environment as any)[k]=Number(p[k]);for(const k of ['isolation','network','modelGateway','internet','runtimeVersion','uatBindings'])(t.environment as any)[k]=required(p[k],k,1000);if(changed){t.environment.status='configured';t.environment.provisionSteps=[]}break}
+ case 'provision':{role(actor,'Platform Engineer');const t=get(s.teams,p.teamId,'Team');must(t.automation,'Сначала выберите Automation.');for(const type of runtimeResources(t.automation))must(t.bindings.some(b=>b.type===type&&b.status==='connected'&&b.platform===t.automation),`Сначала подключите ${type} для ${t.automation}.`);must(p.topologyConfirmed===true,'Сначала просмотрите topology.');t.environment.status='ready';t.environment.provisionSteps=[...PROVISION_STEPS];if(!s.knowledge.some(k=>k.teamId===t.id&&k.sourceRefs?.includes('Шаблон окружения: Jenkins'))){s.knowledge.push({id:uid('knowledge'),productId:p.productId,teamId:t.id,layer:'Team',title:'Обновление зависимостей · сборка в Jenkins',content:DEFAULT_TEAM_KNOWLEDGE,status:'approved',version:++t.knowledgeVersion,author:actor.id,reviewer:actor.id,publishedAt:now,sourceRefs:['Шаблон окружения: Jenkins']});}notify(s,'Environment Ready',t.environment.name,`${t.automation} · Automation Ready`,t.id,p.productId,'environment');break}
  case 'create_project':
  case 'create_board':{
   role(actor,'Product Owner','Product Engineer');workspaceScope(s,actor,p.teamId,p.productId);
@@ -402,11 +469,11 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
   configureResources(s,team.id,cfg);
   cfg.productKnowledge=get(s.products,p.productId,'Product').knowledgeVersion;cfg.teamKnowledge=team.knowledgeVersion;
   cfg.limit=Math.min(cfg.limit,team.environment.quota);
-  cfg=setConfigFields(cfg,p.config);
+  if(!cfg.skills.includes('knowledge-mcp@1'))cfg.skills.push('knowledge-mcp@1');cfg=setConfigFields(cfg,p.config);
   const id=uid('cap'),capability:Capability={id,tag,teamId:team.id,productId:p.productId,name:p.name?required(p.name,'Название Flow',160):tag==='dep-update'?'Dependency Update':tag==='statement-doc'?'Statements & Certificates':tag,draft:cfg,releases:[]};
   validateConfig(s,capability,cfg);s.capabilities.push(capability);result={id};break
  }
- case 'clone_release':{role(actor,'Product Engineer');must(cap,'Capability не найдена.');must(!cap!.draft,'Новая Draft уже существует.');const rel=cap!.releases.find(r=>r.id===p.releaseId)||currentRelease(cap!);must(rel,'Release не найден.');const cfg=copy(rel!.snapshot.config);const [major,minor]=cfg.version.split('.').map(Number);cfg.version=`${major}.${(minor||0)+1}`;cfg.revision=1;if(cfg.nodeConfigs)cfg.nodeConfigs=getEditableFlowNodes(cfg);cfg.runtime=get(s.teams,cap!.teamId,'Team').automation||cfg.runtime;repairEditableDefaults(s,actor,cap!,cfg);cap!.draft=cfg;cap!.migrationFrom=rel!.id;result={id:cap!.id};break}
+ case 'clone_release':{role(actor,'Product Engineer');must(cap,'Capability не найдена.');must(!cap!.draft,'Новая Draft уже существует.');const rel=cap!.releases.find(r=>r.id===p.releaseId)||currentRelease(cap!);must(rel,'Release не найден.');const cfg=copy(rel!.snapshot.config);const [major,minor]=cfg.version.split('.').map(Number);cfg.version=`${major}.${(minor||0)+1}`;cfg.revision=1;if(cfg.nodeConfigs)cfg.nodeConfigs=getEditableFlowNodes(cfg);cfg.runtime=get(s.teams,cap!.teamId,'Team').automation||cfg.runtime;repairEditableDefaults(s,actor,cap!,cfg);const changes=p.updateDependencies?refreshDraftDependencies(s,cap!,cfg):[];validateConfig(s,cap!,cfg);cap!.draft=cfg;cap!.migrationFrom=rel!.id;result={id:cap!.id,changes};break}
  case 'save_config':{role(actor,'Product Engineer');must(cap?.draft,'Создайте новую версию для редактирования.');const original=cap!.draft!;must(p.expectedRevision===original.revision,'Draft уже изменена. Обновите экран.');const cfg=setConfigFields(original,p.config);repairEditableDefaults(s,actor,cap!,cfg,original);validateConfig(s,cap!,cfg);const name=p.name===undefined?cap!.name:required(p.name,'Название Flow',160);if(!sameValue(cfg,original)||name!==cap!.name){cfg.version=nextFlowVersion(original.version);cfg.revision++;cap!.draft=cfg;cap!.name=name}break}
  case 'start_run':{
   role(actor,'Product Engineer');const task=get(s.tasks,p.taskId,'Task');teamAccess(actor,task.teamId);scopeMatch(task,p);
@@ -417,26 +484,7 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
   role(actor,'Product Engineer');must(cap,'Capability не найдена.');
   must(!cap!.legacyDuplicateOf,`Для тега используется общий Flow ${cap!.legacyDuplicateOf}.`);
   const rel=currentRelease(cap!);must(rel&&['active','migration_required'].includes(policyHealth(s,rel.snapshot)),'Нет активной Trusted Capability. Автономная эмуляция запрещена.');
-  executionGrants(s,rel!.snapshot);
-  const id=uid('EMULATION'),results:Item[]=[],runIds:string[]=[];
-  const tasks=s.tasks.filter(task=>task.productId===cap!.productId&&task.tag===cap!.tag);
-  for(const task of tasks){
-   const row:Item={taskId:task.id,boardId:task.boardId,teamId:task.teamId};
-   if(task.status==='done'){results.push({...row,status:'skipped',reason:'Задача уже завершена.'});continue;}
-   if(s.runs.some(run=>run.taskId===task.id&&!run.completedAt&&!['cancelled','failed'].includes(run.status))){results.push({...row,status:'skipped',reason:'У задачи уже есть активный запуск.'});continue;}
-   const isolated=copy(s);
-   try{
-    const currentCap=get(isolated.capabilities,cap!.id,'Capability'),currentTask=get(isolated.tasks,task.id,'Task');
-    const run=createTaskRun(isolated,actor,currentCap,currentTask,'production',now);
-    must(run.status==='accepted'&&run.gates.length===0,'Автономная эмуляция не завершила Flow.');
-    run.execution.emulationId=id;Object.assign(s,isolated);runIds.push(run.id);results.push({...row,status:'completed',runId:run.id});
-   }catch(error){
-    if(!(error instanceof DomainError))throw error;
-    results.push({...row,status:'skipped',reason:error.message});
-   }
-  }
-  result={id,capabilityId:cap!.id,releaseId:rel!.id,tag:cap!.tag,completed:runIds.length,skipped:results.filter(row=>row.status==='skipped').length,failed:0,runIds,results};
-  notify(s,'Эмуляция Capability завершена',`${cap!.name} · ${runIds.length} задач выполнено`,`Тег ${cap!.tag}. Пропущено: ${result.skipped}. Демонстрационный автоматический прогон без Human Gates.`,cap!.teamId,cap!.productId,'capability',cap!.id);
+  result=emulateProductionRelease(s,actor,cap!,rel!,now);
   break
  }
  case 'gate_decision':{
@@ -512,8 +560,23 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
  case 'message':{required(p.text,'Сообщение',10000);must(p.thread===`team-${p.teamId}`||s.runs.some(r=>r.id===p.thread&&r.teamId===p.teamId&&r.productId===p.productId),'Thread не принадлежит текущему scope.');s.messages.push({id:uid('message'),thread:p.thread,teamId:p.teamId,productId:p.productId,actor:actor.id,text:p.text,time:now});break}
  case 'mark_notification':{const n=get(s.notifications,p.id,'Notification');teamAccess(actor,n.teamId);scopeMatch(n as {teamId:string;productId:string},p);n.read=true;break}
  case 'mark_all_notifications':{for(const notice of s.notifications)if(actor.teams.includes(notice.teamId)&&(!p.teamId||notice.teamId===p.teamId)&&(!p.productId||notice.productId===p.productId))notice.read=true;break}
- case 'knowledge_propose':{permission(actor,'knowledge.contribute');const layer=p.layer==='Team'?'Team':'Product';const product=get(s.products,p.productId,'Product');const t=get(s.teams,p.teamId,'Team');const conceptIds=Array.isArray(p.conceptIds)?[...new Set<string>(p.conceptIds)]:[];must(conceptIds.every((id:string)=>s.concepts.some(concept=>concept.id===id&&concept.productId===product.id)),'Понятие не относится к выбранному Product.');const sourceRefs=Array.isArray(p.sourceRefs)?p.sourceRefs.map((value:unknown)=>String(value).trim()).filter(Boolean).slice(0,40):[];s.knowledge.push({id:uid('knowledge'),productId:product.id,teamId:layer==='Team'?t.id:undefined,layer,title:required(p.title,'Название',180),content:required(p.content,'Содержание'),summary:typeof p.summary==='string'?p.summary.trim().slice(0,500):undefined,conceptIds,sourceRefs,status:'proposed',version:1,author:actor.id,sourceRun:p.sourceRun||undefined});break}
- case 'knowledge_review':{permission(actor,'knowledge.review');const k=get(s.knowledge,p.id,'Knowledge');must(k.status==='proposed','Proposal уже рассмотрен.');if(k.teamId)teamAccess(actor,k.teamId);k.status=p.approve?'approved':'rejected';k.reviewer=actor.id;if(p.approve){k.publishedAt=now;if(k.layer==='Product'){const product=get(s.products,k.productId,'Product');product.knowledgeVersion++;k.version=product.knowledgeVersion}else{const t=get(s.teams,k.teamId!,'Team');t.knowledgeVersion++;k.version=t.knowledgeVersion}}break}
+ case 'knowledge_propose':{permission(actor,'knowledge.contribute');const layer=p.layer==='Team'?'Team':'Product';const product=get(s.products,p.productId,'Product');const t=get(s.teams,p.teamId,'Team');const conceptIds=Array.isArray(p.conceptIds)?[...new Set<string>(p.conceptIds)]:[];must(conceptIds.every((id:string)=>s.concepts.some(concept=>concept.id===id&&concept.productId===product.id)),'Понятие не относится к выбранному Product.');const sourceRefs=Array.isArray(p.sourceRefs)?p.sourceRefs.map((value:unknown)=>String(value).trim()).filter(Boolean).slice(0,40):[];const id=uid('knowledge');s.knowledge.push({id,createdAt:now,productId:product.id,teamId:layer==='Team'?t.id:undefined,layer,title:required(p.title,'Название',180),content:required(p.content,'Содержание'),summary:typeof p.summary==='string'?p.summary.trim().slice(0,500):undefined,conceptIds,sourceRefs,status:'proposed',version:1,author:actor.id,sourceRun:p.sourceRun||undefined});result={id};break}
+ case 'knowledge_review':{
+  permission(actor,'knowledge.review');const k=get(s.knowledge,p.id,'Knowledge');
+  workspaceScope(s,actor,p.teamId,p.productId);must(k.productId===p.productId&&(!k.teamId||k.teamId===p.teamId),'Знание не относится к выбранному пространству.');
+  must(k.status==='proposed','Предложение уже рассмотрено.');k.status=p.approve?'reviewed':'rejected';k.reviewer=actor.id;k.reviewedAt=now;result={id:k.id};break;
+ }
+ case 'knowledge_publish':{
+  permission(actor,'knowledge.review');workspaceScope(s,actor,p.teamId,p.productId);const k=get(s.knowledge,p.id,'Knowledge');
+  must(k.productId===p.productId&&(!k.teamId||k.teamId===p.teamId),'Знание не относится к выбранному пространству.');must(k.status==='reviewed','Сначала выполните review знания.');
+  k.status='approved';k.publishedAt=now;
+  k.version=k.layer==='Product'?++get(s.products,k.productId,'Product').knowledgeVersion:++get(s.teams,k.teamId!,'Team').knowledgeVersion;
+  const categoryId=`knowledge-${k.productId}-${k.layer.toLowerCase()}`;
+  if(!s.conceptCategories.some(item=>item.id===categoryId))s.conceptCategories.push({id:categoryId,productId:k.productId,title:k.layer==='Product'?'Знания продукта':'Инженерные знания команды',description:'Опубликованные знания',order:k.layer==='Product'?90:91});
+  const conceptId=`concept-${k.id}`;
+  s.concepts.push({id:conceptId,productId:k.productId,categoryId,label:k.title,description:k.content,variant:'all',sourceRefs:k.sourceRefs||[],status:'approved',version:k.version});
+  k.conceptIds=[...new Set([...(k.conceptIds||[]),conceptId])];result={id:k.id,conceptId};break;
+ }
  case 'save_context_bundle':{
   permission(actor,'knowledge.contribute');workspaceScope(s,actor,p.teamId,p.productId);
   if(p.taskId){
@@ -549,10 +612,77 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
   const input={productId:p.productId,teamId:p.teamId,system:required(p.system,'Техническая система',160),productTopic:required(p.productTopic,'Тема продукта',100),workType:required(p.workType,'Вид работы',100),stage:p.stage};
   const id=uid('bundle'),bundle=compileContextBundle(s,input,{id,createdAt:now,createdBy:actor.id});must(!bundle.blocking.length,bundle.blocking.join(' '));s.contextBundles.unshift(copy(bundle));result={id,bundle};break;
  }
- case 'save_suite':{role(actor,'Product Engineer');const team=workspaceScope(s,actor,p.teamId,p.productId),tag=required(p.tag,'Тег задачи',100);const cases=p.cases||[];must(Array.isArray(cases)&&cases.length>0,'Добавьте хотя бы один Case.');for(const c of cases){const task=get(s.tasks,c.taskId,'Task');must(task.tag===tag&&task.teamId===team.id&&task.productId===p.productId,'Case не относится к тегу или scope Test Suite.');required(c.pr,'PR');required(c.base,'Base revision');required(c.golden,'Golden revision');must(c.confirmed===true,'Подтвердите Golden revision как эталонное исполнение.')}must(s.assets.some(a=>a.type==='Judge Profiles'&&`${a.id}@${a.version}`===p.judgeId),'Judge Profile не найден.');const id=p.id||uid('suite');const versions=s.suites.filter(x=>x.id===id);must(versions.every(item=>item.teamId===team.id&&item.productId===p.productId&&item.tag===tag),'Test Suite принадлежит другому scope или тегу.');s.suites.push({id,version:versions.length?Math.max(...versions.map(x=>x.version))+1:1,name:required(p.name,'Test Suite'),tag,teamId:team.id,productId:p.productId,cases:copy(cases),judgeId:p.judgeId});result={id};break}
- case 'save_judge':{role(actor,'Product Engineer');const schema=p.schema;must(schema&&typeof schema==='object'&&!Array.isArray(schema)&&Object.keys(schema).length>0,'Output Schema должна быть объектом с полями.');for(const value of Object.values(schema))must(['number','text','array','PASS | FAIL','boolean'].includes(String(value)),'Поддерживаемые типы schema: number, text, array, boolean, PASS | FAIL.');const id=p.id||uid('judge');const versions=s.assets.filter(a=>a.id===id);s.assets.push({id,version:versions.length?Math.max(...versions.map(x=>x.version))+1:1,type:'Judge Profiles',name:required(p.name,'Name'),owner:actor.name,status:'Current',runtimes:['HG SDLC','AI Manager'],changelog:required(p.changelog||'Обновлён Judge Profile','Changelog'),instruction:required(p.instruction,'Instruction'),skills:p.skills||[],schema:copy(schema)});break}
- case 'benchmark':{role(actor,'Product Engineer');must(cap,'Capability не найдена.');const suite=s.suites.find(x=>x.id===p.suiteId&&x.version===p.suiteVersion);must(suite&&suite.tag===cap!.tag&&suite.teamId===cap!.teamId&&suite.productId===cap!.productId,'Выберите Test Suite для тега и scope Flow.');must(suite!.cases.every(c=>c.confirmed),'Все Golden revisions должны быть подтверждены.');const cfg=p.releaseId?cap!.releases.find(r=>r.id===p.releaseId)?.snapshot.config:cap!.draft||currentRelease(cap!)?.snapshot.config;must(cfg,'Configuration не найдена.');const selectedRelease=p.releaseId?cap!.releases.find(r=>r.id===p.releaseId):!cap!.draft?currentRelease(cap!):undefined;const snapshot=selectedRelease?copy(selectedRelease.snapshot):makeSnapshot(s,cap!,cfg!,uid('BENCH-SNAP'),now);const judge=s.assets.find(a=>`${a.id}@${a.version}`===suite!.judgeId)!;const id=uid('BENCH');const reports=suite!.cases.map((c,i)=>{const values=[[96,100,92,95],[91,100,98,87],[78,72,94,61]][i%3];const verdict=i%3===2?'FAIL':'PASS';const task=get(s.tasks,c.taskId,'Task');const runtimeInput={taskId:task.id,task:task.title,baseRevision:c.base,configuration:copy(cfg),sandbox:uid('sandbox')};const actual={diff:`--- base:${c.base}\n+++ actual:${task.id}\n+ dependency update`,createdAt:now};const judgeInput={actual,goldenRevision:c.golden,profile:`${judge.id}@${judge.version}`};const fields:Item={};Object.entries(judge.schema||{}).forEach(([k,type],n)=>fields[k]=type==='number'?values[n%4]:type==='array'?verdict==='PASS'?[]:['Изменения вышли за dependency scope.']:type==='boolean'?verdict==='PASS':type==='PASS | FAIL'?verdict:`${verdict}: ${task.title}`);return{taskId:c.taskId,runtimeInput,actual,judgeInput,fields,verdict,goldenDiff:`--- base:${c.base}\n+++ golden:${c.golden}\n+ accepted dependency update`,findings:verdict==='PASS'?['Scope соблюдён; стандартные checks выполнены.']:['Scope control: обнаружены изменения вне dependency.','Minimal change требует Rework.'],runId:`${id}-${i+1}`,artifacts:['actual diff','golden diff','judge report'],events:['Fresh Sandbox from Base','Selected Capability Snapshot','Actual result produced','Golden provided to Judge','Structured Judge Report']}});s.benchmarks.unshift({id,capabilityId:cap!.id,teamId:cap!.teamId,productId:cap!.productId,suiteId:suite!.id,suiteVersion:suite!.version,snapshot,judge:copy(judge),createdAt:now,reports,passed:reports.filter(r=>r.verdict==='PASS').length,total:reports.length,summary:`${reports.filter(r=>r.verdict==='PASS').length} / ${reports.length} PASS. Benchmark evidence; admission не выполнялся.`});result={id};break}
- case 'freeze_release':{role(actor,'Product Engineer');must(cap?.draft,'Для Release нужна Capability Draft.');validateConfig(s,cap!,cap!.draft!);const draftSnapshot=makeSnapshot(s,cap!,cap!.draft!,'comparison',now);const history=s.runs.filter(r=>r.capabilityId===cap!.id&&!r.uat&&sameExecutionConfiguration(r.snapshot,draftSnapshot));const migration=onlyPolicyMigration(s,cap!);const baseline=cap!.releases.find(r=>r.id===cap!.migrationFrom);must(history.length>0||migration&&baseline,'Нужна история запусков текущей конфигурации. Запустите реальную Task в supervised mode.');must(!cap!.releases.some(r=>r.stage!=='production'&&r.stage!=='rejected'&&configKey(r.snapshot.config)===configKey(cap!.draft!)),'Release Snapshot этой конфигурации уже существует.');const snapshot=makeSnapshot(s,cap!,cap!.draft!,uid('SNAP'),now);snapshot.historyRefs=history.map(r=>r.id);snapshot.historyRunCount=history.filter(run=>!!run.completedAt).length;if(migration&&baseline)snapshot.baselineReleaseId=baseline.id;const refs=Array.isArray(p.benchmarkRefs)?p.benchmarkRefs:[];for(const ref of refs)must(s.benchmarks.some(b=>b.id===ref&&b.capabilityId===cap!.id&&sameExecutionConfiguration(b.snapshot,draftSnapshot)),'Benchmark не относится к выпускаемой конфигурации.');snapshot.benchmarkRefs=refs;const id=uid('RELEASE');cap!.releases.unshift({id,snapshot,stage:'frozen',status:'draft',autonomyScope:snapshot.config.scope});result={id};break}
+ case 'save_suite':{
+  role(actor,'Product Engineer');const team=workspaceScope(s,actor,p.teamId,p.productId),tag=required(p.tag,'Тег задачи',100);
+  must(Array.isArray(p.cases)&&p.cases.length>0,'Выберите успешно решённые Workflow задачи.');
+  must(new Set(p.cases.map((item:Item)=>item.taskId)).size===p.cases.length,'Задача повторяется в тестовом наборе.');
+  const cases=p.cases.map((item:Item)=>{
+   const task=get(s.tasks,item.taskId,'Task');must(task.tag===tag&&task.teamId===team.id&&task.productId===p.productId,'Задача не относится к тегу или scope тестового набора.');
+   const successful=s.runs.filter(run=>run.taskId===task.id&&run.teamId===team.id&&run.productId===p.productId&&!run.uat&&run.mode!=='benchmark'&&run.status==='accepted'&&run.completedAt);
+   const source=item.sourceRunId?successful.find(run=>run.id===item.sourceRunId):successful.at(-1);
+   must(source&&source.artifacts.diff,'Для задачи нужен успешно завершённый Workflow с сохранёнными артефактами.');
+   return {taskId:task.id,sourceRunId:source!.id,pr:String(task.pr||`PR · ${task.id}`),base:source!.execution.repositoryRevisions?.[0]?.revision||task.base,golden:`accepted-${source!.id.toLowerCase()}-a${source!.attempt}`,confirmed:true,goldenDiff:String(source!.artifacts.diff),goldenTests:String(source!.artifacts.tests||''),goldenCoverage:source!.artifacts.coverage?.lines,requestInputs:{inputChoice:source!.artifacts.inputChoice||undefined},workflowName:s.capabilities.find(c=>c.id===source!.capabilityId)?.name||source!.snapshot.config.workflow,workflowVersion:`v${source!.snapshot.config.version} · r${source!.snapshot.config.revision}`};
+  });
+  const id=p.id||uid('suite'),versions=s.suites.filter(item=>item.id===id);
+  must(versions.every(item=>item.teamId===team.id&&item.productId===p.productId&&item.tag===tag),'Набор принадлежит другому пространству или тегу.');
+  const judgeId=p.judgeDraft?saveJudgeAsset(s,actor,p.judgeDraft):p.judgeId;
+  must(s.assets.some(item=>item.type==='Judge Profiles'&&`${item.id}@${item.version}`===judgeId),'Выберите судью или создайте его на втором шаге.');
+  const version=versions.length?Math.max(...versions.map(item=>item.version))+1:1;
+  s.suites.push({id,version,name:required(p.name,'Название набора'),tag,teamId:team.id,productId:p.productId,cases,judgeId});result={id,version,judgeId};break;
+ }
+ case 'save_judge':{
+  role(actor,'Product Engineer');workspaceScope(s,actor,p.teamId,p.productId);const key=saveJudgeAsset(s,actor,p);const [id,version]=key.split('@');result={id,version:Number(version),key};break;
+ }
+ case 'benchmark':{
+  role(actor,'Product Engineer');must(cap,'Workflow не найден.');
+  const suite=s.suites.find(item=>item.id===p.suiteId&&item.version===Number(p.suiteVersion));
+  must(suite&&suite.tag===cap!.tag&&suite.teamId===cap!.teamId&&suite.productId===cap!.productId,'Выберите тестовый набор того же тега и scope для этого Workflow.');
+  const selectedRelease=p.releaseId?cap!.releases.find(item=>item.id===p.releaseId):!cap!.draft?currentRelease(cap!):undefined;
+  const cfg=p.releaseId?selectedRelease?.snapshot.config:cap!.draft||selectedRelease?.snapshot.config;must(cfg,'Версия Workflow не найдена.');
+  validateConfig(s,cap!,cfg!,true,true);
+  const snapshot=selectedRelease?copy(selectedRelease.snapshot):makeSnapshot(s,cap!,cfg!,uid('BENCH-SNAP'),now);
+  const benchmarkEnvironment=copy(s);const benchmarkTeam=get(benchmarkEnvironment.teams,snapshot.teamId,'Team');
+  benchmarkTeam.automation=snapshot.runtime;benchmarkTeam.environment.runtimeVersion=snapshot.runtimeVersion;
+  executionGrants(benchmarkEnvironment,snapshot);
+  const judge=s.assets.find(item=>item.type==='Judge Profiles'&&`${item.id}@${item.version}`===suite!.judgeId);must(judge,'Сохранённая версия судьи не найдена.');
+  const id=uid('BENCH');
+  const reports=suite!.cases.map((testCase,index)=>{
+   const isolated=copy(benchmarkEnvironment),task=get(isolated.tasks,testCase.taskId,'Task');task.base=testCase.base;
+   // Execution receives only task, base, selected workflow and permitted context; not the reference result.
+   const run=makeRun(isolated,cap!,cfg!,task,`${id}-${index+1}`,now,'benchmark');
+   if(testCase.requestInputs?.inputChoice)run.artifacts.inputChoice=String(testCase.requestInputs.inputChoice);
+   run.snapshot=copy(snapshot);run.snapshot.testBaskets=[];run.execution.configurationSnapshotId=snapshot.id;
+   const runtimeInput={taskId:task.id,task:task.title,baseRevision:testCase.base,workflow:cap!.name,workflowVersion:`v${cfg!.version} · r${cfg!.revision}`,inputs:copy(testCase.requestInputs||{}),configuration:copy(cfg!),infrastructure:run.workspace.path};
+   let failure='';try{startExecution(isolated,run);}catch(error){if(!(error instanceof DomainError))throw error;failure=error.message;}
+   const actual={diff:String(run.artifacts.diff||''),tests:String(run.artifacts.tests||''),evidence:copy(run.evidence),coverage:copy(run.artifacts.coverage||null),security:copy(run.artifacts.security||null),createdAt:now};
+   const findings:string[]=failure?[failure]:[];
+   const goldenDiff=testCase.goldenDiff||s.runs.find(item=>item.id===testCase.sourceRunId)?.artifacts.diff||'';
+   // Deterministic judge: compare actual patch operations with the captured reference.
+   // This is an explicit demo evaluator, not an external LLM or security scanner.
+   const operations=(diff:string)=>new Set(diff.split('\n').filter(line=>/^[+-]/.test(line)&&!/^---|^\+\+\+/.test(line)).map(line=>line.trim().replace(/\s+/g,' ')));
+   const referenceOps=operations(goldenDiff),actualOps=operations(actual.diff);
+   const overlap=[...referenceOps].filter(line=>actualOps.has(line)).length;
+   const completeness=referenceOps.size?Math.round(100*overlap/referenceOps.size):0;
+   const precision=actualOps.size?Math.round(100*overlap/actualOps.size):0;
+   const correctness=run.status==='accepted'&&run.evidence?.status==='PASS'?precision:0;
+   const testCoverage=typeof actual.coverage?.lines==='number'?actual.coverage.lines:null;
+   const criticalErrors=failure?1:run.evidence?.status==='FAIL'?1:0;
+   if(completeness<100||correctness<100)findings.push(`С эталоном совпало ${overlap} из ${referenceOps.size} операций; фактических операций: ${actualOps.size}.`);
+   if(!goldenDiff)findings.push('В старом наборе нет сохранённого эталонного diff. Создайте новую версию из успешно решённых задач.');
+   if(!actual.tests)findings.push('Отсутствует отчёт тестов.');if(testCoverage===null)findings.push('В материалах нет отдельной метрики покрытия тестами.');
+   const securityKnown=typeof actual.security?.criticalVulnerabilities==='number';
+   if(!securityKnown)findings.push('Нет данных о критических уязвимостях.');
+   const verdict=completeness>=90&&correctness>=90&&testCoverage!==null&&testCoverage>=80&&securityKnown&&actual.security.criticalVulnerabilities===0&&criticalErrors===0&&!!goldenDiff?'PASS':'FAIL';
+   if(!findings.length)findings.push('Демонстрационная проверка: результат сформирован, обязательные проверки выполнены; эталон передан только судье.');
+   const metrics:Item={completeness,correctness,test_coverage:testCoverage,critical_vulnerabilities:actual.security?.criticalVulnerabilities??null,critical_errors:criticalErrors,verdict,summary:`${task.title}: ${verdict}`,findings};
+   const fields:Item={};for(const [key,type] of Object.entries(judge!.schema||{}))fields[key]=metrics[key]??(type==='number'?null:type==='array'?findings:type==='boolean'?verdict==='PASS':type==='PASS | FAIL'?verdict:'Нет данных для пользовательского поля');
+   const baseline={completeness:goldenDiff?100:0,correctness:goldenDiff?100:0,test_coverage:testCase.goldenCoverage??null,critical_vulnerabilities:0,critical_errors:0};
+   return {taskId:task.id,taskTitle:task.title,sourceRunId:testCase.sourceRunId,workflowName:cap!.name,workflowVersion:runtimeInput.workflowVersion,referenceWorkflow:testCase.workflowName||cap!.name,referenceVersion:testCase.workflowVersion||'История',runtimeInput,actual,judgeInput:{actual,goldenRevision:testCase.golden,goldenDiff,profile:`${judge!.id}@${judge!.version}`},fields,metrics,baseline,verdict,goldenDiff,findings,runId:run.id,artifacts:['actual diff','tests','reference diff','judge report'],events:[`Задача ${task.id}`,`Workflow: ${cap!.name} ${runtimeInput.workflowVersion}`,...run.events.map(item=>`${item.title}${item.detail?' · '+item.detail:''}`),'Judge: сравнение результата с сохранённым эталоном','Таблица сравнения сформирована'],trace:copy(run.execution.flow?.trace||[])};
+  });
+  const passed=reports.filter(item=>item.verdict==='PASS').length;
+  s.benchmarks.unshift({id,capabilityId:cap!.id,workflowName:cap!.name,teamId:cap!.teamId,productId:cap!.productId,suiteId:suite!.id,suiteVersion:suite!.version,snapshot,judge:copy(judge!),createdAt:now,reports,passed,total:reports.length,demo:true,summary:`${passed} / ${reports.length} PASS. Демо: patch сравнивается с эталоном; покрытие и результаты безопасности — fixtures симулятора, не замеры реального CI. Внешняя LLM и сканеры не вызываются.`});result={id};break;
+ }
+ case 'freeze_release':{role(actor,'Product Engineer');must(cap?.draft,'Для Release нужна Capability Draft.');validateConfig(s,cap!,cap!.draft!);const draftSnapshot=makeSnapshot(s,cap!,cap!.draft!,'comparison',now);const history=s.runs.filter(r=>r.capabilityId===cap!.id&&!r.uat&&r.status==='accepted'&&!!r.completedAt&&sameExecutionConfiguration(r.snapshot,draftSnapshot));const migration=onlyPolicyMigration(s,cap!);const baseline=cap!.releases.find(r=>r.id===cap!.migrationFrom);must(history.length>0||migration&&baseline,'Нужна история запусков текущей конфигурации. Запустите реальную Task в supervised mode.');must(!cap!.releases.some(r=>r.stage!=='production'&&r.stage!=='rejected'&&configKey(r.snapshot.config)===configKey(cap!.draft!)),'Release Snapshot этой конфигурации уже существует.');const snapshot=makeSnapshot(s,cap!,cap!.draft!,uid('SNAP'),now);snapshot.historyRefs=history.map(r=>r.id);snapshot.historyRunCount=history.filter(run=>!!run.completedAt).length;if(migration&&baseline)snapshot.baselineReleaseId=baseline.id;const refs=Array.isArray(p.benchmarkRefs)?p.benchmarkRefs:[];for(const ref of refs)must(s.benchmarks.some(b=>b.id===ref&&b.capabilityId===cap!.id&&sameExecutionConfiguration(b.snapshot,draftSnapshot)),'Benchmark не относится к выпускаемой конфигурации.');snapshot.benchmarkRefs=refs;const id=uid('RELEASE');cap!.releases.unshift({id,snapshot,stage:'frozen',status:'draft',autonomyScope:snapshot.config.scope});result={id};break}
  case 'run_uat':{
   role(actor,'Product Engineer');must(cap,'Capability не найдена.');const release=get(cap!.releases,p.releaseId,'Release');
   must(release.stage==='frozen','UAT доступен для frozen Release Snapshot.');must(!!release.snapshot.uatBindings,'Настройте UAT environment bindings.');executionGrants(s,release.snapshot);
@@ -571,7 +701,8 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
   release.risk={accepted:p.accepted,actor:actor.id,identity,comment:required(p.comment,'Риски и решение'),time:now,snapshotId:release.snapshot.id,acknowledgements:p.accepted?assessment.risks.map(risk=>risk.id):[],assessment};
   release.stage=p.accepted?'admitted':'rejected';notify(s,'release approvals',`${cap!.name} · ${p.accepted?'Риск принят':'Риск отклонён'}`,release.risk.comment,cap!.teamId,cap!.productId,'capability',cap!.id);break;
  }
- case 'promote':{role(actor,'Product Engineer');must(cap,'Capability не найдена.');const rel=get(cap!.releases,p.releaseId,'Release');must(rel.stage==='admitted'&&rel.uat?.status==='PASS'&&rel.risk?.accepted&&rel.uat.snapshotId===rel.snapshot.id&&rel.risk.snapshotId===rel.snapshot.id,'Требуются успешный UAT и принятый risk decision того же Release Snapshot.');must(policyHealth(s,rel.snapshot)!=='suspended','Policy dependency запрещает новые автономные запуски.');for(const old of cap!.releases)if(old.stage==='production')old.status='superseded';rel.stage='production';rel.status=policyHealth(s,rel.snapshot);rel.releasedAt=now;if(cap!.draft&&configKey(cap!.draft)===configKey(rel.snapshot.config))cap!.draft=null;notify(s,'release approvals',`${cap!.name} v${rel.snapshot.config.version} · Production`,rel.snapshot.id,cap!.teamId,cap!.productId,'capability',cap!.id);break}
+ case 'security_decision':{role(actor,'Regulator');must(actor.directions?.includes('Information Security'),'ИБ-допуск может выдать только Безник.');must(cap,'Capability не найдена.');const release=get(cap!.releases,p.releaseId,'Release');must(release.stage==='admitted'&&release.risk?.accepted&&release.risk.snapshotId===release.snapshot.id,'ИБ-допуск доступен после UAT и принятия риска Product Owner.');must(typeof p.accepted==='boolean','Подтвердите или отклоните ИБ-допуск.');release.securityApproval={accepted:p.accepted,actor:actor.id,identity,comment:required(p.comment,'Комментарий Безника'),time:now,snapshotId:release.snapshot.id};if(!p.accepted)release.stage='rejected';notify(s,'release approvals',`${cap!.name} · ${p.accepted?'ИБ-допуск получен':'ИБ-допуск отклонён'}`,release.securityApproval.comment,cap!.teamId,cap!.productId,'capability',cap!.id);break}
+ case 'promote':{role(actor,'Product Engineer');must(cap,'Capability не найдена.');const rel=get(cap!.releases,p.releaseId,'Release');must(rel.stage==='admitted'&&rel.uat?.status==='PASS'&&rel.risk?.accepted&&rel.securityApproval?.accepted&&rel.uat.snapshotId===rel.snapshot.id&&rel.risk.snapshotId===rel.snapshot.id&&rel.securityApproval.snapshotId===rel.snapshot.id,'Требуются UAT, принятие риска Product Owner и ИБ-допуск Безника для того же Release Snapshot.');must(policyHealth(s,rel.snapshot)!=='suspended','Policy dependency запрещает новые автономные запуски.');for(const old of cap!.releases)if(old.stage==='production')old.status='superseded';rel.stage='production';rel.status=policyHealth(s,rel.snapshot);rel.releasedAt=now;if(cap!.draft&&configKey(cap!.draft)===configKey(rel.snapshot.config))cap!.draft=null;notify(s,'release approvals',`${cap!.name} v${rel.snapshot.config.version} · Production`,`${rel.snapshot.id}. Запускается автоматическая эмуляция продуктовых задач.`,cap!.teamId,cap!.productId,'capability',cap!.id);result={id:rel.id,emulation:emulateProductionRelease(s,actor,cap!,rel,now)};break}
  case 'save_policy':{
   role(actor,'Regulator');must(actor.directions?.includes(p.direction),'Нет Regulator scope для этого направления.');must(SEGMENTS.includes(p.segment),'Неизвестный Segment.');
   const id=required(p.id,'Policy ID',150),versions=s.policies.filter(policy=>policy.id===id),version=versions.length?Math.max(...versions.map(policy=>policy.version))+1:1;
@@ -596,10 +727,10 @@ export function applyAction(source:State,actor:Person,action:string,p:Item,ident
    for(const rule of value){must(rule&&typeof rule==='object'&&!Array.isArray(rule),label+': правило должно быть объектом.');must(!rule.requirement||keys.has(rule.requirement),label+': правило ссылается на отсутствующее требование.');if(rule.verificationSkill)selectedAssets([rule.verificationSkill],'Skills');}
    return copy(value);
   };
-  const policy:Policy={id,version,direction:p.direction,segment:p.segment,status:'Draft',sunset:'',effective:p.effective||now.slice(0,10),owner:p.direction,supersedes:versions.length?`${id}@${version-1}`:'',requirements,applicability:rules(p.applicability||[],'Применимость'),skills,subagents,evidence:rules(p.evidence||[],'Evidence'),changelog:required(p.changelog,'Changelog')};
+  const policy:Policy={createdBy:actor.id,createdAt:now,productId:p.productId||undefined,teamId:p.teamId||undefined,id,version,direction:p.direction,segment:p.segment,status:'Draft',sunset:'',effective:p.effective||now.slice(0,10),owner:p.direction,supersedes:versions.length?`${id}@${version-1}`:'',requirements,applicability:rules(p.applicability||[],'Применимость'),skills,subagents,evidence:rules(p.evidence||[],'Evidence'),changelog:typeof p.changelog==='string'?p.changelog.trim():''};
   s.policies.push(policy);result={id:policyKey(policy)};break;
  }
- case 'policy_status':{role(actor,'Regulator');const pol=s.policies.find(x=>policyKey(x)===p.policyKey);must(pol,'Policy Package не найден.');must(actor.directions?.includes(pol!.direction),'Нет Regulator scope для этого направления.');must(POLICY_STATUSES.includes(p.status),'Неизвестный Policy status.');if(p.status==='Deprecating')required(p.sunset,'Sunset');pol!.status=p.status;pol!.sunset=p.status==='Deprecating'?p.sunset:'';for(const c of s.capabilities){const affected=c.releases.some(r=>r.stage==='production'&&r.status!=='superseded'&&r.snapshot.config.policies.includes(p.policyKey));if(affected){notify(s,p.status==='Deprecating'?'Policy migration required':p.status==='Retired'?'Capability suspended':'Policy lifecycle',`${p.policyKey} · ${p.status}`,pol!.sunset?`Sunset: ${pol!.sunset}`:pol!.changelog,c.teamId,c.productId,'capability',c.id);if(pol!.sunset)notify(s,'Policy sunset',p.policyKey,pol!.sunset,c.teamId,c.productId,'regulation',p.policyKey)}}refreshHealth(s);break}
+ case 'policy_status':{role(actor,'Regulator');const pol=s.policies.find(x=>policyKey(x)===p.policyKey);must(pol,'Policy Package не найден.');must(actor.directions?.includes(pol!.direction),'Нет Regulator scope для этого направления.');must(POLICY_STATUSES.includes(p.status),'Неизвестный Policy status.');const peer=s.people.some(person=>person.role==='Regulator'&&person.id!==actor.id&&person.directions?.includes(pol!.direction));must(pol!.createdBy!==actor.id||!peer,'4-eyes check: автор пакета не может менять его статус. Переключитесь на другого регулятора этого направления.');pol!.approvedBy=actor.id;pol!.approvedAt=now;if(p.status==='Deprecating')required(p.sunset,'Sunset');pol!.status=p.status;for(const req of pol!.requirements)req.status=p.status;pol!.sunset=p.status==='Deprecating'?p.sunset:'';for(const c of s.capabilities){const affected=c.releases.some(r=>r.stage==='production'&&r.status!=='superseded'&&r.snapshot.config.policies.includes(p.policyKey));if(affected){notify(s,p.status==='Deprecating'?'Policy migration required':p.status==='Retired'?'Capability suspended':'Policy lifecycle',`${p.policyKey} · ${p.status}`,pol!.sunset?`Sunset: ${pol!.sunset}`:pol!.changelog,c.teamId,c.productId,'capability',c.id);if(pol!.sunset)notify(s,'Policy sunset',p.policyKey,pol!.sunset,c.teamId,c.productId,'regulation',p.policyKey)}}refreshHealth(s);break}
  case 'create_initiative':{role(actor,'Product Owner');workspaceScope(s,actor,p.teamId,p.productId);const id=uid('initiative');s.initiatives.push({id,teamId:p.teamId,productId:p.productId,name:required(p.name,'Initiative'),description:p.description||'',taskIds:[]});result={id};break}
  case 'task_initiative':{role(actor,'Product Owner');const task=get(s.tasks,p.taskId,'Task');teamAccess(actor,task.teamId);if(p.initiativeId){const initiative=get(s.initiatives,p.initiativeId,'Initiative');must(initiative.teamId===task.teamId&&initiative.productId===task.productId,'Инициатива не относится к доске и команде задачи.');}task.initiativeId=p.initiativeId||undefined;break}
  default:throw new DomainError('Неизвестное действие.');}

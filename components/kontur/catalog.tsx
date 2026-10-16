@@ -6,7 +6,7 @@ import {Button, Card, PageHead, Pill, Status, Detail, Tabs, TabsList, TabsTrigge
 import {createFlowNode, currentRelease, defaultConfig, getFlowNodes, type Asset, type Config, type FlowNodeType} from '@/lib/domain';
 
 const catalogTypes = ['Flow', 'Skills', 'Subagents', 'AI Agent Blueprints', 'Judge Profiles'];
-const catalogTypeLabels: Record<string, string> = {Flow: 'Сценарии', Skills: 'Скиллы', Subagents: 'Сабагенты', 'AI Agent Blueprints': 'Шаблоны ИИ-агентов', 'Judge Profiles': 'Профили проверки'};
+const catalogTypeLabels: Record<string, string> = {Flow: 'Сценарии', Skills: 'Скиллы', Subagents: 'Сабагенты', 'AI Agent Blueprints': 'Шаблоны ИИ-агентов', 'Judge Profiles': 'Судьи'};
 const templateInfo: Record<string, {name: string; description: string; output: string; icon: typeof Workflow}> = {
   'dependency-update@1': {name: 'Обновление зависимостей', description: 'Анализ задачи, обновление зависимостей и проверка результата.', output: 'Изменение зависимостей и результаты проверок', icon: GitBranch},
   'sdd-statements@1': {name: 'Выписки и справки', description: 'Подготовка спецификации, согласование, реализация и проверки.', output: 'Согласованная спецификация и реализация', icon: Layers},
@@ -35,7 +35,7 @@ export default function Catalog({initialType}: {initialType?: string} = {}) {
   const Icon = icons[type] || Workflow;
   if (flow && type === 'Flow') return <CatalogFlowDetail key={`${flowId}-${team.id}-${product.id}`} asset={flow} suggestedTag={decodeTag(ref)} onBack={() => setFlowId('')}/>;
   return <div className="page flow-catalog-page">
-    <PageHead title="Каталог" description="Сценарии, скиллы и сабагенты для задач продукта" actions={type === 'Judge Profiles' ? <Button variant="outline" onClick={() => go('benchmark', '', 'judges')}>Настроить профили проверки</Button> : undefined}/>
+    <PageHead title="Каталог" description="Сценарии, скиллы и сабагенты для задач продукта" actions={type === 'Judge Profiles' ? <Button variant="outline" onClick={() => go('benchmark', '', 'judges')}>Настроить судей</Button> : undefined}/>
     <Tabs className="section-tabs" value={type} onValueChange={value => go('catalog', value === 'Flow' ? ref : '', value)}><TabsList>{catalogTypes.map(item => <TabsTrigger key={item} value={item}>{catalogTypeLabels[item]}</TabsTrigger>)}</TabsList>
       <TabsContent value="Flow">
         {!configuredRuntime && <Card><Blank title="Сначала выберите оркестратор" text="Настройте Sandbox, чтобы каталог показал совместимые сценарии." action={<Button onClick={() => go('environment', '', 'sandbox')}>Настроить Sandbox</Button>}/></Card>}

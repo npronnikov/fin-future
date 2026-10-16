@@ -1,6 +1,6 @@
 {
   "name": "kontur-react-node",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,7 +11,10 @@
     "start": "node --env-file-if-exists=.env server/index.mjs",
     "build": "npm run typecheck && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/runtime.test.mjs tests/domain.test.mjs tests/api.test.mjs tests/setup.test.mjs tests/watch.test.mjs && node tests/render.cjs"
+    "test": "node --test tests/runtime.test.mjs tests/domain.test.mjs tests/api.test.mjs tests/setup.test.mjs tests/journey-v16.test.mjs",
+    "build:offline": "node scripts/build-offline.cjs",
+    "test:dev": "node --test tests/watch.test.mjs",
+    "test:render": "node tests/render.cjs"
   },
   "dependencies": {
     "react": "19.2.6",

@@ -13,13 +13,13 @@ const columns = [
   {id: 'done', name: 'Готово'},
 ];
 const mockSets = [
-  {value: 'mixed', label: 'Смешанный backlog · 12 примеров'},
-  {value: 'dep-update', label: 'Обновление зависимостей · 4 примера'},
+  {value: 'mixed', label: 'Смешанный backlog · 16 примеров'},
+  {value: 'dep-update', label: 'Обновление зависимостей · 8 примеров'},
   {value: 'statement-doc', label: 'Выписки и справки · 4 примера'},
 ];
 const initials = (name: string) => name.split(/\s+/).slice(0, 2).map(word => word[0]).join('');
 
-export default function Tasks() {
+export default function Tasks({showSetupHints=true}:{showSetupHints?:boolean}) {
   const {state, team, product, ref, tab, go, act, can, busy} = useKontur();
   const boards = state.boards.filter(board => board.teamId === team.id && board.productId === product.id);
   const tasks = state.tasks.filter(task => task.teamId === team.id && task.productId === product.id);
@@ -31,7 +31,7 @@ export default function Tasks() {
   const [boardOpen, setBoardOpen] = useState(false);
   const [boardForm, setBoardForm] = useState({name: '', description: ''});
   const [mockOpen, setMockOpen] = useState(false);
-  const [mockForm, setMockForm] = useState({boardId: '', template: 'mixed', count: 12, assigneeId: 'unassigned'});
+  const [mockForm, setMockForm] = useState({boardId: '', template: 'dep-update', count: 8, assigneeId: 'unassigned'});
   const [selected, setSelected] = useState('');
   const [taskForm, setTaskForm] = useState({status: 'backlog', assigneeId: 'unassigned', tag: ''});
   const [dropColumn, setDropColumn] = useState('');
@@ -60,11 +60,11 @@ export default function Tasks() {
     setTaskForm({status: value.status, assigneeId: value.assigneeId || 'unassigned', tag: value.tag});
   }
   function openMocks() {
-    setMockForm({boardId: currentBoard?.id || boards[0]?.id || '', template: 'mixed', count: 12, assigneeId: 'unassigned'});
+    setMockForm({boardId: currentBoard?.id || boards[0]?.id || '', template: 'dep-update', count: 8, assigneeId: 'unassigned'});
     setMockOpen(true);
   }
-  useEffect(() => {if (tab === 'new' && ready && editable) setBoardOpen(true); if (tab === 'add' && ready && editable && boards.length) {setMockForm({boardId: boards.some(board => board.id === ref) ? ref : currentBoard?.id || boards[0].id, template: 'mixed', count: 12, assigneeId: 'unassigned'});setMockOpen(true);}}, [tab, ref]);
-  function addFlow(tag = newTag) {go('catalog', encodeURIComponent(tag), 'Flow');}
+  useEffect(() => {if (tab === 'new' && ready && editable) setBoardOpen(true); if (tab === 'add' && ready && editable && boards.length) {setMockForm({boardId: boards.some(board => board.id === ref) ? ref : currentBoard?.id || boards[0].id, template: 'dep-update', count: 8, assigneeId: 'unassigned'});setMockOpen(true);}}, [tab, ref]);
+  function addFlow(_tag = newTag) {go('automation');}
   async function start() {
     if (!task || !cap) return;
     const result = await act('start_run', {taskId: task.id, capabilityId: cap.id, mode: 'supervised'});
@@ -82,8 +82,9 @@ export default function Tasks() {
       <Button variant="outline" disabled={busy || !editable || !ready} onClick={() => {setBoardForm({name: '', description: ''}); setBoardOpen(true);}}><FolderKanban size={16}/>Новая доска</Button>
       <Button disabled={busy || !editable || !boards.length || !ready} onClick={openMocks}><Plus size={16}/>Добавить моковые задачи</Button>
     </>}/>
-    {!ready && <Notice tone="blue" title="Сначала подготовьте Automation" action={<Button variant="outline" onClick={() => go('environment', '', 'resources')}>Настроить среду</Button>}>После подготовки среды создайте доску, добавьте задачи и настройте Flow.</Notice>}
+    {!ready && <Notice tone="blue" title="Сначала подготовьте Automation" action={<Button variant="outline" onClick={() => go('environment', '', 'resources')}>Настроить среду</Button>}>После подготовки среды создайте доску и добавьте задачи. Затем вернитесь к плану: следующий этап — регуляторный пакет.</Notice>}
     {ready && boards.length === 0 && <Card><Blank title="Создайте первую доску" text="Добавьте на доску моковые задачи, а затем выберите Flow для нужного тега." action={<Button disabled={!editable || busy} onClick={() => setBoardOpen(true)}><Plus size={16}/>Новая доска</Button>}/></Card>}
+    {showSetupHints&&tasks.length>0&&<Notice tone="blue" title="Следующий этап — пакет политик" action={<Button variant="outline" onClick={()=>go('home')}>К плану</Button>}>Регулятор создаёт и подтверждает политики. Workflow создаётся в разделе «Автоматизация».</Notice>}
     {boards.length > 0 && <>
       <div className="board-toolbar">
         <div className="row wrap"><Filter size={16}/>
@@ -91,7 +92,7 @@ export default function Tasks() {
           <Pick label="Фильтр по assignee" value={assigneeFilter} onChange={setAssigneeFilter} options={[{value: 'all', label: 'Все исполнители'}, ...assigneeOptions]}/>
           <Pick label="Фильтр по тегу" value={tagFilter} onChange={setTagFilter} options={[{value: 'all', label: 'Все теги'}, ...tags.map(tag => ({value: `tag:${tag}`, label: `#${tag}`})), {value: 'untagged', label: 'Без тега'}]}/>
         </div>
-        <div className="row wrap"><span className="task-sub">{filtered.length} задач</span><Button variant="outline" disabled={!newTag || !can('Product Engineer') || busy || !ready} onClick={() => addFlow()}><Workflow size={15}/>Добавить сценарий</Button></div>
+        <div className="row wrap"><span className="task-sub">{filtered.length} задач</span></div>
       </div>
       {currentBoard && <div className="board-project-heading"><div><h2>{currentBoard.name}</h2>{currentBoard.description && <p className="subtext">{currentBoard.description}</p>}</div><Pill>{boardTasks.length} задач</Pill></div>}
       {selectedTagCap && <div className="board-tag-summary"><span><Tag size={14}/>#{selectedTag} · {state.runs.filter(item => item.teamId === team.id && item.productId === product.id && !item.uat && snapshotTag(item.snapshot) === selectedTag).length} запусков</span><TextLink onClick={() => go('capability', selectedTagCap.id, 'history')}>Flow и статистика по тегу</TextLink></div>}
@@ -126,8 +127,8 @@ export default function Tasks() {
 
     <Modal open={mockOpen} onClose={() => setMockOpen(false)} title="Добавить моковые задачи" description="Демонстрационные задачи сохраняются на выбранной доске команды."><form className="stack" onSubmit={async event => {event.preventDefault(); const result = await act('add_mock_tasks', {...mockForm, assigneeId: mockForm.assigneeId === 'unassigned' ? '' : mockForm.assigneeId}); if (result?.ok) {setMockOpen(false); setBoardId(mockForm.boardId); setTagFilter('all'); setAssigneeFilter('all'); go('tasks', mockForm.boardId);}}}>
       <Field label="Доска"><Pick label="Доска для моковых задач" value={mockForm.boardId} onChange={value => setMockForm({...mockForm, boardId: value})} options={boards.map(board => ({value: board.id, label: board.name}))}/></Field>
-      <Field label="Набор задач"><Pick label="Набор моковых задач" value={mockForm.template} onChange={value => setMockForm({...mockForm, template: value, count: value === 'mixed' ? 12 : 4})} options={mockSets}/></Field>
-      <div className="form-grid"><Field label="Количество"><Input type="number" min={1} max={12} value={mockForm.count} onChange={event => setMockForm({...mockForm, count: Number(event.target.value)})}/></Field><Field label="Исполнитель"><Pick label="Исполнитель моковых задач" value={mockForm.assigneeId} onChange={value => setMockForm({...mockForm, assigneeId: value})} options={assigneeOptions}/></Field></div>
+      <Field label="Набор задач"><Pick label="Набор моковых задач" value={mockForm.template} onChange={value => setMockForm({...mockForm, template: value, count: value === 'mixed' ? 16 : value==='dep-update'?8:4})} options={mockSets}/></Field>
+      <div className="form-grid"><Field label="Количество"><Input type="number" min={1} max={24} value={mockForm.count} onChange={event => setMockForm({...mockForm, count: Number(event.target.value)})}/></Field><Field label="Исполнитель"><Pick label="Исполнитель моковых задач" value={mockForm.assigneeId} onChange={value => setMockForm({...mockForm, assigneeId: value})} options={assigneeOptions}/></Field></div>
       <div className="actions"><Button type="button" variant="outline" onClick={() => setMockOpen(false)}>Отмена</Button><Button type="submit" disabled={busy || !editable || !mockForm.boardId}>Добавить задачи</Button></div>
     </form></Modal>
 
