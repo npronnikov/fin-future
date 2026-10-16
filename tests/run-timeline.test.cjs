@@ -41,7 +41,7 @@ test('runtime evidence is disclosed inside the execution timeline', () => {
   };
   const html = renderToStaticMarkup(React.createElement(KonturContext.Provider, {value: context}, React.createElement(RunView)));
 
-  for (const text of ['Execution timeline', 'Knowledge MCP', 'Запрос к графу', 'MATCH (owner)', '&quot;teamId&quot;: &quot;growth&quot;', 'Регуляторные требования', 'SEC-DEP-014@3', 'Какую допустимую версию использовать?']) {
+  for (const text of ['Execution timeline', 'Knowledge MCP', 'Запрос к графу', 'Product / Team без сегмента', 'MATCH (owner)', '&quot;teamId&quot;: &quot;growth&quot;', 'Регуляторный запрос', 'Information Security', 'Reliability', 'Risk', 'SEC-DEP-014@3', 'REL-COMPAT-004@5', 'RISK-SCOPE-003@2', 'Какую допустимую версию использовать?']) {
     assert.ok(html.includes(text), `missing ${text}`);
   }
   assert.ok(html.includes('<details class="timeline-disclosure knowledge-delivery"'), 'Knowledge delivery is inline');

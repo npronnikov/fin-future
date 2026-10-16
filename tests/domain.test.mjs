@@ -15,13 +15,24 @@ test('ready graph queries keep product and team knowledge inside the selected sc
  const team=q.runKnowledgeGraphQuery(s,'team','accreditive','growth');
  const relations=q.runKnowledgeGraphQuery(s,'relations','accreditive','growth');
  const implementation=q.runKnowledgeGraphQuery(s,'implementation','accreditive','growth');
+ const regulatory=q.runKnowledgeGraphQuery(s,'regulatory','accreditive','growth','corporate.backend');
  assert.ok(product.length>0&&product.every(row=>row.type==='knowledge'&&row.layer==='Product'));
  assert.deepEqual(team.map(row=>row.sourceId),['tk-trade-lc']);
+ assert.ok(s.knowledge.every(item=>!Object.hasOwn(item,'segment')),'Product and Team Knowledge must not carry an IT segment.');
+ assert.ok([...product,...team].every(row=>!Object.hasOwn(row,'segment')));
  assert.ok(relations.some(row=>row.type==='concept')&&relations.some(row=>row.type==='knowledge'));
  assert.ok(implementation.some(row=>row.sourceId==='tk-trade-lc'));
  assert.ok(!implementation.some(row=>row.sourceId==='tk-retail-lc'));
+ assert.deepEqual([...new Set(regulatory.map(row=>row.direction))].sort(),['Information Security','Reliability','Risk']);
+ assert.ok(regulatory.every(row=>row.segment==='corporate.backend'));
+ assert.ok(regulatory.some(row=>row.label==='REL-COMPAT-004@5'));
+ assert.ok(regulatory.some(row=>row.label==='RISK-SCOPE-003@2'));
+ assert.equal(Object.hasOwn(q.knowledgeGraphQueryParams('accreditive','growth'),'segment'),false);
+ assert.equal(q.regulatoryGraphQueryParams('corporate.backend').segment,'corporate.backend');
  assert.match(q.KNOWLEDGE_GRAPH_QUERIES.implementation.cypher,/\$teamId/);
- assert.match(s.runs.find(run=>run.id==='RUN-912').execution.knowledgeDelivery.graphQuery,/MATCH \(owner\)/);
+ const receipt=s.runs.find(run=>run.id==='RUN-912').execution.knowledgeDelivery;
+ assert.match(receipt.graphQuery,/MATCH \(owner\)/);assert.equal(Object.hasOwn(receipt.queryParams,'segment'),false);
+ assert.deepEqual([...new Set(receipt.policies.map(item=>item.direction))].sort(),['Information Security','Reliability','Risk']);
 });
 
 function migration(){let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.policies=cfg.policies.map(x=>x==='IS-corporate-backend@7'?'IS-corporate-backend@8':x);s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});return s}
@@ -829,7 +840,7 @@ test('Context Bundle follows team/system segmentation and reports incomplete or 
  const s=d.createSeed();
  const retail=c.compileContextBundle(s,{productId:'accreditive',teamId:'retail-lc',system:'LC Retail Service',productTopic:'deals',workType:'implementation',stage:'plan'});
  assert.equal(retail.segment,'retail.backend');assert.deepEqual(retail.teamKnowledge.map(item=>item.id),['tk-retail-lc']);
- assert.ok(retail.concepts.some(item=>item.id==='deal_realty'));assert.ok(retail.concepts.every(item=>item.variant!=='corporate'));
+ assert.ok(retail.concepts.some(item=>item.id==='deal_realty'));assert.ok(retail.concepts.some(item=>item.id==='deal_supply'),'Product concepts must not be filtered by an IT segment.');
  const incomplete=c.compileContextBundle(s,{productId:'accreditive',teamId:'growth',system:'Unknown system',productTopic:'foundation',workType:'implementation',stage:'plan'});
  assert.equal(incomplete.receiptStatus,'incomplete');assert.ok(incomplete.unknown.some(item=>item.includes('Resource Bindings')));
  s.policies.find(item=>d.policyKey(item)==='IS-corporate-backend@8').status='Retired';

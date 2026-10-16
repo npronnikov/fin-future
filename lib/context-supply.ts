@@ -75,8 +75,7 @@ export function compileContextDeliveryTrace(state:State,taskId:string):ContextDe
  const plannerResult:ContextPlannerResult={simulation:true,topics,layers:{product:!!topics.length,team:true},assignments:{product:topics.length?assignments.product:[],team:assignments.team},rationale:[topics.length?`Темы выведены из Task #${task.tag||'без тега'} и названия задачи.`:'Product Knowledge не назначено без уверенно определённой темы.','Team Knowledge назначено узлам Implementation, Checks и Result.','Policy не выбирается Planner и разрешается отдельно по техническому scope.'],unknown:plannerUnknown};
  unknown.push(...plannerUnknown);
  const request={taskId:task.id,taskTitle:task.title,taskTag:task.tag,repository:task.repo,system,segment,workTypes:[...workTypes],flowNodes:flowNodes.map(node=>({id:node.id,name:node.name,type:node.type,revision:node.revision}))};
- const variant=segment.startsWith('corporate')?'corporate':'individual';
- const concepts=state.concepts.filter(item=>item.productId===task.productId&&item.status==='approved'&&topics.includes(item.categoryId)&&(item.variant==='all'||item.variant===variant));
+ const concepts=state.concepts.filter(item=>item.productId===task.productId&&item.status==='approved'&&topics.includes(item.categoryId));
  const conceptIds=new Set(concepts.map(item=>item.id));
  const approved=state.knowledge.filter(item=>item.productId===task.productId&&item.status==='approved');
  const productKnowledge=topics.length?approved.filter(item=>item.layer==='Product'&&(!item.conceptIds?.length||item.conceptIds.some(id=>conceptIds.has(id)))):[];
@@ -134,9 +133,8 @@ export function compileContextBundle(state:State,input:ContextBundleInput,meta:{
  const bindings=team?.bindings.filter(binding=>binding.type==='Repository'&&binding.system===input.system)||[];
  const segments=[...new Set(bindings.map(binding=>binding.segment).filter(Boolean))] as string[];
  const segment=segments.length===1?segments[0]:'';
- const variant=segment.startsWith('corporate')?'corporate':'individual';
  const category=state.conceptCategories.find(item=>item.productId===input.productId&&item.id===input.productTopic);
- const concepts=state.concepts.filter(item=>item.productId===input.productId&&item.status==='approved'&&(input.productTopic==='all'||item.categoryId===input.productTopic)&&(item.variant==='all'||item.variant===variant));
+ const concepts=state.concepts.filter(item=>item.productId===input.productId&&item.status==='approved'&&(input.productTopic==='all'||item.categoryId===input.productTopic));
  const conceptIds=new Set(concepts.map(item=>item.id));
  const approved=state.knowledge.filter(item=>item.productId===input.productId&&item.status==='approved');
  const productKnowledge=approved.filter(item=>item.layer==='Product'&&(input.productTopic==='all'||!item.conceptIds?.length||item.conceptIds.some(id=>conceptIds.has(id))));

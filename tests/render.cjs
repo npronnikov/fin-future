@@ -70,7 +70,7 @@ includes(automation, ['Создать Workflow', 'Открыть DEV', 'Мони
 for (const [tab, expected] of Object.entries({
   ontology: ['Как знание попадает в продукт', 'Дерево и граф'],
   publication: ['Workflow публикации', 'Предложено', 'Проверено', 'Опубликовано'],
-  graph: ['Граф опубликованных знаний', 'Готовые запросы к графу', 'JavaScript-эмуляция Cypher'],
+  graph: ['Граф опубликованных знаний', 'Готовые запросы к графу', 'Регуляторные знания сегмента', 'JavaScript-эмуляция Cypher'],
   delivery: ['Способ 1 · Knowledge MCP', 'Способ 2 · API', 'Implementation', 'Jenkins'],
 })) {
   const html = render('knowledge', 'default', {screen: 'knowledge', tab});

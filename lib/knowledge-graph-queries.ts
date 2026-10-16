@@ -1,6 +1,6 @@
 import type {Item,State} from './domain.ts';
 
-export type KnowledgeGraphQueryId='product'|'team'|'relations'|'implementation';
+export type KnowledgeGraphQueryId='product'|'team'|'relations'|'implementation'|'regulatory';
 
 export interface KnowledgeGraphQueryPreset{
  id:KnowledgeGraphQueryId;
@@ -43,9 +43,19 @@ WHERE owner.id IN [$productId, $teamId]
   AND k.status = 'approved'
 RETURN k`,
  },
+ regulatory:{
+  id:'regulatory',
+  title:'Регуляторные знания сегмента',
+  description:'Только актуальные требования ИБ, надёжности и рисков для технического сегмента.',
+  cypher:`MATCH (s:System {segment: $segment})-[:GOVERNED_BY]->(p:PolicyPackage)
+WHERE p.status = 'Current'
+  AND p.direction IN ['Information Security', 'Reliability', 'Risk']
+UNWIND p.requirements AS requirement
+RETURN p.direction, p.segment, requirement`,
+ },
 };
 
-export const KNOWLEDGE_GRAPH_QUERY_ORDER:KnowledgeGraphQueryId[]=['product','team','relations','implementation'];
+export const KNOWLEDGE_GRAPH_QUERY_ORDER:KnowledgeGraphQueryId[]=['product','team','relations','implementation','regulatory'];
 
 function knowledgeRow(item:Item):Item{
  return {id:`knowledge:${item.id}`,sourceId:item.id,type:'knowledge',label:item.title,detail:item.summary||item.content,layer:item.layer,version:item.version};
@@ -55,7 +65,12 @@ function conceptRow(item:Item):Item{
  return {id:`concept:${item.id}`,sourceId:item.id,type:'concept',label:item.label,detail:item.description,version:item.version};
 }
 
-export function runKnowledgeGraphQuery(state:State,queryId:KnowledgeGraphQueryId,productId:string,teamId:string):Item[]{
+function policyRow(policy:Item,requirement:Item):Item{
+ return {id:`policy:${policy.id}@${policy.version}:${requirement.id}@${requirement.version}`,sourceId:`${policy.id}@${policy.version}`,type:'policy',label:`${requirement.id}@${requirement.version}`,detail:requirement.text,direction:policy.direction,segment:policy.segment,status:policy.status,version:policy.version};
+}
+
+export function runKnowledgeGraphQuery(state:State,queryId:KnowledgeGraphQueryId,productId:string,teamId:string,segment=''):Item[]{
+ if(queryId==='regulatory')return state.policies.filter(item=>item.segment===segment&&item.status==='Current'&&['Information Security','Reliability','Risk'].includes(item.direction)).flatMap(policy=>policy.requirements.map(requirement=>policyRow(policy,requirement)));
  const approved=state.knowledge.filter(item=>item.productId===productId&&item.status==='approved');
  const inScope=approved.filter(item=>item.layer==='Product'||item.teamId===teamId);
  if(queryId==='product')return approved.filter(item=>item.layer==='Product').map(knowledgeRow);
@@ -68,6 +83,10 @@ export function runKnowledgeGraphQuery(state:State,queryId:KnowledgeGraphQueryId
  ];
 }
 
-export function knowledgeGraphQueryParams(productId:string,teamId:string,segment='',stage='Implementation'):Item{
- return {productId,teamId,segment:segment||'unknown',stage};
+export function knowledgeGraphQueryParams(productId:string,teamId:string,stage='Implementation'):Item{
+ return {productId,teamId,stage};
+}
+
+export function regulatoryGraphQueryParams(segment:string,stage='Implementation'):Item{
+ return {segment:segment||'unknown',directions:['Information Security','Reliability','Risk'],stage};
 }
