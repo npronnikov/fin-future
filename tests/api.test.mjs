@@ -36,6 +36,12 @@ async function fixture(t) {
     get base() { return base; },
     get store() { return store; },
     async restart() { await stop(); await start(); },
+    async get(path) {
+      const response = await fetch(`${base}${path}`, {headers: {Cookie: cookie, Accept: 'application/json'}});
+      const setCookie = response.headers.get('set-cookie');
+      if (setCookie) cookie = setCookie.split(';')[0];
+      return {status: response.status, headers: response.headers, body: await response.json()};
+    },
     async request(body) {
       const response = await fetch(`${base}/api/state`, body === undefined ? {
         headers: {Cookie: cookie},
@@ -50,6 +56,34 @@ async function fixture(t) {
     },
   };
 }
+
+test('Evidence Registry exposes regulator-only REST records from persisted Run reports', async t => {
+  const f = await fixture(t);
+  await f.request();
+  const denied = await f.get('/api/evidence');
+  assert.equal(denied.status, 403);
+  assert.match(denied.body.error, /только регуляторам/);
+  await f.request({action: 'select_actor', payload: {actorId: 'regulator'}});
+  const listing = await f.get('/api/evidence?policyPackage=IS-corporate-backend%407&limit=2');
+  assert.equal(listing.status, 200);
+  assert.equal(listing.body.service, 'Evidence Registry');
+  assert.equal(listing.body.storage, 'SQLite');
+  assert.ok(listing.body.total > 2);
+  assert.equal(listing.body.records.length, 2);
+  assert.ok(listing.body.records.every(record => record.policyPackage === 'IS-corporate-backend@7'));
+  assert.ok(listing.body.records.every(record => record.taskId && record.runId && record.verificationSkill));
+  assert.ok(listing.body.records[0].createdAt >= listing.body.records[1].createdAt);
+  const record = listing.body.records[0];
+  const detail = await f.get(`/api/evidence/${encodeURIComponent(record.id)}`);
+  assert.equal(detail.status, 200);
+  assert.deepEqual(detail.body.record, record);
+  assert.equal((await f.get('/api/evidence?limit=0')).status, 400);
+  await f.request({action: 'select_actor', payload: {actorId: 'regulator-reviewer'}});
+  const riskProfile = await f.get('/api/evidence?limit=500');
+  assert.equal(riskProfile.status, 200);
+  assert.ok(riskProfile.body.records.length > 0);
+  assert.ok(riskProfile.body.records.every(item => item.policyDirection === 'Risk'));
+});
 
 test('Node API creates the seed and a persistent local browser session', async t => {
   const f = await fixture(t);

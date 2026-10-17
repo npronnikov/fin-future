@@ -85,6 +85,22 @@ function domainWorkspace() {
   };
 }
 
+function addWorkspacePolicies(workspace) {
+  for (const [actorId, direction, prefix] of [
+    ['regulator', 'Information Security', 'IS'],
+    ['regulator-reliability', 'Reliability', 'REL'],
+    ['regulator-reviewer', 'Risk', 'RISK'],
+  ]) {
+    const saved = workspace.act(actorId, 'save_policy', {
+      id: `${prefix}-NEW-APP`, direction, segment: 'retail.frontend',
+      requirements: [{id: `${prefix}-NEW-APP-R001`, version: 1, text: `Правило направления ${direction}.`}],
+      applicability: [{requirement: `${prefix}-NEW-APP-R001@1`, workType: 'implementation'}],
+      evidence: [], skills: [], subagents: [],
+    });
+    workspace.act(actorId, 'policy_status', {policyKey: saved.id, status: 'Current'});
+  }
+}
+
 test('empty scenario has no user workspace data, team membership or inherited history', () => {
   const empty = createEmptyState();
   for (const key of workspaceCollections) assert.deepEqual(empty[key], [], key);
@@ -93,7 +109,8 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   assert.equal(empty.people.length, 6);
   assert.ok(empty.people.every(person => person.teams.length === 0));
   assert.ok(empty.people.find(person => person.id === 'po').assignments.includes('team.admin'));
-  assert.ok(empty.policies.length > 0, 'Platform policies remain available for setup.');
+  assert.deepEqual(empty.policies, [], 'Policy packages must be created explicitly in a from-scratch workspace.');
+  assert.equal(empty.workspaceKind, 'empty');
   assert.ok(empty.assets.some(asset => asset.type === 'Skills'));
   assert.ok(empty.assets.some(asset => asset.type === 'Flow'));
   empty.people[0].teams.push('not-shared');
@@ -101,6 +118,12 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   const second = createEmptyState();
   assert.deepEqual(second.people[0].teams, []);
   assert.notEqual(second.assets[0].name, 'not-shared');
+  const legacyEmpty = structuredClone(second);
+  delete legacyEmpty.workspaceKind;
+  legacyEmpty.policies = structuredClone(createSeed().policies);
+  const cleaned = migrateState(legacyEmpty).state;
+  assert.equal(cleaned.workspaceKind, 'empty');
+  assert.deepEqual(cleaned.policies, [], 'Migration must not restore demo policy packages in an empty workspace.');
   assert.equal(createSeed().tasks.length, 16);
 });
 
@@ -135,6 +158,7 @@ test('the regulatory segment selected during product creation seeds new reposito
 
 test('team policy follows its repository segment and demo peer approval needs no role switch', () => {
   const workspace = domainWorkspace();
+  assert.deepEqual(workspace.state.policies, []);
   workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});
   workspace.act('platform', 'save_binding', {type: 'Repository', name: 'bank/lc-trade-api', permissions: ['read']});
   const saved = workspace.act('regulator', 'save_policy', {
@@ -254,6 +278,7 @@ test('setup preserves role, required resources, topology and repository scope ga
   assert.throws(() => w.act('platform', 'provision', {topologyConfirmed: false}), /topology/);
   assert.equal(w.state.teams[0].environment.status, 'configured');
   w.act('platform', 'provision', {topologyConfirmed: true});
+  addWorkspacePolicies(w);
   assert.ok(w.state.teams[0].bindings.every(binding => binding.type !== 'Model Gateway'));
   assert.throws(() => w.act('platform', 'save_binding', {type: 'Model Gateway', name: 'Model Gateway'}), /Resource Binding/);
   const projectId = w.act('engineer', 'create_project', {name: 'Проект с ограниченным scope'}).id;
@@ -300,7 +325,8 @@ for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor']) {
     assert.equal(current.scenarioChosen, true);
     assert.equal(current.actor.id, 'po');
     assert.equal(current.state.products.length, 0);
-    productId = (await act('create_product', {name: `Продукт ${runtime}`, description: 'Setup с нуля'})).id;
+    productId = (await act('create_product', {name: `Продукт ${runtime}`, description: 'Setup с нуля', segment: 'retail.data'})).id;
+    assert.deepEqual(current.state.policies, []);
     teamId = (await act('create_team', {name: 'Команда с нуля', scope: 'Onboarding, Activation'})).id;
     let team = current.state.teams.find(value => value.id === teamId);
     assert.ok(team.spaceId);
@@ -332,6 +358,20 @@ for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor']) {
     const {taskIds} = await act('add_mock_tasks', {projectId, template: 'mixed', count: 12, assigneeId: 'engineer'});
     assert.equal(current.state.tasks.length, 12);
     assert.ok(current.state.tasks.every(task => task.boardId === projectId && task.assigneeId === 'engineer'));
+    await act('select_actor', {actorId: 'regulator'});
+    const saved = await act('save_policy', {
+      id: `IS-${runtime.replaceAll(' ', '-').toUpperCase()}`, direction: 'Information Security', segment: 'corporate.backend',
+      requirements: [{id: 'IS-SETUP-R001', version: 1, text: 'Правило Information Security для нового приложения.'}],
+      applicability: [{requirement: 'IS-SETUP-R001@1', workType: 'implementation'}],
+      evidence: [], skills: [], subagents: [],
+    });
+    const policy = current.state.policies.find(item => `${item.id}@${item.version}` === saved.id);
+    assert.equal(policy.segment, 'retail.data');
+    await act('policy_status', {policyKey: saved.id, status: 'Current'});
+    await act('select_actor', {actorId: 'engineer'});
+    assert.equal(current.state.policies.length, 1);
+    assert.equal(current.state.policies[0].direction, 'Information Security');
+    assert.ok(current.state.policies.every(policy => policy.segment === 'retail.data'));
     const instructions = 'Обновить только зависимость. Не менять retry logic. Выполнить compatibility suite.';
     const capabilityId = (await act('create_capability', {
       tag: 'dep-update', template: 'dependency-update@1', name: 'Dependency Update', config: {instructions},
@@ -340,6 +380,7 @@ for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor']) {
     assert.equal(capability.tag, 'dep-update');
     assert.equal(Object.hasOwn(capability, 'classId'), false);
     assert.equal(capability.draft.runtime, runtime);
+    assert.deepEqual(capability.draft.policies, [saved.id]);
     assert.equal(capability.draft.gateAssignee, 'engineer');
     assert.equal(capability.draft.instructions, instructions);
     const workflow = copy(capability.draft);

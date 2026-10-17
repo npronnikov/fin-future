@@ -2,6 +2,7 @@ import {createServer} from 'node:http';
 import {readFile, stat} from 'node:fs/promises';
 import {extname, resolve, sep} from 'node:path';
 import {handleApi} from './api.mjs';
+import {handleEvidenceApi} from './evidence-api.mjs';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -23,6 +24,7 @@ export function createApp({store, clientDir, middleware}) {
     try {
       const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
       if (url.pathname === '/api/state') return await handleApi(request, response, store);
+      if (url.pathname === '/api/evidence' || url.pathname.startsWith('/api/evidence/')) return handleEvidenceApi(request, response, store, url);
       if (url.pathname.startsWith('/api/')) {
         response.writeHead(404, {'Content-Type': 'application/json; charset=utf-8'});
         return response.end(JSON.stringify({error: 'API route не найден.'}));

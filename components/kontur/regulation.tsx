@@ -1,12 +1,13 @@
 'use client';
 import {DEFAULT_SECURITY_RULE} from '@/lib/demo-v16';
 import ContextSegmentation from './context-segmentation';
+import EvidenceRegistry from './evidence-registry';
 import {useEffect, useState} from 'react';
 import {Check, ChevronDown, FileCheck, FileText, Layers, Lock, Plus, Search, Trash2, Users} from 'lucide-react';
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle} from '@/components/ui/alert-dialog';
 import {useKontur} from './context';
 import {Button, Input, Textarea, Card, PageHead, Pill, Status, Pick, Modal, Field, Tabs, TabsList, TabsTrigger, TabsContent, KV, Notice, TextLink, Blank} from './ui';
-import {copy, normalizePolicyStatus, POLICY_STATUSES, policyKey, type Asset, type Item, type Policy} from '@/lib/domain';
+import {copy, normalizePolicyStatus, POLICY_STATUSES, POLICY_STAGE_IDS, policyKey, policyStageAssignments, type Asset, type Item, type Policy, type PolicyStageId} from '@/lib/domain';
 
 interface RuleDraft {
   key: string;
@@ -24,8 +25,7 @@ interface PackageDraft {
   effective: string;
   changelog: string;
   rules: RuleDraft[];
-  skills: string[];
-  subagents: string[];
+  stages: Record<PolicyStageId, {skills: string[]; subagents: string[]}>;
   sharedApplicability: Item[];
   sharedEvidence: Item[];
 }
@@ -35,6 +35,11 @@ const assetKey = (asset: Asset) => `${asset.id}@${asset.version}`;
 const directionLabels: Record<string, string> = {'Information Security': 'Информационная безопасность', Reliability: 'Надёжность', Risk: 'Риск'};
 const assetTypeLabels: Record<string, string> = {Skills: 'Скиллы', Subagents: 'Сабагенты'};
 const statusLabels: Record<string, string> = {Draft: 'Черновик', Current: 'Действует', Deprecating: 'Выводится из эксплуатации', Retired: 'Выведена из эксплуатации', Withdrawn: 'Выведена из эксплуатации', Revoked: 'Выведена из эксплуатации', Superseded: 'Выведена из эксплуатации'};
+const policyStageMeta: Record<PolicyStageId, {label: string; description: string}> = {
+  requirements: {label: 'Требования', description: 'Разобрать задачу, применить текст политики и сформировать обязательные требования.'},
+  implementation: {label: 'Реализация', description: 'Применять политику во время изменений и удерживать реализацию в разрешённых границах.'},
+  checks: {label: 'Проверки', description: 'Проверить соблюдение политики и собрать подтверждающие артефакты.'},
+};
 const workTypes = [
   {value: '__all', label: 'Любая работа'},
   {value: 'dependency_change', label: 'Изменение зависимостей'},
@@ -74,11 +79,11 @@ function PackageAssets({type, keys, assets, onOpen}: {type: 'Skills' | 'Subagent
 }
 
 export default function Regulation() {
-  const {state, actor, team, product, go, ref, act, can, busy} = useKontur();
+  const {state, actor, team, product, go, ref, tab: regTab, act, can, busy} = useKontur();
   const referenced = state.policies.find(policy => policyKey(policy) === ref);
   const workspaceSegment = team.bindings.find(binding => binding.type === 'Repository')?.segment || product.segment || 'retail.backend';
   const [segment, setSegment] = useState(referenced?.segment || workspaceSegment);
-  const allowedDirections=actor.role==='Regulator'?(actor.directions||[]):['Information Security','Reliability','Risk'];
+  const allowedDirections=actor.role==='Regulator'?(actor.directions||[]).slice(0,1):['Information Security','Reliability','Risk'];
   const [direction, setDirection] = useState(referenced?.direction || allowedDirections[0] || 'Information Security');
   const [selected, setSelected] = useState(ref || 'IS-corporate-backend@7');
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -86,9 +91,10 @@ export default function Regulation() {
   const [statusForm, setStatusForm] = useState<Item | null>(null);
   const [editor, setEditor] = useState<PackageDraft | null>(null);
   const [editorTab, setEditorTab] = useState('rules');
+  const [visitedStages, setVisitedStages] = useState<PolicyStageId[]>([]);
   const [error, setError] = useState('');
   const [critical, setCritical] = useState(false);
-  useEffect(() => {if (referenced&&allowedDirections.includes(referenced.direction)) {setSegment(referenced.segment); setDirection(referenced.direction); setSelected(policyKey(referenced));}else if(!allowedDirections.includes(direction)&&allowedDirections[0])setDirection(allowedDirections[0]);}, [ref,actor.id]);
+  useEffect(() => {if (referenced&&allowedDirections.includes(referenced.direction)) {setSegment(referenced.segment); setDirection(referenced.direction); setSelected(policyKey(referenced));}else {setSegment(workspaceSegment);if(!allowedDirections.includes(direction)&&allowedDirections[0])setDirection(allowedDirections[0]);}}, [ref,actor.id,team.id,product.id,workspaceSegment]);
   const policies = state.policies.filter(policy => policy.segment === segment && policy.direction === direction);
   const policy = policies.find(policy => policyKey(policy) === selected) || policies[0];
   const editable = can('Regulator') && actor.directions?.includes(direction);
@@ -101,14 +107,15 @@ export default function Regulation() {
 
   function edit(source?: Policy) {
     const references = new Set((source?.requirements || []).map(requirement => `${requirement.id}@${requirement.version}`));
-    setError(''); setEditorTab('rules');
+    setError(''); setEditorTab('rules'); setVisitedStages([]);
+    const assignments = policyStageAssignments(source || {skills: [], subagents: []});
     setEditor({
-      id: source?.id || `IS-DEPENDENCY-${Date.now().toString(36).toUpperCase()}`, existing: !!source, direction, segment, effective: new Date().toISOString().slice(0, 10), changelog: '',
+      id: source?.id || `IS-DEPENDENCY-${Date.now().toString(36).toUpperCase()}`, existing: !!source, direction, segment: source?.segment || workspaceSegment, effective: new Date().toISOString().slice(0, 10), changelog: '',
       rules: source?.requirements.length ? source.requirements.map(requirement => {
         const key = `${requirement.id}@${requirement.version}`;
         return {key, original: copy(requirement), text: requirement.text || '', references: requirement.references || '', applicability: copy(source.applicability.filter(rule => rule.requirement === key)), evidence: copy(source.evidence.filter(rule => rule.requirement === key))};
       }) : [newRule()],
-      skills: [...(source?.skills || [])], subagents: [...(source?.subagents || [])],
+      stages: Object.fromEntries(assignments.map(item => [item.stage, {skills: [...item.skills], subagents: [...item.subagents]}])) as PackageDraft['stages'],
       sharedApplicability: copy((source?.applicability || []).filter(rule => !references.has(rule.requirement))),
       sharedEvidence: copy((source?.evidence || []).filter(rule => !references.has(rule.requirement))),
     });
@@ -121,6 +128,10 @@ export default function Regulation() {
     if (!editor) return;
     setError('');
     if (!editor.rules.length || editor.rules.some(rule => !rule.text.trim())) {setError('Заполните текст каждого правила или удалите пустую карточку.'); setEditorTab('rules'); return;}
+    for (const stage of POLICY_STAGE_IDS) {
+      if (!visitedStages.includes(stage)) {setError(`Пройдите этап «${policyStageMeta[stage].label}» и настройте его применение.`); setEditorTab(stage); setVisitedStages(current => current.includes(stage) ? current : [...current, stage]); return;}
+      if (!editor.stages[stage].skills.length) {setError(`Этап «${policyStageMeta[stage].label}»: добавьте хотя бы один скилл.`); setEditorTab(stage); return;}
+    }
     try {
       const ids = new Set(editor.rules.map(rule => rule.original?.id).filter(Boolean));
       let sequence = 0;
@@ -135,7 +146,8 @@ export default function Regulation() {
         applicability.push(...rule.applicability.map(item => ({...item, requirement: requirementKey})));
         evidence.push(...rule.evidence.map(item => ({...item, requirement: requirementKey})));
       }
-      const result = await act('save_policy', {id: editor.id, direction: editor.direction, segment: editor.segment, effective: editor.effective, changelog: editor.changelog, requirements, applicability, evidence, skills: editor.skills, subagents: editor.subagents});
+      const stages = POLICY_STAGE_IDS.map(stage => ({stage, skills: editor.stages[stage].skills, subagents: editor.stages[stage].subagents}));
+      const result = await act('save_policy', {id: editor.id, direction: editor.direction, segment: editor.segment, effective: editor.effective, changelog: editor.changelog, requirements, applicability, evidence, stages});
       if (result?.ok) {setSelected(result.id); setEditor(null);}
     } catch (caught) {setError(caught instanceof Error ? caught.message : 'Не удалось сохранить пакет политик.');}
   }
@@ -148,23 +160,23 @@ export default function Regulation() {
   const statusPolicy = state.policies.find(item=>policyKey(item)===statusForm?.policyKey);
   const peerReviewer = state.people.find(person=>person.role==='Regulator'&&person.id!==statusPolicy?.createdBy&&person.directions?.includes(statusPolicy?.direction||direction));
   const simulatedPeerApproval = statusPolicy?.createdBy===actor.id&&!!peerReviewer;
-  const {tab:regTab} = useKontur();
+  if(regTab==='evidence')return <EvidenceRegistry/>;
   if(regTab==='segmentation')return <div className="page"><PageHead title="Регуляторы · сегментация систем" actions={<Button variant="outline" onClick={()=>go('regulation')}>Пакеты политик</Button>}/><ContextSegmentation/></div>;
-  return <div className="page policy-page"><PageHead title="Регуляторы" description={actor.role==='Regulator'?`${actor.name} · персональный контур «${directionLabels[direction]}»`:'Все политики безопасности, рисков и надёжности · только чтение'} actions={<>{(actor.role!=='Regulator'||actor.directions?.includes('Information Security'))&&<Button variant="outline" onClick={()=>go('regulation','','segmentation')}>Сегментация систем</Button>}<Button disabled={!editable} onClick={() => edit()}><Plus size={16}/>Новый пакет политик</Button></>}/>
+  return <div className="page policy-page"><PageHead title="Регуляторы" description={actor.role==='Regulator'?`${actor.name} · персональный контур «${directionLabels[direction]}»`:'Все политики безопасности, рисков и надёжности · только чтение'} actions={<>{actor.role==='Regulator'&&<Button variant="outline" onClick={()=>go('regulation','','evidence')}><FileCheck size={15}/>Evidence Registry</Button>}{(actor.role!=='Regulator'||allowedDirections.includes('Information Security'))&&<Button variant="outline" onClick={()=>go('regulation','','segmentation')}>Сегментация систем</Button>}<Button disabled={!editable} onClick={() => edit()}><Plus size={16}/>Новый пакет политик</Button></>}/>
     <div className="row wrap mb-6"><Pick label="Бизнес-направление" value={segment.split('.')[0]} onChange={value => setSegment(`${value}.${segment.split('.')[1]}`)} options={[{value: 'retail', label: 'Розница'}, {value: 'corporate', label: 'Корпоративный'}]}/><span className="muted">/</span><Pick label="Тип платформы" value={segment.split('.')[1]} onChange={value => setSegment(`${segment.split('.')[0]}.${value}`)} options={[{value: 'frontend', label: 'Фронтенд'}, {value: 'backend', label: 'Бэкенд'}, {value: 'data', label: 'Данные'}]}/><Pill><Lock size={12}/>{segment}</Pill><div className="flex-1"/><span className="task-sub">{editable ? 'Рабочее пространство регулятора' : 'Только чтение'}</span></div>
     <Tabs value={direction} onValueChange={setDirection} className="section-tabs"><TabsList>{allowedDirections.map(item => <TabsTrigger key={item} value={item}>{directionLabels[item]}</TabsTrigger>)}</TabsList></Tabs>
     <div className="mt-6">{policy ? <div className="main-grid"><div className="stack">
       <Card title="Пакет политик" action={<Status value={policy.status}/>}><div className="row between wrap"><Pick label="Версия пакета политик" value={key || ''} onChange={setSelected} options={policies.map(policy => ({value: policyKey(policy), label: `${policyKey(policy)} · ${statusLabels[policy.status] || policy.status}`}))}/><Button variant="outline" size="sm" disabled={!editable} onClick={() => edit(policy)}>Новая версия</Button></div>
-        <div className="policy-composition-summary"><div><FileText size={18}/><strong>{policy.requirements.length}</strong><span>Текстовые правила</span></div><div><FileCheck size={18}/><strong>{policy.skills.length}</strong><span>Скиллы</span></div><div><Users size={18}/><strong>{policy.subagents?.length || 0}</strong><span>Сабагенты</span></div></div>
+        <div className="policy-composition-summary"><div><FileText size={18}/><strong>{policy.requirements.length}</strong><span>Текст политики</span></div><div><Layers size={18}/><strong>3</strong><span>Этапа применения</span></div><div><Users size={18}/><strong>{policy.skills.length + (policy.subagents?.length || 0)}</strong><span>Закреплённых skills и subagents</span></div></div>
         <div className="grid-2 mt-4"><div><KV label="Владелец">{directionLabels[policy.owner] || policy.owner}</KV><KV label="Сегмент">{policy.segment}</KV></div><div><KV label="Дата вступления">{policy.effective}</KV><KV label="Заменяет">{policy.supersedes || '—'}</KV></div></div>
         {policy.sunset && <div className="mt-4"><Notice title={`Дата прекращения: ${new Date(policy.sunset).toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'})}`}>Статус «Выводится из эксплуатации» разрешает работу в течение переходного периода. Выпущенные возможности сохраняют закреплённую версию политики.</Notice></div>}
         <p className="subtext mt-4">{policy.changelog}</p><div className="actions"><Button variant="outline" onClick={() => {setDetailsTab('rules');setDetailsOpen(true);}}><FileText size={15}/>Просмотреть состав</Button><Button variant="outline" disabled={!editable} onClick={() => setStatusForm({policyKey: key, status: normalizePolicyStatus(policy.status), sunset: policy.sunset})}>Изменить статус жизненного цикла</Button></div>
       </Card>
     </div><div className="stack"><Card title="Анализ влияния"><p className="mono text-sm text-[#365b40] mb-5">{key}</p><div className="graph-row flex-wrap"><div className="graph-box"><strong>{repos.size}</strong><p>Репозитории</p></div><div className="graph-box"><strong>{teams.size}</strong><p>Команды</p></div></div><div className="graph-box mt-3"><strong>{affected.length}</strong><p>Доверенные возможности</p></div><div className="divider"/>{affected.map(capability => <div className="py-3" key={capability.id}><TextLink onClick={() => go('capability', capability.id, 'releases')}>{capability.name}</TextLink><p className="task-sub">{state.teams.find(team => team.id === capability.teamId)?.name}</p></div>)}{!affected.length && <p className="subtext">Нет зависимых выпусков.</p>}</Card>
       <Card title="Жизненный цикл политики"><div className="stack gap-3">{POLICY_STATUSES.map(status => <div key={status} className="row"><span className={`step-circle ${normalizePolicyStatus(policy.status) === status ? 'bg-[#628057]! text-white!' : ''}`}>{normalizePolicyStatus(policy.status) === status ? <Check size={13}/> : <span className="w-1 h-1 rounded-full bg-[#ccd8c3]"/>}</span><span className="text-sm">{statusLabels[status]}</span></div>)}</div></Card><Notice tone="blue" title="Закрепление версии политики">Новая версия пакета не заменяет версию действующего выпуска. Для изменения нужна новая конфигурация возможности.</Notice>
-    </div></div> : <Card><Blank title={`Нет пакетов политик · ${segment}`} text={`${directionLabels[direction] || direction}: соберите пакет из текстовых политик, скиллов и сабагентов.`} action={<Button disabled={!editable} onClick={() => edit()}>Создать пакет политик</Button>}/></Card>}</div>
+    </div></div> : <Card><Blank title={`Нет пакетов политик · ${segment}`} text={`${directionLabels[direction] || direction}: задайте текст политики и её применение на этапах требований, реализации и проверок.`} action={<Button disabled={!editable} onClick={() => edit()}>Создать пакет политик</Button>}/></Card>}</div>
 
-    <Modal open={detailsOpen} onClose={() => setDetailsOpen(false)} title="Состав пакета политик" description={key || ''} wide>{policy && <Tabs value={detailsTab} onValueChange={setDetailsTab}><TabsList className="policy-composer-tabs"><TabsTrigger value="rules"><FileText size={14}/>Текстовые политики · {policy.requirements.length}</TabsTrigger><TabsTrigger value="skills"><FileCheck size={14}/>Скиллы · {policy.skills.length}</TabsTrigger><TabsTrigger value="subagents"><Users size={14}/>Сабагенты · {policy.subagents?.length || 0}</TabsTrigger></TabsList>
+    <Modal open={detailsOpen} onClose={() => setDetailsOpen(false)} title="Состав пакета политик" description={key || ''} wide>{policy && <Tabs value={detailsTab} onValueChange={setDetailsTab}><TabsList className="policy-composer-tabs"><TabsTrigger value="rules"><FileText size={14}/>Текст политики · {policy.requirements.length}</TabsTrigger><TabsTrigger value="application"><Layers size={14}/>Применение · 3 этапа</TabsTrigger></TabsList>
       <TabsContent value="rules"><div className="policy-rule-list">{policy.requirements.map((requirement, index) => {
         const requirementKey = `${requirement.id}@${requirement.version}`, rules = policy.applicability.filter(rule => !rule.requirement || rule.requirement === requirementKey), evidence = policy.evidence.filter(rule => rule.requirement === requirementKey);
         return <article className="policy-rule-read" key={requirementKey}><div className="policy-rule-read-head"><span className="policy-rule-number">{String(index + 1).padStart(2, '0')}</span><div><h3>{requirementKey}</h3><small>{requirement.owner || policy.owner}</small></div>{requirement.status && <Status value={requirement.status}/>}</div><p className="policy-rule-text">{requirement.text}</p>
@@ -174,18 +186,17 @@ export default function Regulation() {
           {requirement.references && <div className="policy-rule-context"><span className="policy-rule-context-label">Источники</span><p>{requirement.references}</p></div>}
         </article>;
       })}{!policy.requirements.length && <p className="subtext">В этой версии текстовые правила не заданы.</p>}</div></TabsContent>
-      <TabsContent value="skills"><PackageAssets type="Skills" keys={policy.skills} assets={state.assets} onOpen={asset => go('catalog', asset, 'Skills')}/></TabsContent>
-      <TabsContent value="subagents"><PackageAssets type="Subagents" keys={policy.subagents || []} assets={state.assets} onOpen={asset => go('catalog', asset, 'Subagents')}/></TabsContent>
+      <TabsContent value="application"><Notice tone="blue" title="Контракт оркестратора">Текст политики передаётся в контекст каждого этапа. Оркестратор должен подключить закреплённые версии skills и subagents на соответствующем этапе.</Notice><div className="policy-stage-read-list">{policyStageAssignments(policy).map((assignment, index) => <section className="policy-stage-read" key={assignment.stage}><header><span className="policy-rule-number">{index + 1}</span><div><strong>{policyStageMeta[assignment.stage].label}</strong><p>{policyStageMeta[assignment.stage].description}</p></div></header><div className="policy-assets-read-grid"><PackageAssets type="Skills" keys={assignment.skills} assets={state.assets} onOpen={asset => go('catalog', asset, 'Skills')}/><PackageAssets type="Subagents" keys={assignment.subagents} assets={state.assets} onOpen={asset => go('catalog', asset, 'Subagents')}/></div></section>)}</div></TabsContent>
     </Tabs>}</Modal>
 
     <Modal open={!!statusForm} onClose={() => setStatusForm(null)} title="Жизненный цикл политики" description={statusForm?.policyKey}>{statusForm && <div className="stack"><Notice tone={simulatedPeerApproval?'amber':'blue'} title={simulatedPeerApproval?'Демо: вторая рука эмулируется':'Контроль направления'}>{simulatedPeerApproval?`Подтверждение будет записано от имени «${peerReviewer?.name}» без переключения роли. В реальном приложении второй регулятор подтверждает решение самостоятельно.`:`Направление закреплено за ролью «${actor.name}». Решение и личность регулятора сохраняются в аудите.`}</Notice><Field label="Статус"><Pick label="Статус жизненного цикла политики" value={statusForm.status} onChange={value => setStatusForm({...statusForm, status: value})} options={POLICY_STATUSES.map(value => ({value, label: statusLabels[value]}))}/></Field>{statusForm.status === 'Deprecating' && <Field label="Дата прекращения"><Input type="date" value={statusForm.sunset} onChange={event => setStatusForm({...statusForm, sunset: event.target.value})}/></Field>}{statusForm.status === 'Retired' && <Notice tone="red" title="Новые автономные запуски будут запрещены">Зависимые доверенные возможности будут приостановлены. Исторические запуски и выпуски останутся доступны.</Notice>}<div className="actions"><Button variant="outline" onClick={() => setStatusForm(null)}>Отмена</Button><Button disabled={busy||!can('Regulator')} onClick={() => statusForm.status === 'Retired' ? setCritical(true) : statusSave()}>Применить статус</Button></div></div>}</Modal>
     <AlertDialog open={critical} onOpenChange={setCritical}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{statusForm ? statusLabels[statusForm.status] || statusForm.status : ''} · {statusForm?.policyKey}</AlertDialogTitle><AlertDialogDescription>Действие приостановит зависимые возможности и запретит новые автономные запуски. Затронуто возможностей: {affected.length}. В демо подтверждение второй рукой эмулируется.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Отмена</AlertDialogCancel><AlertDialogAction onClick={statusSave}>Подтвердить изменение</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
 
-    <Modal open={!!editor} onClose={() => setEditor(null)} title={editor?.existing ? 'Пакет политик · новая версия' : 'Собрать пакет политик'} description="Текстовые политики, скиллы и сабагенты" wide>{editor && <form onSubmit={savePolicy} className="stack policy-composer">
+    <Modal open={!!editor} onClose={() => setEditor(null)} title={editor?.existing ? 'Пакет политик · новая версия' : 'Собрать пакет политик'} description="Текст политики и применение на трёх этапах" wide>{editor && <form onSubmit={savePolicy} className="stack policy-composer">
       <div className="form-grid"><Field label="Идентификатор политики"><Input value={editor.id} readOnly={editor.existing} onChange={event => setEditor({...editor, id: event.target.value})} required/></Field><Field label="Дата вступления"><Input type="date" value={editor.effective} onChange={event => setEditor({...editor, effective: event.target.value})} required/></Field></div>
       <div className="row wrap"><Pill>{editor.segment}</Pill><Pill>{directionLabels[editor.direction] || editor.direction}</Pill><Pill tone="blue">Черновик · v{nextVersion}</Pill></div>
-      <Tabs value={editorTab} onValueChange={setEditorTab}><TabsList className="policy-composer-tabs"><TabsTrigger value="rules"><FileText size={14}/>Текстовые политики · {editor.rules.length}</TabsTrigger><TabsTrigger value="skills"><FileCheck size={14}/>Навыки · {editor.skills.length}</TabsTrigger><TabsTrigger value="subagents"><Users size={14}/>Субагенты · {editor.subagents.length}</TabsTrigger></TabsList>
-        <TabsContent value="rules"><div className="policy-composer-description"><h3>Набор правил пакета</h3><p>Каждая карточка содержит текст политики. При необходимости задайте применимость и способ проверки правила.</p></div><div className="policy-rule-editor-list">{editor.rules.map((rule, index) => <section className="policy-rule-editor" key={rule.key}>
+      <Tabs value={editorTab} onValueChange={value => {setEditorTab(value); if (POLICY_STAGE_IDS.includes(value as PolicyStageId)) setVisitedStages(current => current.includes(value as PolicyStageId) ? current : [...current, value as PolicyStageId]);}}><TabsList className="policy-composer-tabs"><TabsTrigger value="rules"><FileText size={14}/>Политика · текст</TabsTrigger>{POLICY_STAGE_IDS.map((stage, index) => {const complete=visitedStages.includes(stage)&&editor.stages[stage].skills.length>0;return <TabsTrigger value={stage} key={stage}>{complete?<Check size={14}/>:<span className="policy-stage-index">{index + 1}</span>}{policyStageMeta[stage].label}</TabsTrigger>;})}</TabsList>
+        <TabsContent value="rules"><div className="policy-composer-description"><h3>Текст политики</h3><p>Сформулируйте обязательные правила. Этот текст всегда будет передан в контекст каждого из трёх этапов.</p></div><div className="policy-rule-editor-list">{editor.rules.map((rule, index) => <section className="policy-rule-editor" key={rule.key}>
           <header><span className="policy-rule-number">{String(index + 1).padStart(2, '0')}</span><strong>Правило {index + 1}</strong>{rule.original && <small>{rule.original.id}@{rule.original.version}</small>}<Button type="button" size="icon" variant="ghost" aria-label={`Удалить правило ${index + 1}`} disabled={busy} onClick={() => setEditor({...editor, rules: editor.rules.filter((_, position) => position !== index)})}><Trash2 size={15}/></Button></header>
           <Field label={`Текст правила ${index + 1}`}><Textarea rows={4} value={rule.text} onChange={event => updateRule(index, {text: event.target.value})} placeholder="Например: при обновлении библиотек использовать только сертифицированные версии."/></Field>
           <details className="policy-rule-options"><summary>Применимость и проверка<ChevronDown size={14}/></summary><div className="policy-rule-options-body">
@@ -196,8 +207,7 @@ export default function Regulation() {
         </section>)}</div><Button type="button" className="policy-add-rule" variant="outline" disabled={busy} onClick={() => setEditor({...editor, rules: [...editor.rules, newRule()]})}><Plus size={15}/>Добавить текстовое правило</Button>
           {(!!editor.sharedApplicability.length || !!editor.sharedEvidence.length) && <p className="policy-inherited-note">Общие условия применимости и проверки исходного пакета будут сохранены в новой версии.</p>}
         </TabsContent>
-        <TabsContent value="skills"><AssetPicker type="Skills" assets={state.assets} selected={editor.skills} onChange={skills => setEditor({...editor, skills})} disabled={busy}/></TabsContent>
-        <TabsContent value="subagents"><AssetPicker type="Subagents" assets={state.assets} selected={editor.subagents} onChange={subagents => setEditor({...editor, subagents})} disabled={busy}/></TabsContent>
+        {POLICY_STAGE_IDS.map((stage, index) => <TabsContent value={stage} key={stage}><div className="policy-stage-editor-head"><span className="policy-rule-number">{index + 1}</span><div><h3>{policyStageMeta[stage].label}</h3><p>{policyStageMeta[stage].description}</p></div></div><Notice tone="blue" title="Политика всегда в контексте">Оркестратор получает текст политики на этом этапе и подключает выбранные ниже версии skills. Subagents можно добавить при необходимости.</Notice><div className="policy-stage-asset-groups"><AssetPicker type="Skills" assets={state.assets} selected={editor.stages[stage].skills} onChange={skills => setEditor({...editor, stages: {...editor.stages, [stage]: {...editor.stages[stage], skills}}})} disabled={busy}/><AssetPicker type="Subagents" assets={state.assets} selected={editor.stages[stage].subagents} onChange={subagents => setEditor({...editor, stages: {...editor.stages, [stage]: {...editor.stages[stage], subagents}}})} disabled={busy}/></div></TabsContent>)}
       </Tabs>
       <Field label="История изменений"><Textarea rows={2} value={editor.changelog} onChange={event => setEditor({...editor, changelog: event.target.value})} placeholder="Необязательно"/></Field>
       {error && <p className="form-error" role="alert">{error}</p>}<div className="actions"><Button variant="outline" type="button" onClick={() => setEditor(null)}>Отмена</Button><Button disabled={busy}><Layers size={15}/>Сохранить черновик</Button></div>

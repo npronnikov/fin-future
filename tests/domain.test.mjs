@@ -68,6 +68,21 @@ test('a new Workflow must be saved before its first supervised task launch',()=>
  assert.equal(s.runs.length,1);
 });
 test('Product Engineer cannot grant repository write access',()=>{assert.throws(()=>act(d.createSeed(),'engineer','save_binding',{type:'Repository',name:'bank/lc-trade-api',read:'/**',write:'/**'}),/Platform Engineer/)});
+test('orchestrator YAML resource request is approved atomically without persisting the Jenkins token',()=>{
+ let s=d.createSeed();
+ assert.throws(()=>act(s,'engineer','approve_resource_request',{repository:'company/payments-service',teamSpace:'LC-TRADE',jenkinsToken:'secret-token'}),/Platform Engineer/);
+ assert.throws(()=>act(s,'platform','approve_resource_request',{repository:'company/payments-service',teamSpace:'LC-TRADE',jenkinsToken:'short'}),/не менее 8/);
+ s=act(s,'platform','approve_resource_request',{repository:'company/payments-service',teamSpace:'LC-TRADE',jenkinsToken:'secret-token'});
+ const bindings=s.teams[0].bindings;
+ assert.deepEqual(bindings.map(binding=>binding.type).sort(),['CI','Repository','Task Tracker']);
+ assert.ok(bindings.every(binding=>binding.platform==='HG SDLC'&&binding.status==='connected'&&binding.requestedBy==='orchestrator-yaml'));
+ assert.equal(bindings.find(binding=>binding.type==='Repository').name,'company/payments-service');
+ assert.deepEqual(bindings.find(binding=>binding.type==='Repository').permissions,['read','write','create_pr']);
+ assert.equal(bindings.find(binding=>binding.type==='Task Tracker').scope,'LC-TRADE');
+ assert.equal(bindings.find(binding=>binding.type==='CI').credentialStatus,'configured');
+ assert.equal(JSON.stringify(s).includes('secret-token'),false);
+ assert.equal(s.teams[0].environment.status,'configured');
+});
 test('new Product and Team stay empty until explicit project and mock-task creation',()=>{
  let s=act(d.createSeed(),'po','create_product',{name:'Карты',description:'Product'});const productId=s.products.at(-1).id;
  assert.equal(s.products.at(-1).knowledgeVersion,1);
@@ -641,6 +656,7 @@ test('offered catalog combinations create and supervise from API/web repositorie
   s=created.state;const id=created.result.id;let cfg=d.copy(s.capabilities[0].draft);
   assert.ok(cfg.repos.includes(repository.name));assert.equal(cfg.model,'glm');assert.equal(cfg.tokenLimit,100000);
   assert.ok(cfg.policies.every(key=>s.policies.find(policy=>d.policyKey(policy)===key).segment===repository.segment));
+  assert.ok(cfg.policies.every(key=>s.policies.find(policy=>d.policyKey(policy)===key).direction==='Information Security'));
   cfg.nodeConfigs=d.getFlowNodes(cfg);s=act(s,'engineer','save_config',{capabilityId:id,expectedRevision:cfg.revision,config:cfg});
   s=act(s,'engineer','start_run',{capabilityId:id,taskId:task.id,mode:'supervised'});
   const runId=s.runs.at(-1).id;
@@ -657,7 +673,7 @@ test('offered catalog combinations create and supervise from API/web repositorie
   assert.ok(paths.every(path=>e.pathAllowed(path,run.snapshot.config.scope)&&e.pathAllowed(path,binding.write)));
   assert.equal(run.scope.workTypes.includes('dependency_change'),template==='dependency-update@1');
   assert.equal(run.artifacts.manifest.includes('Generated statement'),template==='sdd-statements@1');
-  assert.ok(run.plans[0].applicable.length>0,'Actual repository segment has regulatory requirements.');
+  assert.ok(run.plans[0].applicable.length+run.plans[0].notApplicable.length>0,'The security package is evaluated for the actual repository segment.');
   assert.equal(run.evidence.status,'PASS');assert.ok(run.metrics.tokens>0);
   assert.equal(run.execution.economics.demo,true);
   assert.equal(run.execution.economics.costRubles,d.estimateTokenCost(cfg.model,run.metrics.tokens));
@@ -825,15 +841,16 @@ test('a persisted old UAT waiting on a gate resumes automatically on the same sn
  const after=JSON.stringify(s);e.refreshHealth(s);assert.equal(JSON.stringify(s),after);
 });
 
-test('Policy Package composition validates textual rules and exact Skills/Subagents and freezes their selected versions',()=>{
+test('Policy Package composition validates policy text and all three stage assignments and freezes their selected versions',()=>{
  let s=d.createSeed(),snapshots=JSON.stringify(s.runs.map(run=>run.snapshot));
- const payload={id:'IS-team-rules',direction:'Information Security',segment:'retail.backend',changelog:'Текстовые политики команды.',requirements:[{id:'IS-team-rules-R001',version:1,text:'Изменения должны оставаться в разрешённом scope.\nНельзя менять публичный контракт.'}],applicability:[{requirement:'IS-team-rules-R001@1',workType:'implementation'}],skills:['code-diff-analysis@4'],subagents:['checks-agent@1'],evidence:[{requirement:'IS-team-rules-R001@1',artifacts:'Отчёт проверок и diff.',verificationSkill:'dependency-evidence-check@3'}]};
- for(const changed of [{...payload,requirements:[]},{...payload,requirements:[{...payload.requirements[0],text:' '}]},{...payload,skills:['missing@1']},{...payload,subagents:['code-diff-analysis@4']},{...payload,evidence:[{requirement:'unknown@1'}]}])assert.throws(()=>act(s,'regulator','save_policy',changed),/правил|Текст|Skills|Subagents|требование/);
- s=act(s,'regulator','save_policy',payload);let policy=s.policies.at(-1);assert.equal(policy.version,1);assert.equal(policy.status,'Draft');assert.deepEqual(policy.subagents,['checks-agent@1']);assert.equal(policy.requirements[0].text,payload.requirements[0].text);
+ const stages=[{stage:'requirements',skills:['code-diff-analysis@4'],subagents:[]},{stage:'implementation',skills:['dependency-review@5'],subagents:['implementation-agent@1']},{stage:'checks',skills:['dependency-evidence-check@3'],subagents:['checks-agent@1']}];
+ const payload={id:'IS-team-rules',direction:'Information Security',segment:'retail.backend',changelog:'Текстовые политики команды.',requirements:[{id:'IS-team-rules-R001',version:1,text:'Изменения должны оставаться в разрешённом scope.\nНельзя менять публичный контракт.'}],applicability:[{requirement:'IS-team-rules-R001@1',workType:'implementation'}],stages,evidence:[{requirement:'IS-team-rules-R001@1',artifacts:'Отчёт проверок и diff.',verificationSkill:'dependency-evidence-check@3'}]};
+ for(const changed of [{...payload,requirements:[]},{...payload,requirements:[{...payload.requirements[0],text:' '}]},{...payload,stages:stages.slice(0,2)},{...payload,stages:stages.map(item=>item.stage==='checks'?{...item,skills:[]}:item)},{...payload,stages:stages.map(item=>item.stage==='checks'?{...item,subagents:['code-diff-analysis@4']}:item)},{...payload,evidence:[{requirement:'unknown@1'}]}])assert.throws(()=>act(s,'regulator','save_policy',changed),/правил|Текст|этап|Skill|Subagent|требование/i);
+ s=act(s,'regulator','save_policy',payload);let policy=s.policies.at(-1);assert.equal(policy.version,1);assert.equal(policy.status,'Draft');assert.deepEqual(policy.stages,stages);assert.deepEqual(policy.skills,['code-diff-analysis@4','dependency-review@5','dependency-evidence-check@3']);assert.deepEqual(policy.subagents,['implementation-agent@1','checks-agent@1']);assert.equal(policy.requirements[0].text,payload.requirements[0].text);
  s=act(s,'regulator','save_policy',{...payload,changelog:'Уточнены правила.'});policy=s.policies.at(-1);assert.equal(policy.version,2);assert.equal(policy.supersedes,'IS-team-rules@1');
  assert.equal(s.policies.find(item=>item.id===payload.id&&item.version===1).changelog,payload.changelog);assert.equal(JSON.stringify(s.runs.map(run=>run.snapshot)),snapshots);
  const cap=s.capabilities[1],cfg=d.copy(cap.draft);cfg.policies=cfg.policies.map(key=>key.startsWith('IS-')?'IS-team-rules@2':key);const run=d.makeRun(s,cap,cfg,s.tasks[4],'POLICY-FROZEN',new Date().toISOString());
- assert.deepEqual(run.snapshot.policyPackages.find(item=>item.id===payload.id).subagents,['checks-agent@1']);
+ assert.deepEqual(run.snapshot.policyPackages.find(item=>item.id===payload.id).stages,stages);
  s.policies.at(-1).requirements[0].text='Changed live';assert.equal(run.snapshot.policyPackages.find(item=>item.id===payload.id).requirements[0].text,payload.requirements[0].text);
 });
 
@@ -879,6 +896,7 @@ test('Context Delivery Trace restricts Product and Team fragments to planned sta
  assert.ok(trace.stages.every(stage=>stage.product.length===0||productIds.has(stage.id)));
  assert.ok(trace.stages.every(stage=>stage.team.length===0||teamIds.has(stage.id)));
  assert.ok(trace.fragments.filter(item=>item.kind==='policy').every(item=>item.stageIds.length===trace.stages.length));
+ assert.ok(trace.fragments.filter(item=>item.kind==='policy').every(item=>item.details.policyContext==='all_stages'&&item.details.stageAssignments.length===3));
  assert.ok(trace.fragments.some(item=>item.sourceId==='IS-corporate-backend@8'));
  assert.ok(!trace.fragments.some(item=>item.sourceId.startsWith('IS-retail-backend')),'Policy selection must respect Repository segment.');
  assert.ok(trace.unknown.some(item=>item.includes('Deprecating')));

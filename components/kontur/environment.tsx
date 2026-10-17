@@ -1,32 +1,25 @@
 'use client';
 import {useEffect, useState} from 'react';
-import {ArrowLeft, ArrowRight, Bot, Check, GitBranch, Loader2, Lock, Plus, Server, Workflow} from 'lucide-react';
+import {ArrowLeft, ArrowRight, Bot, Check, FileCode2, GitBranch, KeyRound, Loader2, Server, ShieldCheck, Workflow} from 'lucide-react';
 import {RadioGroup, RadioGroupItem} from '@/components/ui/radio-group';
 import {Progress} from '@/components/ui/progress';
-import {RUNTIME_PLATFORMS, runtimeResources, runtimeVersions, PROVISION_STEPS, REPOSITORIES, type Item, type Runtime} from '@/lib/domain';
+import {ORCHESTRATOR_RESOURCE_REQUEST, RUNTIME_PLATFORMS, resourceRequestYaml, runtimeResources, runtimeVersions, PROVISION_STEPS, REPOSITORIES, type Item, type Runtime} from '@/lib/domain';
 import {useKontur} from './context';
 import SandboxPreview, {bindingPermissions, resourceTypeLabel} from './sandbox-preview';
-import {Button, Input, Card, PageHead, Pill, Status, Pick, Modal, Field, KV, Notice, Toggle, Table, TableHeader, TableHead, TableBody, TableRow, TableCell} from './ui';
+import {Button, Input, Card, PageHead, Pill, Status, Pick, Modal, Field, Notice, Table, TableHeader, TableHead, TableBody, TableRow, TableCell} from './ui';
 
 const RESOURCE_TYPES = ['Repository', 'Task Tracker', 'CI'];
-const TRACKER_PROJECTS = [{value: 'LC-TRADE', label: 'Аккредитив · Trade Finance (LC-TRADE)'}, {value: 'LC-RETAIL', label: 'Аккредитив · Retail (LC-RETAIL)'}, {value: 'PAYMENTS', label: 'Платежи (PAYMENTS)'}];
-const CI_SCOPES = ['kopilka/build-and-test', 'growth/quality-checks', 'payments/build-and-test'];
 const GIT_PERMISSIONS = [{value: 'read', label: 'Чтение (read)'}, {value: 'write', label: 'Запись (write)'}, {value: 'admin', label: 'Администрирование (admin)'}, {value: 'create_pr', label: 'Создание pull request (create_pr)'}];
 const ENV_FIELDS = [{key: 'isolation', label: 'Isolation profile'}, {key: 'network', label: 'Network zone'}, {key: 'cpu', label: 'CPU', number: true}, {key: 'ram', label: 'RAM · GB', number: true}, {key: 'disk', label: 'Disk · GB', number: true}, {key: 'ttl', label: 'TTL · hours', number: true}, {key: 'parallel', label: 'Максимум параллельных запусков', number: true}, {key: 'quota', label: 'Quota', number: true}, {key: 'modelGateway', label: 'Model Gateway'}, {key: 'runtimeVersion', label: 'Runtime version'}, {key: 'internet', label: 'Network / internet constraints'}, {key: 'uatBindings', label: 'UAT environment bindings'}];
 const SANDBOX_FIELDS = [{key: 'cpu', label: 'CPU', number: true}, {key: 'ram', label: 'RAM · GB', number: true}, {key: 'disk', label: 'Disk · GB', number: true}];
 const WIZARD_STEPS = [{key:'automation',title:'Платформа исполнения',description:'Оркестратор и его компоненты'},{key:'resources',title:'Доступы к ресурсам',description:'Только для выбранной платформы'},{key:'sandbox',title:'Инфраструктура',description:'Схема и настройка окружения'}];
 const PROMOTION_STEPS = ['Validating changes','Reserving additional resources','Updating orchestrator','Applying environment settings','Verifying deployment'];
 
-function newBinding(type: string, system: string): Item {
-  if (type === 'Repository') return {type, name: REPOSITORIES[0].name, system, permissions: ['read', 'write', 'create_pr']};
-  if (type === 'Task Tracker') return {type, name: 'Jira', scope: TRACKER_PROJECTS[0].value};
-  return {type: 'CI', name: 'Jenkins CI', scope: CI_SCOPES[0]};
-}
-
 export default function Environment() {
   const {team, product, go, tab, act, can, busy} = useKontur();
   const [form, setForm] = useState<Item>({...team.environment, automation: team.automation || 'HG SDLC'});
-  const [binding, setBinding] = useState<Item | null>(null);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [resourceInputs, setResourceInputs] = useState({repository: team.bindings.find(item => item.type === 'Repository')?.name || REPOSITORIES[0].name, teamSpace: team.bindings.find(item => item.type === 'Task Tracker')?.scope || team.name, jenkinsToken: ''});
   const [createDialog, setCreateDialog] = useState(false);
   const [deploymentMode, setDeploymentMode] = useState<'create'|'promote'>('create');
   const [provisionStep, setProvisionStep] = useState(-1);
@@ -42,12 +35,12 @@ export default function Environment() {
   const provisioned = team.environment.status === 'ready';
   const ready = resourcesReady && team.environment.status === 'ready' && form.automation === team.automation && ENV_FIELDS.every(item => form[item.key] === (team.environment as unknown as Item)[item.key]);
   const deploymentSteps = deploymentMode === 'promote' ? PROMOTION_STEPS : PROVISION_STEPS;
-  const nextResource = RESOURCE_TYPES.find(type => !resources.some(item => item.type === type && item.status === 'connected')) || 'Repository';
 
   useEffect(() => {
     setForm({...team.environment, automation: team.automation || 'HG SDLC'});
     setEntryStep(furthestStep);
-    setCreateDialog(false); setBinding(null); setProvisionStep(-1); setShowReadyNotice(false);
+    setResourceInputs({repository: team.bindings.find(item => item.type === 'Repository')?.name || REPOSITORIES[0].name, teamSpace: team.bindings.find(item => item.type === 'Task Tracker')?.scope || team.name, jenkinsToken: ''});
+    setCreateDialog(false); setRequestOpen(false); setProvisionStep(-1); setShowReadyNotice(false);
   }, [team.id]);
 
   useEffect(() => {
@@ -92,13 +85,9 @@ export default function Environment() {
     if (result?.ok) setShowReadyNotice(true);
     setRunning(false);
   }
-  function permission(value: string, checked: boolean) {
-    if (!binding) return;
-    let permissions = bindingPermissions(binding);
-    permissions = checked ? [...new Set([...permissions, value])] : permissions.filter(item => item !== value);
-    if (value === 'admin' && checked) permissions = [...new Set([...permissions, 'read', 'write', 'create_pr'])];
-    if (!checked && ['read', 'write', 'create_pr'].includes(value)) permissions = permissions.filter(item => item !== 'admin');
-    setBinding({...binding, permissions});
+  async function approveResourceRequest() {
+    const result = await act('approve_resource_request', resourceInputs);
+    if (result?.ok) {setRequestOpen(false); setResourceInputs(current => ({...current, jenkinsToken: ''}));}
   }
 
   return <div className="page environment-wizard">
@@ -116,14 +105,14 @@ export default function Environment() {
     {!provisioned && !enabled && <Notice tone="blue" title="Настройку выполняет Platform Engineer">Параметры доступны для просмотра. Для подключения ресурсов и Provisioning выберите Platform Engineer команды.</Notice>}
 
     {!provisioned && activeStep === 1 && <section className="environment-wizard-stage" aria-label="Шаг 2 · Resources">
-      <div className="environment-stage-head"><div><p className="eyebrow">ШАГ 2 / 3</p><h2>Подключите ресурсы</h2><p className="subtext">Ресурсы компонентов {team.automation}: Git-репозиторий, Task Tracker и Jenkins CI.</p></div><Button onClick={() => setBinding(newBinding(nextResource, product.name))} disabled={!enabled || busy}><Plus size={16}/>{resources.length ? 'Подключить ресурс' : 'Подключить ресурсы'}</Button></div>
-      <div className="environment-resource-progress">{RESOURCE_TYPES.map(type => <span key={type} className={resources.some(item => item.type === type && item.status === 'connected') ? 'connected' : ''}>{resources.some(item => item.type === type && item.status === 'connected') ? <Check size={15}/> : <span className="environment-resource-dot"/>}{resourceTypeLabel(type)}</span>)}</div>
+      <div className="environment-stage-head"><div><p className="eyebrow">ШАГ 2 / 3</p><h2>Ресурсы оркестратора</h2><p className="subtext">{team.automation} декларирует нужные ресурсы в YAML. Проверьте запрос и подтвердите подключение всего набора.</p></div><Button onClick={() => setRequestOpen(true)} disabled={!enabled || busy}><FileCode2 size={16}/>{resourcesReady ? 'Посмотреть запрос' : 'Открыть запрос'}</Button></div>
+      <div className="environment-resource-progress">{RESOURCE_TYPES.map(type => {const connected=resources.some(item => item.type === type && item.status === 'connected' && item.platform === team.automation);return <span key={type} className={connected ? 'connected' : ''}>{connected ? <Check size={15}/> : <span className="environment-resource-dot"/>}{resourceTypeLabel(type)}</span>})}</div>
       <Card body={false}>
-        {resources.length ? <Table className="data-table environment-resources-table"><TableHeader><TableRow><TableHead>Ресурс</TableHead><TableHead>Permissions / Scope</TableHead><TableHead>Статус</TableHead><TableHead/></TableRow></TableHeader><TableBody>{resources.map(item => <TableRow key={item.id}>
+        {resources.length ? <Table className="data-table environment-resources-table"><TableHeader><TableRow><TableHead>Ресурс</TableHead><TableHead>Доступ из YAML</TableHead><TableHead>Статус</TableHead></TableRow></TableHeader><TableBody>{resources.map(item => <TableRow key={item.id}>
           <TableCell><div className="row"><span className="icon-tile">{item.type === 'Repository' ? <GitBranch size={20}/> : item.type === 'CI' ? <Server size={20}/> : <Workflow size={20}/>}</span><div><p className="task-title">{item.name}</p><p className="task-sub">{resourceTypeLabel(item.type)}</p></div></div></TableCell>
-          <TableCell>{item.type === 'Repository' ? <div className="environment-permission-chips">{GIT_PERMISSIONS.filter(option => bindingPermissions(item).includes(option.value)).map(option => <Pill key={option.value}>{option.label}</Pill>)}</div> : <div><p className="task-sub">{item.type === 'Task Tracker' ? 'Проект в Task Tracker' : 'Pipeline / Job'}</p><span className="mono">{(item as unknown as Item).scope || item.name}</span></div>}</TableCell>
-          <TableCell><Pill tone={item.status==='connected'&&item.platform===team.automation?'green':'amber'}>{item.status==='connected'&&item.platform===team.automation?`${item.platform} · подключён`:'Нужно переподключить'}</Pill></TableCell><TableCell><Button variant="ghost" size="sm" disabled={!enabled || busy} onClick={() => setBinding({...item, ...(item.type === 'Repository' ? {system: product.id === 'accreditive' ? item.system : product.name, permissions: bindingPermissions(item)} : {scope: (item as unknown as Item).scope || item.name})})}>Настроить</Button></TableCell>
-        </TableRow>)}</TableBody></Table> : <div className="environment-resources-empty"><span className="icon-tile"><GitBranch size={23}/></span><h3>Ресурсы ещё не подключены</h3><p>Добавьте три подключения. Для каждого сохраните Permissions или Scope.</p></div>}
+          <TableCell>{item.type === 'Repository' ? <div className="environment-permission-chips">{GIT_PERMISSIONS.filter(option => bindingPermissions(item).includes(option.value)).map(option => <Pill key={option.value}>{option.label}</Pill>)}</div> : <div><p className="task-sub">{item.type === 'Task Tracker' ? 'Командное пространство' : 'Jenkins credential'}</p><span className="mono">{item.type === 'CI' ? item.credentialStatus === 'configured' ? 'Token · настроен' : 'Ожидает подтверждения' : (item as unknown as Item).scope || item.name}</span></div>}</TableCell>
+          <TableCell><Pill tone={item.status==='connected'&&item.platform===team.automation?'green':'amber'}>{item.status==='connected'&&item.platform===team.automation?`${item.platform} · подключён`:'Нужно подтвердить запрос'}</Pill></TableCell>
+        </TableRow>)}</TableBody></Table> : <div className="environment-resources-empty"><span className="icon-tile"><GitBranch size={23}/></span><h3>Оркестратор запросил 3 ресурса</h3><p>Откройте YAML-запрос, укажите три значения и подтвердите подключение.</p></div>}
       </Card>
       <div className="environment-wizard-footer"><p>{resourcesReady ? 'Доступы подключены к выбранной платформе. Далее — параметры инфраструктуры.' : 'Для продолжения подключите Git-репозиторий, Task Tracker и Jenkins CI.'}</p><Button disabled={!enabled || busy || !resourcesReady} onClick={() => go('environment', '', 'sandbox')}>Далее · Инфраструктура<ArrowRight size={16}/></Button></div>
     </section>}
@@ -146,13 +135,12 @@ export default function Environment() {
       {!provisioned && <div className="environment-wizard-footer"><Button variant="outline" onClick={() => go('environment', '', 'resources')} disabled={busy || running}><ArrowLeft size={16}/>Назад</Button><p>После Provisioning вернитесь на главную к созданию доски и задач.</p></div>}
     </section>}
 
-    <Modal open={!!binding} onClose={() => !busy && setBinding(null)} title={binding?.id ? 'Настроить ресурс' : 'Подключить ресурс'} description="Демонстрационная интеграция · Platform Engineer" wide>{binding && <form onSubmit={async event => {event.preventDefault(); const result = await act('save_binding', binding); if (result?.ok) setBinding(null);}} className="stack">
-      <div className="form-grid"><Field label="Тип ресурса"><Pick label="Тип ресурса" value={binding.type} onChange={value => setBinding({...newBinding(value, product.name), ...(value === binding.type && binding.id ? {id: binding.id} : {})})} options={RESOURCE_TYPES.map(type => ({value: type, label: resourceTypeLabel(type)}))} disabled={busy}/></Field>
-        {binding.type === 'Repository' ? <Field label="Git-репозиторий"><Pick label="Git-репозиторий" value={binding.name} onChange={value => setBinding({...binding, name: value})} options={REPOSITORIES.map(item => item.name)} disabled={busy}/></Field> : binding.type === 'Task Tracker' ? <><Field label="Task Tracker"><Input value={binding.name} disabled/></Field><Field label="Проект в Task Tracker (Scope)"><Pick label="Проект в Task Tracker" value={binding.scope} onChange={value => setBinding({...binding, scope: value})} options={[...TRACKER_PROJECTS, ...(!TRACKER_PROJECTS.some(item => item.value === binding.scope) && binding.scope ? [{value: binding.scope, label: binding.scope}] : [])]} disabled={busy}/></Field></> : <><Field label="CI"><Input value={binding.name} disabled/></Field><Field label="Pipeline / Job (Scope)"><Pick label="Jenkins CI scope" value={binding.scope} onChange={value => setBinding({...binding, scope: value})} options={[...CI_SCOPES, ...(!CI_SCOPES.includes(binding.scope) && binding.scope ? [binding.scope] : [])]} disabled={busy}/></Field></>}
-      </div>
-      {binding.type === 'Repository' && <><Field label="System"><Input value={binding.system || product.name} onChange={event => setBinding({...binding, system: event.target.value})} required disabled={busy}/></Field><div className="environment-binding-permissions"><p className="eyebrow">Permissions</p><div className="grid-2">{GIT_PERMISSIONS.map(option => <Toggle key={option.value} label={option.label} checked={bindingPermissions(binding).includes(option.value)} onChange={checked => permission(option.value, checked)} disabled={busy}/>)}</div></div><div className="environment-binding-meta"><KV label="Segment"><span className="row"><Lock size={13}/>{REPOSITORIES.find(item => item.name === binding.name)?.segment}</span></KV></div></>}
-      <div className="actions"><Button variant="outline" type="button" disabled={busy} onClick={() => setBinding(null)}>Отмена</Button><Button type="submit" disabled={busy || !enabled}>Сохранить биндинг</Button></div>
-    </form>}</Modal>
+    <Modal open={requestOpen} onClose={() => !busy && setRequestOpen(false)} title="Запрос ресурсов от оркестратора" description={`${team.automation} · resources.yaml · Platform Engineer`} wide><form onSubmit={async event => {event.preventDefault(); await approveResourceRequest();}} className="resource-request-dialog">
+      <div className="resource-request-message orchestrator"><span className="resource-message-avatar"><Workflow size={18}/></span><div><div className="row between"><strong>{team.automation}</strong><Pill tone="amber">Требует подтверждения</Pill></div><p>Для выполнения Workflow мне нужны следующие подключения. Состав и права заданы декларацией.</p><pre className="resource-yaml">{resourceRequestYaml(team.automation)}</pre></div></div>
+      <div className="resource-request-list">{ORCHESTRATOR_RESOURCE_REQUEST.resources.map(resource => <div key={resource.type}><span className="icon-tile">{resource.type === 'Repository' ? <GitBranch size={18}/> : resource.type === 'CI' ? <Server size={18}/> : <Workflow size={18}/>}</span><div><strong>{resourceTypeLabel(resource.type)}</strong><small>{resource.permissions.join(' · ')}</small></div><Check size={16}/></div>)}</div>
+      <div className="resource-request-message approval"><span className="resource-message-avatar"><ShieldCheck size={18}/></span><div><strong>Подтверждение Platform Engineer</strong><p>Укажите только значения для запрошенных ресурсов. Permissions и pipeline определяет YAML оркестратора.</p><div className="resource-request-fields"><Field label="Имя репозитория"><Input value={resourceInputs.repository} onChange={event => setResourceInputs({...resourceInputs, repository: event.target.value})} placeholder="org/repository" required disabled={busy}/></Field><Field label="Командное пространство Task Tracker"><Input value={resourceInputs.teamSpace} onChange={event => setResourceInputs({...resourceInputs, teamSpace: event.target.value})} placeholder="TEAM-SPACE" required disabled={busy}/></Field><Field label="Jenkins token"><div className="resource-token-input"><KeyRound size={16}/><Input type="password" autoComplete="new-password" value={resourceInputs.jenkinsToken} onChange={event => setResourceInputs({...resourceInputs, jenkinsToken: event.target.value})} placeholder="••••••••••••" minLength={8} required disabled={busy}/></div></Field></div><p className="resource-secret-note">Токен передаётся Jenkins при подключении и не сохраняется в открытом виде.</p></div></div>
+      <div className="actions"><Button variant="outline" type="button" disabled={busy} onClick={() => setRequestOpen(false)}>Отмена</Button><Button type="submit" disabled={busy || !enabled || !resourceInputs.repository.trim() || !resourceInputs.teamSpace.trim() || resourceInputs.jenkinsToken.length < 8}><ShieldCheck size={16}/>Одобрить и подключить</Button></div>
+    </form></Modal>
 
     <Modal open={createDialog} onClose={() => !running && setCreateDialog(false)} title={deploymentMode==='promote'?'Промоут окружения':'Создание окружения'} description={`${product.name} / ${team.name} · ${form.automation} @${form.runtimeVersion}`}>
       {provisionStep >= 0 && <div className="stack"><Progress value={Math.min(100, provisionStep / deploymentSteps.length * 100)}/><div className="grid-2 gap-2">{deploymentSteps.map((item, index) => <div className={`row text-sm ${index === provisionStep ? 'text-[#628057]' : 'muted'}`} key={item}>{index < provisionStep ? <Check size={15} className="text-[#608149]"/> : index === provisionStep ? <Loader2 size={15} className="animate-spin"/> : <span className="w-[15px]"/>}{item}</div>)}</div></div>}

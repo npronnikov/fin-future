@@ -69,18 +69,61 @@ function releaseGuideStep(stage, securityAccepted = false) {
 }
 assert.deepEqual({role: releaseGuideStep('frozen').role, actorId: releaseGuideStep('frozen').actorId}, {role: 'Product Engineer', actorId: 'engineer'});
 assert.deepEqual({role: releaseGuideStep('uat_passed').role, actorId: releaseGuideStep('uat_passed').actorId}, {role: 'Product Owner', actorId: 'po'});
-assert.deepEqual({role: releaseGuideStep('admitted').role, actorId: releaseGuideStep('admitted').actorId}, {role: 'Безник', actorId: 'regulator'});
+assert.deepEqual({role: releaseGuideStep('admitted').role, actorId: releaseGuideStep('admitted').actorId, switchLabel: releaseGuideStep('admitted').switchLabel}, {role: 'Regulator', actorId: 'regulator', switchLabel: 'эксперта безопасности'});
 assert.deepEqual({role: releaseGuideStep('admitted', true).role, actorId: releaseGuideStep('admitted', true).actorId}, {role: 'Product Engineer', actorId: 'engineer'});
+const singlePolicyState = copy(seed);
+singlePolicyState.capabilities = [];
+singlePolicyState.runs = [];
+singlePolicyState.suites = [];
+singlePolicyState.benchmarks = [];
+singlePolicyState.policies = [{...copy(seed.policies.find(policy => policy.direction === 'Information Security' && policy.status === 'Current')), createdBy: 'regulator', productId: seed.products[0].id, status: 'Draft'}];
+let singlePolicySteps = getSetupSteps(singlePolicyState, singlePolicyState.teams[0], singlePolicyState.products[0], singlePolicyState.people.find(person => person.id === 'regulator'));
+assert.equal(singlePolicySteps.find(step => step.title === 'Создайте регуляторный пакет').done, true, 'One package completes package creation.');
+assert.equal(singlePolicySteps.find(step => step.title === 'Введите пакет в действие').done, false, 'Draft package still requires activation.');
+singlePolicyState.policies[0].status = 'Current';
+singlePolicySteps = getSetupSteps(singlePolicyState, singlePolicyState.teams[0], singlePolicyState.products[0], singlePolicyState.people.find(person => person.id === 'regulator'));
+assert.equal(singlePolicySteps.find(step => !step.done).title, 'Создайте Workflow из Автоматизации', 'One current package advances the guide to Workflow.');
+assert.equal(singlePolicySteps.find(step => !step.done).button, 'Открыть Автоматизацию');
 const intro = render('onboarding', 'JourneyOverview');
 includes(intro, ['Последовательность демосценария', 'Product Owner', 'Product Engineer', 'Platform Engineer', 'Regulator'], 'Journey');
 const platforms = render('environment', 'default', {screen: 'environment', tab: 'automation', actor: seed.people.find(p => p.id === 'platform'), team: emptyTeam});
 includes(platforms, ['HG SDLC', 'Maestro', 'AI Conductor', 'AI Manager', 'Платформа исполнения'], 'Execution platforms');
 const automation = render('runs', 'Automation', {screen: 'automation'});
 includes(automation, ['Создать Workflow', 'Открыть DEV', 'Мониторинг PROD', 'Workflows продукта'], 'Automation entry');
+const productionMonitoringState = copy(seed), productionRelease = currentRelease(productionMonitoringState.capabilities.find(capability => capability.id === 'cap-dep'));
+for (const run of productionMonitoringState.runs.filter(run => run.teamId === productionMonitoringState.teams[0].id && run.capabilityId === 'cap-dep' && !run.uat).slice(0, 2)) {
+  run.releaseId = productionRelease.id;
+  run.mode = 'production';
+}
+const productionMonitoring = render('capabilities', 'CapabilityView', {state: productionMonitoringState, screen: 'capability', ref: 'cap-dep', tab: 'monitoring'});
+includes(productionMonitoring, ['Автоматическое выполнение задач', 'Прогресс PROD', 'Human Gates не используются'], 'Production monitoring progress');
+assert.ok(!productionMonitoring.includes('Эмулировать продакшн'), 'Production monitoring has no manual emulation button.');
+const capabilityList = render('capabilities', 'CapabilityList', {screen: 'capabilities'});
+assert.ok(!capabilityList.includes('Эмулировать продакшн'), 'Production cards have no manual emulation button.');
 const messengerInput = render('messenger', 'Messenger', {screen: 'messenger', ref: 'RUN-912', tab: 'messages'});
 includes(messengerInput, ['HUMAN INPUT', 'Варианты Human Input', 'Отправить ввод'], 'Messenger Human Input');
 const messengerApproval = render('messenger', 'Messenger', {screen: 'messenger', ref: 'RUN-913', tab: 'messages'});
 includes(messengerApproval, ['HUMAN APPROVAL', 'Отправить на доработку', 'Одобрить'], 'Messenger Human Approval');
+const takeoverState = copy(seed), takeoverRun = takeoverState.runs.find(run => run.id === 'RUN-912'), takeoverGate = takeoverRun.gates.find(gate => gate.status === 'pending');
+takeoverRun.writer = 'human';
+takeoverRun.status = 'takeover';
+takeoverGate.status = 'taken_over';
+takeoverGate.decision = {action: 'takeover', actor: 'engineer', comment: 'Ручная правка в IDE.'};
+const takeover = render('runs', 'RunView', {state: takeoverState, screen: 'run', ref: takeoverRun.id, tab: 'gates'});
+includes(takeover, ['Верните управление после ручной работы', 'Комментарий к возврату', 'Вернуть агенту и продолжить'], 'Takeover return');
+const evidenceRun = seed.runs.find(run => run.evidence && run.snapshot.config.policies.length);
+assert.ok(evidenceRun, 'Seed must contain a completed run with regulatory evidence.');
+const regulatoryEvidence = render('regulatory-evidence-readiness', 'default', {}, {policyKeys: evidenceRun.snapshot.config.policies, runs: [evidenceRun]});
+includes(regulatoryEvidence, ['Регуляторные проверки по запускам', 'отчётов evidence', evidenceRun.evidence.id, 'Ожидаемая проверка:', 'Observed', 'Evidence', 'Источник: Evidence Registry'], 'Regulatory evidence readiness');
+const missingRegulatoryEvidence = render('regulatory-evidence-readiness', 'default', {}, {policyKeys: evidenceRun.snapshot.config.policies, runs: []});
+includes(missingRegulatoryEvidence, ['Нет evidence', 'Нет отчёта'], 'Missing regulatory evidence');
+const evidenceRegistry = render('evidence-registry', 'default', {actor: seed.people.find(person => person.id === 'regulator'), screen: 'regulation', tab: 'evidence'});
+includes(evidenceRegistry, ['Evidence Registry', 'GET /api/evidence', 'SQLite', 'Журнал проверок', 'REGULATORY CONTROL PLANE'], 'Evidence Registry');
+const riskRegulation = render('regulation', 'default', {actor: seed.people.find(person => person.id === 'regulator-reviewer'), screen: 'regulation', tab: ''});
+includes(riskRegulation, ['Эксперт рисков', 'Риск'], 'Risk regulator profile');
+assert.ok(!riskRegulation.includes('Информационная безопасность'), 'Risk profile must not show the Information Security tab.');
+assert.ok(!riskRegulation.includes('Надёжность'), 'Risk profile must not show the Reliability tab.');
+assert.ok(!riskRegulation.includes('Сегментация систем'), 'Risk profile must not show the Information Security segmentation action.');
 for (const [tab, expected] of Object.entries({
   ontology: ['Как знание попадает в продукт', 'Дерево и граф'],
   publication: ['Workflow публикации', 'Предложено', 'Проверено', 'Опубликовано'],

@@ -1,4 +1,4 @@
-import {capabilityForTag,copy,currentRelease,defaultConfig,getFlowNodes,isDependencyFlow,isRetiredPolicyStatus,normalizePolicyStatus,policyKey,type ContextBundle,type ContextBundleInput,type ContextDeliveryTrace,type ContextFragment,type ContextPlannerResult,type Item,type RegulatoryVerificationPreview,type State} from './domain.ts';
+import {capabilityForTag,copy,currentRelease,defaultConfig,getFlowNodes,isDependencyFlow,isRetiredPolicyStatus,normalizePolicyStatus,policyKey,policyStageAssignments,type ContextBundle,type ContextBundleInput,type ContextDeliveryTrace,type ContextFragment,type ContextPlannerResult,type Item,type RegulatoryVerificationPreview,type State} from './domain.ts';
 
 function stable(value:unknown):unknown{
  if(Array.isArray(value))return value.map(stable);
@@ -97,7 +97,7 @@ export function compileContextDeliveryTrace(state:State,taskId:string):ContextDe
    if(isRetiredPolicyStatus(policy.status)){blocking.push(`${policyKey(policy)} выведена из эксплуатации для применимого scope ${segment}.`);continue;}
    if(!['Current','Deprecating'].includes(normalized))continue;
    const evidence=policy.evidence.find(item=>item.requirement===requirementKey);
-   fragments.push({id:`policy:${policyKey(policy)}:${requirementKey}`,sourceId:policyKey(policy),version:policy.version,kind:'policy',title:requirementKey,content:requirement.text,reason:`Resolver: ${task.repo} → ${system||'system unresolved'} → ${segment||'segment unresolved'} · #${task.tag||'—'} · ${workTypes.join(', ')}`,stageIds:[...allStageIds],provenance:[requirement.references,policy.changelog].filter(Boolean),status:normalized,details:{direction:policy.direction,sunset:policy.sunset,skills:[...policy.skills],subagents:[...(policy.subagents||[])],evidence:evidence?copy(evidence):null,applicability:copy(rules)}});
+   fragments.push({id:`policy:${policyKey(policy)}:${requirementKey}`,sourceId:policyKey(policy),version:policy.version,kind:'policy',title:requirementKey,content:requirement.text,reason:`Resolver: ${task.repo} → ${system||'system unresolved'} → ${segment||'segment unresolved'} · #${task.tag||'—'} · ${workTypes.join(', ')}`,stageIds:[...allStageIds],provenance:[requirement.references,policy.changelog].filter(Boolean),status:normalized,details:{direction:policy.direction,sunset:policy.sunset,skills:[...policy.skills],subagents:[...(policy.subagents||[])],stageAssignments:policyStageAssignments(policy),policyContext:'all_stages',evidence:evidence?copy(evidence):null,applicability:copy(rules)}});
   }
  }
  const policyFragments=fragments.filter(item=>item.kind==='policy');
@@ -153,7 +153,7 @@ export function compileContextBundle(state:State,input:ContextBundleInput,meta:{
    const rules=policy.applicability.filter(rule=>!rule.requirement||rule.requirement===key);
    return !rules.length||rules.some(rule=>(!rule.segment||rule.segment===segment)&&workMatches(rule.workType,input.workType));
   });
-  if(requirements.length)policyRows.push({...copy(policy),requirements});
+  if(requirements.length)policyRows.push({...copy(policy),requirements,stages:policyStageAssignments(policy)});
  }
  const unknown:string[]=[];
  if(!product)unknown.push('Продукт не найден.');

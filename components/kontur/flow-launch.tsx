@@ -1,8 +1,8 @@
 'use client';
 import {useEffect, useState} from 'react';
-import {ArrowRight, FolderKanban, Play, ShieldCheck, Tag} from 'lucide-react';
+import {ArrowRight, FolderKanban, Play} from 'lucide-react';
 import {useKontur} from './context';
-import {Button, Field, KV, Modal, Notice, Pick, Pill, Status} from './ui';
+import {Button, Field, Modal, Pick, Status} from './ui';
 import {flowIssues, type Capability, type Config} from '@/lib/domain';
 
 export default function FlowLaunch({open, onClose, cap, config, dirty}: {
@@ -12,7 +12,7 @@ export default function FlowLaunch({open, onClose, cap, config, dirty}: {
   const [boardId, setBoardId] = useState('all');
   const [taskId, setTaskId] = useState('');
   const [launching, setLaunching] = useState(false);
-  const tasks = state.tasks.filter(task => task.productId === cap.productId && task.teamId === team.id && task.tag === cap.tag);
+  const tasks = state.tasks.filter(task => task.productId === cap.productId && task.teamId === team.id && task.tag === cap.tag && task.status !== 'done');
   const boards = state.boards.filter(board => board.teamId === team.id && board.productId === cap.productId && tasks.some(task => task.boardId === board.id));
   const activeRun = (id: string) => state.runs.find(run => run.taskId === id && run.teamId === team.id && !run.completedAt && !['failed', 'cancelled'].includes(run.status));
   const executionConfig = config;
@@ -51,16 +51,14 @@ export default function FlowLaunch({open, onClose, cap, config, dirty}: {
   return <Modal open={open} onClose={() => {if (!launching) onClose();}} title="Запустить задачу · Supervised" className="flow-launch-dialog" description={`${cap.name} · #${cap.tag} · ${product.name} / ${team.name}`} wide>
     <div className="flow-launch-grid">
       <div className="stack"><Field label="Доска задач"><Pick label="Доска запуска" value={boardId} onChange={value => {setBoardId(value); if (value !== 'all' && task?.boardId !== value) setTaskId('');}} options={[{value: 'all', label: 'Все доски моей команды'}, ...boards.map(board => ({value: board.id, label: board.name}))]} disabled={launching}/></Field>
+        {reasons.length > 0 && <div className="flow-launch-reasons" role="status"><strong>Для запуска:</strong><ul>{reasons.map((reason,index)=><li key={index}>{reason}</li>)}</ul></div>}
         <div className="flow-launch-task-list" aria-label="Задачи для запуска Flow">{filtered.map(item => {
-          const active = activeRun(item.id), outside = !executionConfig.repos.includes(item.repo);
-          return <button type="button" key={item.id} className={`flow-launch-task-card ${taskId === item.id ? 'selected' : ''}`} aria-pressed={taskId === item.id} disabled={launching || !!active || outside} onClick={() => setTaskId(item.id)}><div className="row between"><span className="mono">{item.externalId || item.id}</span><Status value={item.status}/></div><strong>{item.title}</strong><span className="flow-launch-repo">{item.repo}</span><small>{boards.find(board => board.id === item.boardId)?.name}{item.mock ? ' · Mock' : ''}</small>{(active || outside) && <span className="flow-launch-disabled">{active ? `Активный ${active.id}` : 'Git-репозиторий не подключён к Flow'}</span>}</button>;
-        })}{!filtered.length && <div className="flow-launch-empty"><FolderKanban size={24}/><h3>Нет задач для этого тега</h3><p>Добавьте задачи с тегом #{cap.tag} на доску вашей команды.</p></div>}</div>
+          const active = activeRun(item.id), outside = !executionConfig.repos.includes(item.repo), selected = taskId === item.id, unavailable = launching || !!active || outside;
+          return <article key={item.id} className={`flow-launch-task-card ${selected ? 'selected' : ''}`} aria-disabled={unavailable}><button type="button" className="flow-launch-task-select" aria-pressed={selected} disabled={unavailable} onClick={() => setTaskId(item.id)}><div className="row between"><span className="mono">{item.externalId || item.id}</span><Status value={item.status}/></div><strong>{item.title}</strong><span className="flow-launch-repo">{item.repo}</span><small>{boards.find(board => board.id === item.boardId)?.name}{item.mock ? ' · Mock' : ''}</small>{(active || outside) && <span className="flow-launch-disabled">{active ? `Активный ${active.id}` : 'Git-репозиторий не подключён к Flow'}</span>}</button>{selected && !active && !outside && <Button type="button" className="flow-launch-card-action" disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : 'Запустить задачу'}</Button>}</article>;
+        })}{!filtered.length && <div className="flow-launch-empty"><FolderKanban size={24}/><h3>Нет незавершённых задач</h3><p>Добавьте новую задачу с тегом #{cap.tag} на доску вашей команды.</p></div>}</div>
         <Button type="button" variant="outline" disabled={launching} onClick={() => {onClose(); go('tasks', boardId === 'all' ? '' : boardId);}}>Открыть доску задач<ArrowRight size={15}/></Button>
       </div>
-      <div className="flow-launch-summary stack"><div><KV label="Ответственный за проверку">{gateAssignee?.name || 'Не назначен'}</KV></div>
-        {reasons.length > 0 && <div className="flow-launch-reasons" role="status"><strong>Для запуска:</strong><ul>{reasons.map((reason,index)=><li key={index}>{reason}</li>)}</ul></div>}
-      </div>
     </div>
-    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : 'Запустить сценарий'}</Button></div>
+    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button></div>
   </Modal>;
 }

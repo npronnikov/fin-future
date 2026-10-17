@@ -187,16 +187,19 @@
 .flow-launch-grid > div { min-width: 0; }
 .flow-launch-task-list { display: grid; gap: 10px; max-height: 395px; overflow: auto; padding: 2px 3px 2px 1px; scrollbar-width: thin; scrollbar-color: #c6d3bb transparent; }
 .flow-launch-task-card { display: block; width: 100%; min-width: 0; padding: 15px; border: 1px solid #e0e7d6; border-radius: 9px; background: #fff; text-align: left; color: #63755f; }
-.flow-launch-task-card:hover:not(:disabled) { background: #fbfdf8; border-color: #b3c79f; }
+.flow-launch-task-card:hover:not([aria-disabled="true"]) { background: #fbfdf8; border-color: #b3c79f; }
 .flow-launch-task-card.selected, .flow-launch-task-card[aria-pressed="true"], .flow-launch-task-card[aria-checked="true"] { background: #f1f7e9; border-color: #8dac73; box-shadow: 0 0 0 2px #aac49714; }
-.flow-launch-task-card > div { flex: 1; min-width: 0; }
-.flow-launch-task-card strong { display: block; color: #3d5e3e; font-size: 13px; line-height: 1.6; font-weight: 600; overflow-wrap: anywhere; margin-top: 9px; }
-.flow-launch-task-card small { display: block; color: #76886b; font-size: 11px; margin-top: 4px; line-height: 1.65; }
+.flow-launch-task-select { display: block; width: 100%; min-width: 0; background: transparent; text-align: left; color: inherit; }
+.flow-launch-task-select:disabled { cursor: not-allowed; }
+.flow-launch-task-select > div { flex: 1; min-width: 0; }
+.flow-launch-task-select strong { display: block; color: #3d5e3e; font-size: 13px; line-height: 1.6; font-weight: 600; overflow-wrap: anywhere; margin-top: 9px; }
+.flow-launch-task-select small { display: block; color: #76886b; font-size: 11px; margin-top: 4px; line-height: 1.65; }
 .flow-launch-task-card .pill { font-size: 10px; }
-.flow-launch-task-card > .row { gap: 10px; align-items: center; flex-wrap: wrap; }
+.flow-launch-task-select > .row { gap: 10px; align-items: center; flex-wrap: wrap; }
 .flow-launch-task-card .mono { color: #7b8e6d; font-size: 11px; }
 .flow-launch-repo { display: block; color: #63755f; font-size: 11px; line-height: 1.65; margin-top: 9px; overflow-wrap: anywhere; }
-.flow-launch-task-card:disabled { opacity: .72; background: #f8faf5; }
+.flow-launch-task-card[aria-disabled="true"] { opacity: .72; background: #f8faf5; cursor: not-allowed; }
+.flow-launch-card-action { display: flex; width: max-content; margin: 13px 0 0 auto; }
 .flow-launch-disabled { display: block; color: #8c774b; font-size: 10px; line-height: 1.7; margin-top: 8px; }
 .flow-launch-summary { padding: 17px; border: 1px solid #e0e9d5; border-radius: 9px; background: #f4f8ee; min-width: 0; }
 .flow-launch-summary.stack { gap: 16px; }

@@ -110,7 +110,7 @@ export function buildKnowledgeReceipt(state: State, run: Run): Item {
   const regulatoryQueryParams = regulatoryGraphQueryParams(binding?.segment||'','Implementation');
   return {
     simulation:true,transport:'MCP',skill:'knowledge-mcp@1',service:'Context Supply Chain',taskId:task.id,request:task.title,
-    planner:{model:'LLM Context Planner · demo',needs:dependency?['Team knowledge','Regulatory: Information Security, Reliability, Risk']:['Product knowledge','Team knowledge','Regulatory: Information Security, Reliability, Risk'],productReason:dependency?'Продуктовые знания не нужны для этой задачи обновления зависимости.':'Требуются продуктовые понятия.',mandatoryPolicies:true},
+    planner:{model:'LLM Context Planner · demo',needs:dependency?['Team knowledge','Regulatory: Information Security']:['Product knowledge','Team knowledge','Regulatory: Information Security'],productReason:dependency?'Продуктовые знания не нужны для этой задачи обновления зависимости.':'Требуются продуктовые понятия.',mandatoryPolicies:true},
     plannerRequest,query:graphQuery,graphQuery,queryParams,regulatoryQuery,regulatoryQueryParams,product:product.map(fragment),team:team.map(fragment),policies,
     fragments:[...product.map(fragment),...team.map(fragment),...policies],
     targetStage:'Implementation',delivered:false,attempt:run.attempt,
