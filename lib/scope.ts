@@ -47,7 +47,7 @@ export function projectStateForActor(source:State,actor:Person):State{
  }
  for(const benchmark of state.benchmarks)if(benchmark.snapshot)hidePrivateRefs(benchmark.snapshot);
  state.notifications=state.notifications.filter(notice=>teamIds.has(notice.teamId)&&(notice.target!=='run'||runIds.has(notice.ref)));
- state.messages=state.messages.filter(message=>runIds.has(message.thread)||[...teamIds].some(teamId=>message.thread===`team-${teamId}`));
+ state.messages=state.messages.filter(message=>runIds.has(message.thread)||[...teamIds].some(teamId=>message.thread===`team-${teamId}`)||actor.role==='Regulator'&&message.assigneeId===actor.id&&message.thread===`regulator-${actor.id}`);
  state.knowledge=state.knowledge.filter(item=>productIds.has(item.productId)&&(!item.teamId||teamIds.has(item.teamId)));
  for(const item of state.knowledge)if(item.sourceRun&&!runIds.has(item.sourceRun))delete item.sourceRun;
  state.initiatives=state.initiatives.filter(item=>item.teamId?teamIds.has(item.teamId):(item.taskIds||[]).some((id:string)=>taskIds.has(id)));

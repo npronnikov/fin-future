@@ -119,6 +119,10 @@ const missingRegulatoryEvidence = render('regulatory-evidence-readiness', 'defau
 includes(missingRegulatoryEvidence, ['Нет evidence', 'Нет отчёта'], 'Missing regulatory evidence');
 const evidenceRegistry = render('evidence-registry', 'default', {actor: seed.people.find(person => person.id === 'regulator'), screen: 'regulation', tab: 'evidence'});
 includes(evidenceRegistry, ['Evidence Registry', 'GET /api/evidence', 'SQLite', 'Журнал проверок', 'REGULATORY CONTROL PLANE'], 'Evidence Registry');
+const securityMessengerState = copy(seed);
+securityMessengerState.messages.push({id:'security-evidence-alert',thread:'regulator-regulator',teamId:'growth',productId:'accreditive',actor:'automation',kind:'evidence_alert',title:'Production evidence · проверки пройдены',text:'Evidence Registry получил 6 отчётов по LC Dependency Update. Проверки ИБ: 6 PASS.',assigneeId:'regulator',status:'PASS',runIds:['RUN-900'],evidenceIds:['EVIDENCE-RUN-900-1'],evidenceId:'EVIDENCE-RUN-900-1',time:'2026-10-18T10:00:00.000Z'});
+const securityMessenger = render('messenger', 'Messenger', {state: securityMessengerState, actor: securityMessengerState.people.find(person => person.id === 'regulator'), screen: 'messenger', ref: 'regulator-regulator', tab: 'messages'});
+includes(securityMessenger, ['Security alerts', 'Evidence Registry', 'Production evidence · проверки пройдены', 'Открыть evidence'], 'Security Expert Messenger alert');
 const riskRegulation = render('regulation', 'default', {actor: seed.people.find(person => person.id === 'regulator-reviewer'), screen: 'regulation', tab: ''});
 includes(riskRegulation, ['Эксперт рисков', 'Риск'], 'Risk regulator profile');
 assert.ok(!riskRegulation.includes('Информационная безопасность'), 'Risk profile must not show the Information Security tab.');

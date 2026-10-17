@@ -21,7 +21,7 @@ function valueText(value: unknown) {
 }
 
 export default function EvidenceRegistry() {
-  const {actor, state, go} = useKontur();
+  const {actor, state, go, ref} = useKontur();
   const [response, setResponse] = useState<RegistryResponse | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,6 +49,7 @@ export default function EvidenceRegistry() {
     const query = search.trim().toLocaleLowerCase();
     return (policy === '__all' || record.policyPackage === policy) && (status === '__all' || record.status === status) && (!query || `${record.taskId} ${record.taskTitle} ${record.runId} ${record.evidenceId} ${record.requirement} ${record.verificationSkill} ${record.teamName}`.toLocaleLowerCase().includes(query));
   }), [response, policy, status, search]);
+  useEffect(() => {if(ref&&response){const record=response.records.find(item=>item.id===ref||item.evidenceId===ref);if(record)setSelected(record);}}, [ref,response]);
   const profileDirection = actor.directions?.[0] || 'Regulator';
 
   if (actor.role !== 'Regulator') return <div className="page"><PageHead title="Evidence Registry" actions={<Button variant="outline" onClick={() => go('regulation')}>Пакеты политик</Button>}/><Notice title="Нужен профиль Regulator">Evidence Registry содержит полную трассировку проверок по задачам и доступен только роли Regulator.</Notice></div>;

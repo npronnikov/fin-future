@@ -50,6 +50,22 @@ function taskAssignee(s:State,teamId:string,assigneeId:unknown){
  return person.id;
 }
 function notify(s:State,kind:string,title:string,text:string,teamId:string,productId:string,target='capability',ref=''){s.notifications.unshift({id:uid('notice'),kind,title,text,teamId,productId,target,ref,time:new Date().toISOString(),read:false})}
+function sendSecurityEvidenceMessage(s:State,cap:Capability,rel:Release,runIds:string[],time:string){
+ const securityPackages=(rel.snapshot.policyPackages||[]).filter(policy=>policy.direction==='Information Security');
+ const recipient=s.people.find(person=>person.role==='Regulator'&&person.directions?.[0]==='Information Security')||s.people.find(person=>person.role==='Regulator'&&person.directions?.includes('Information Security'));
+ if(!securityPackages.length||!recipient||!runIds.length)return;
+ const requirements=new Set(securityPackages.flatMap(policy=>policy.requirements.map(requirement=>`${requirement.id}@${requirement.version}`)));
+ const runs=runIds.map(id=>s.runs.find(run=>run.id===id)).filter((run):run is Run=>!!run?.evidence);
+ const checks=runs.flatMap(run=>(run.evidence?.results||[]).filter((result:Item)=>requirements.has(result.requirement)));
+ if(!checks.length)return;
+ const status=checks.some(result=>result.status==='FAIL')?'FAIL':checks.some(result=>result.status==='INCONCLUSIVE')?'INCONCLUSIVE':'PASS';
+ const evidenceIds=runs.map(run=>run.evidence!.id),packageKeys=securityPackages.map(policyKey);
+ const title=status==='PASS'?`Production evidence · проверки пройдены`:`Production evidence · требуется внимание`;
+ const text=status==='PASS'
+  ?`Evidence Registry получил ${evidenceIds.length} отчётов по ${cap.name}. Проверки ИБ: ${checks.length} PASS.`
+  :`Evidence Registry получил ${evidenceIds.length} отчётов по ${cap.name}. Итог проверок ИБ: ${status}. Откройте evidence и проверьте наблюдаемые артефакты.`;
+ s.messages.push({id:uid('message'),thread:`regulator-${recipient.id}`,teamId:cap.teamId,productId:cap.productId,actor:'automation',kind:'evidence_alert',title,text,assigneeId:recipient.id,direction:'Information Security',status,capabilityId:cap.id,releaseId:rel.id,policyPackages:packageKeys,runIds:[...runIds],evidenceIds,evidenceId:evidenceIds[0],time});
+}
 function gateNotice(s:State,r:Run){
  const g=r.gates.at(-1);
  if(g?.status!=='pending')return;
@@ -337,6 +353,7 @@ function emulateProductionRelease(s:State,actor:Person,cap:Capability,rel:Releas
   }catch(error){if(!(error instanceof DomainError))throw error;results.push({...row,status:'skipped',reason:error.message});}
  }
  const output={id,capabilityId:cap.id,releaseId:rel.id,tag:cap.tag,completed:runIds.length,skipped:results.filter(row=>row.status==='skipped').length,failed:0,runIds,results};
+ sendSecurityEvidenceMessage(s,cap,rel,runIds,now);
  notify(s,'Эмуляция Capability завершена',`${cap.name} · ${runIds.length} задач выполнено`,`Тег ${cap.tag}. Пропущено: ${output.skipped}. Демонстрационный автоматический прогон без Human Gates.`,cap.teamId,cap.productId,'capability',cap.id);
  return output;
 }

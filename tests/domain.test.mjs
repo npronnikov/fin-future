@@ -4,6 +4,7 @@ import * as d from '../lib/domain.ts';
 import * as e from '../lib/engine.ts';
 import * as c from '../lib/context-supply.ts';
 import * as q from '../lib/knowledge-graph-queries.ts';
+import {projectStateForActor} from '../lib/scope.ts';
 const act=(s,who,action,p={})=>e.applyAction(s,s.people.find(x=>x.id===who),action,{teamId:'growth',productId:'accreditive',...p},'test-owner').state;
 const decision=(s,id,kind,more={})=>{const r=s.runs.find(r=>r.id===id),g=r.gates.at(-1);return act(s,'engineer','gate_decision',{runId:id,gateId:g.id,gateRevision:g.revision,artifactRevision:g.artifactRevision,decision:kind,...more})};
 const depId='cap-dep';
@@ -585,6 +586,14 @@ test('released emulation solves all eligible product-tag tasks across teams with
   assert.equal(JSON.stringify(run.snapshot),frozen);assert.equal(run.evidence.status,'PASS');
   assert.ok(run.execution.autonomous);assert.ok(run.execution.flow.completed);assert.ok(run.execution.flow.trace.every(row=>row.demo));
  }
+ const securityAlert=s.messages.find(message=>message.kind==='evidence_alert'&&message.releaseId==='REL-DEP-1.4');
+ assert.ok(securityAlert);assert.equal(securityAlert.assigneeId,'regulator');assert.equal(securityAlert.status,'PASS');
+ assert.equal(securityAlert.runIds.length,output.result.completed);assert.equal(securityAlert.evidenceIds.length,output.result.completed);
+ assert.match(securityAlert.text,/Evidence Registry/);assert.match(securityAlert.title,/Production evidence/);
+ const securityView=projectStateForActor(s,s.people.find(person=>person.id==='regulator'));
+ assert.ok(securityView.messages.some(message=>message.id===securityAlert.id),'Security Expert receives the evidence alert in Messenger.');
+ const reliabilityView=projectStateForActor(s,s.people.find(person=>person.id==='regulator-reliability'));
+ assert.ok(!reliabilityView.messages.some(message=>message.id===securityAlert.id),'Evidence alert stays addressed to the Security Expert.');
  assert.equal(JSON.stringify(s.runs.slice(0,JSON.parse(historical).length)),historical);
  output=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'emulate_release',{teamId:'growth',productId:'accreditive',capabilityId:'cap-dep'},'test');
  assert.equal(output.result.completed,0);assert.equal(output.state.runs.length,s.runs.length);
