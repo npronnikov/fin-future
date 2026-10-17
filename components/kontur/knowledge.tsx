@@ -6,7 +6,7 @@ import {Button,Input,Textarea,Card,PageHead,Pill,Status,Pick,Modal,Field,Tabs,Ta
 import {DEFAULT_TEAM_KNOWLEDGE} from '@/lib/demo-v16';
 import type {Item,Knowledge,ProductConcept} from '@/lib/domain';
 import KnowledgeQueryConsole from './knowledge-query-console';
-export default function KnowledgePage(_props:{guideOpen?:boolean;onCloseGuide?:()=>void}){
+export default function KnowledgePage(){
  const{state,team,product,tab,go,act,has,busy}=useKontur();
  const[form,setForm]=useState<Item|null>(null),[selected,setSelected]=useState<Knowledge|null>(null),[selectedConcept,setSelectedConcept]=useState<ProductConcept|null>(null),[graphZoom,setGraphZoom]=useState(1);
  const knowledge=state.knowledge.filter(k=>k.productId===product.id&&(!k.teamId||k.teamId===team.id));

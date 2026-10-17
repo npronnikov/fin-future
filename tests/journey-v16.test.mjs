@@ -23,7 +23,7 @@ function workspace(runtime='Maestro'){
  w.release=benchmarkId=>{const releaseId=act('engineer','freeze_release',{capabilityId:w.capabilityId,benchmarkRefs:[benchmarkId]}).id;act('engineer','run_uat',{capabilityId:w.capabilityId,releaseId});const release=state.capabilities[0].releases.find(r=>r.id===releaseId);assert.equal(release.stage,'uat_passed');act('po','risk_decision',{capabilityId:w.capabilityId,releaseId,accepted:true,comment:'Демо: риски рассмотрены',acknowledgements:d.releaseRiskAssessment(state,release).risks.map(r=>r.id)});act('regulator','security_decision',{capabilityId:w.capabilityId,releaseId,accepted:true,comment:'ИБ-проверка пройдена для frozen snapshot.'});w.lastPromotion=act('engineer','promote',{capabilityId:w.capabilityId,releaseId});return releaseId;};
  return w;
 }
-function configured(runtime){const w=workspace(runtime);w.configure();const policy=w.policy();w.act('regulator-reviewer','policy_status',{policyKey:policy,status:'Current'});w.flow();return w;}
+function configured(runtime){const w=workspace(runtime);w.configure();const policy=w.policy();w.act('regulator','policy_status',{policyKey:policy,status:'Current'});w.flow();return w;}
 for(const runtime of ['HG SDLC','Maestro','AI Conductor'])test(`${runtime}: 00 → 8 tasks → four-eyes → modified Flow → 2 runs → judge → benchmark → release → 6 autonomous`,()=>{
  const w=configured(runtime);assert.equal(w.state.setupIntroSeen,true);assert.equal(w.state.tasks.length,8);assert.ok(w.team.bindings.every(b=>b.platform===runtime));
  assert.ok(w.state.capabilities[0].draft.policies.includes('DEMO-SECURITY@1'));
@@ -43,10 +43,9 @@ test('platform first, PL-only access, unavailable AI Manager and cross-platform 
  w.act('platform','save_environment',{...w.team.environment,automation:'AI Conductor'});assert.ok(w.team.bindings.every(b=>b.status!=='connected'));
  assert.throws(()=>w.act('platform','provision',{topologyConfirmed:true}),/binding|подключ|ресурс/i);
 });
-test('policy author cannot activate their own package and each rule is captured by the new Flow',()=>{
- const w=workspace();w.configure();const key=w.policy(),draft=JSON.stringify(w.state.policies.find(p=>d.policyKey(p)===key));
- assert.throws(()=>w.act('regulator','policy_status',{policyKey:key,status:'Current'}),/4-eyes|автор|другой/i);assert.equal(JSON.stringify(w.state.policies.find(p=>d.policyKey(p)===key)),draft);
- w.act('regulator-reviewer','policy_status',{policyKey:key,status:'Current'});const policy=w.state.policies.find(p=>d.policyKey(p)===key);assert.equal(policy.createdBy,'regulator');assert.equal(policy.approvedBy,'regulator-reviewer');assert.equal(policy.changelog,'');w.flow();assert.ok(w.state.capabilities[0].draft.policies.includes(key));
+test('demo emulates peer approval without switching the policy author and captures each rule in the new Flow',()=>{
+ const w=workspace();w.configure();const key=w.policy();const decision=w.act('regulator','policy_status',{policyKey:key,status:'Current'});
+ const policy=w.state.policies.find(p=>d.policyKey(p)===key);assert.equal(decision.simulatedPeerApproval,true);assert.equal(policy.createdBy,'regulator');assert.equal(policy.approvedBy,'regulator-reviewer');assert.equal(policy.changelog,'');w.flow();assert.ok(w.state.capabilities[0].draft.policies.includes(key));
 });
 test('only successful executions become suite cases; judges and suites retain old versions',()=>{
  const w=configured();assert.throws(()=>w.suite(),/успешно завершённый/);w.state.tasks.slice(0,2).forEach(t=>w.run(t.id));const suite=w.suite(),old=JSON.stringify(w.state.suites.at(-1));
@@ -64,7 +63,7 @@ test('knowledge uses separate review/publish; delivered sources are frozen for a
 });
 test('new policy → candidate → benchmark → re-release does not rewrite the previous released snapshot',()=>{
  const w=configured();w.state.tasks.slice(0,2).forEach(t=>w.run(t.id));const suite=w.suite();const firstReport=w.act('engineer','benchmark',{capabilityId:w.capabilityId,suiteId:suite.id,suiteVersion:suite.version}).id;const firstRelease=w.release(firstReport);const old=JSON.stringify(w.state.capabilities[0].releases[0].snapshot);
- const newPolicy=w.policy(2);w.act('regulator-reviewer','policy_status',{policyKey:newPolicy,status:'Current'});w.act('regulator-reviewer','policy_status',{policyKey:'DEMO-SECURITY@1',status:'Deprecating',sunset:'2027-12-31'});
+ const newPolicy=w.policy(2);w.act('regulator','policy_status',{policyKey:newPolicy,status:'Current'});w.act('regulator','policy_status',{policyKey:'DEMO-SECURITY@1',status:'Deprecating',sunset:'2027-12-31'});
  w.act('engineer','clone_release',{capabilityId:w.capabilityId});const cfg=d.copy(w.state.capabilities[0].draft);cfg.policies=cfg.policies.map(key=>key==='DEMO-SECURITY@1'?newPolicy:key);w.act('engineer','save_config',{capabilityId:w.capabilityId,expectedRevision:cfg.revision,config:cfg});
  w.run(w.state.tasks[2].id);const newReport=w.act('engineer','benchmark',{capabilityId:w.capabilityId,suiteId:suite.id,suiteVersion:suite.version}).id;assert.equal(w.state.benchmarks[0].passed,2);const next=w.release(newReport);assert.notEqual(firstRelease,next);assert.equal(JSON.stringify(w.state.capabilities[0].releases.find(r=>r.id===firstRelease).snapshot),old);assert.equal(w.state.capabilities[0].releases.find(r=>r.id===firstRelease).status,'superseded');
 });

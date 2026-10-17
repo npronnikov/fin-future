@@ -54,6 +54,19 @@ test('stored original demo migrates to Accreditive without losing execution hist
  assert.ok(!migrated.policies.some(policy=>policy.id==='IS-corporate-backend'&&policy.version===1));assert.equal(d.migrateState(migrated).changed,false);
 });
 test('Flow must use an existing task tag, without a Task Class entity',()=>{const s=d.createSeed();assert.equal('classes' in s,false);assert.ok(s.capabilities.every(cap=>cap.tag&&!('classId' in cap)));assert.ok(s.tasks.every(task=>s.boards.some(project=>project.id===task.boardId)));assert.throws(()=>act(s,'engineer','create_capability',{tag:'arbitrary',name:'x'}),/существующий тег/)});
+
+test('a new Workflow must be saved before its first supervised task launch',()=>{
+ let s=d.createSeed();s.capabilities=[];s.runs=[];
+ const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'accreditive',tag:'dep-update',template:'dependency-update@1'},'test');
+ s=created.state;const id=created.result.id;
+ assert.equal(d.isDraftSaved(s.capabilities[0]),false);
+ assert.throws(()=>act(s,'engineer','start_run',{capabilityId:id,taskId:'BANK-1857',mode:'supervised'}),/Сначала сохраните Workflow/);
+ const cfg=d.copy(s.capabilities[0].draft);cfg.nodeConfigs=d.getEditableFlowNodes(cfg);
+ s=act(s,'engineer','save_config',{capabilityId:id,expectedRevision:cfg.revision,config:cfg});
+ assert.equal(d.isDraftSaved(s.capabilities[0]),true);
+ s=act(s,'engineer','start_run',{capabilityId:id,taskId:'BANK-1857',mode:'supervised'});
+ assert.equal(s.runs.length,1);
+});
 test('Product Engineer cannot grant repository write access',()=>{assert.throws(()=>act(d.createSeed(),'engineer','save_binding',{type:'Repository',name:'bank/lc-trade-api',read:'/**',write:'/**'}),/Platform Engineer/)});
 test('new Product and Team stay empty until explicit project and mock-task creation',()=>{
  let s=act(d.createSeed(),'po','create_product',{name:'Карты',description:'Product'});const productId=s.products.at(-1).id;
@@ -655,9 +668,10 @@ test('new mixed-repository Flow includes both connected repositories and generat
  let s=d.createSeed();s.capabilities=[];s.runs=[];
  s.tasks=s.tasks.slice(1,3).map(task=>({...task,tag:'shared-dependency-tag',status:'todo'}));
  const created=e.applyAction(s,s.people.find(person=>person.id==='engineer'),'create_capability',{teamId:'growth',productId:'accreditive',tag:'shared-dependency-tag',template:'dependency-update@1'},'test');
- s=created.state;const id=created.result.id,cfg=s.capabilities[0].draft;
+ s=created.state;const id=created.result.id,cfg=d.copy(s.capabilities[0].draft);cfg.nodeConfigs=d.getEditableFlowNodes(cfg);
  assert.deepEqual(cfg.repos,['bank/lc-trade-api','bank/lc-retail-api']);assert.equal(cfg.scope,'/src/letters-of-credit/**');
  assert.ok(cfg.policies.some(key=>key.includes('retail-backend')));
+ s=act(s,'engineer','save_config',{capabilityId:id,expectedRevision:cfg.revision,config:cfg});
  for(const task of s.tasks){
   s=act(s,'engineer','start_run',{capabilityId:id,taskId:task.id,mode:'supervised'});const runId=s.runs.at(-1).id;
   s=decision(s,runId,'input',{value:'2.17.3'});s=decision(s,runId,'approve');

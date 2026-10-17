@@ -4,7 +4,7 @@ import {mkdtempSync, rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {DatabaseSync} from 'node:sqlite';
-import {createEmptyState, createSeed, getStats, snapshotTag, trackerTaskTemplates} from '../lib/domain.ts';
+import {copy, createEmptyState, createSeed, getEditableFlowNodes, getStats, migrateState, snapshotTag, trackerTaskTemplates} from '../lib/domain.ts';
 import {applyAction, DomainError} from '../lib/engine.ts';
 import {Store} from '../server/store.mjs';
 import {projectStateForActor} from '../lib/scope.ts';
@@ -104,6 +104,99 @@ test('empty scenario has no user workspace data, team membership or inherited hi
   assert.equal(createSeed().tasks.length, 16);
 });
 
+test('a repository binding in a new workspace keeps the configured system name', () => {
+  const workspace = domainWorkspace();
+  workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});
+  workspace.act('platform', 'save_binding', {
+    type: 'Repository', name: 'bank/lc-trade-api', system: 'DevPlane',
+    permissions: ['read', 'write', 'create_pr'],
+  });
+  const binding = workspace.state.teams[0].bindings.find(item => item.type === 'Repository');
+  assert.equal(binding.system, 'DevPlane');
+  assert.equal(binding.segment, 'corporate.backend');
+});
+
+test('the regulatory segment selected during product creation seeds new repository bindings', () => {
+  let state = createEmptyState();
+  const run = (actorId, action, payload = {}) => {
+    const changed = applyAction(state, state.people.find(person => person.id === actorId), action, payload, 'setup-test');
+    state = changed.state;
+    return changed.result;
+  };
+  const productId = run('po', 'create_product', {name: 'Data Plane', description: 'Новый продукт', segment: 'retail.data'}).id;
+  const teamId = run('po', 'create_team', {productId, name: 'Data Team', scope: 'Data'}).id;
+  run('po', 'add_person', {productId, teamId, personId: 'platform', role: 'Platform Engineer'});
+  run('platform', 'save_environment', {productId, teamId, ...state.teams[0].environment, automation: 'HG SDLC'});
+  run('platform', 'save_binding', {productId, teamId, type: 'Repository', name: 'bank/lc-trade-api', permissions: ['read']});
+  assert.equal(state.products[0].segment, 'retail.data');
+  assert.equal(state.teams[0].bindings[0].segment, 'retail.data');
+  assert.throws(() => run('po', 'create_product', {name: 'Invalid', description: 'Invalid', segment: 'unknown'}), /регуляторный сегмент/);
+});
+
+test('team policy follows its repository segment and demo peer approval needs no role switch', () => {
+  const workspace = domainWorkspace();
+  workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});
+  workspace.act('platform', 'save_binding', {type: 'Repository', name: 'bank/lc-trade-api', permissions: ['read']});
+  const saved = workspace.act('regulator', 'save_policy', {
+    id: 'TEAM-SECURITY', direction: 'Information Security', segment: 'retail.backend',
+    requirements: [{id: 'TEAM-SECURITY-R001', version: 1, text: 'Проверить разрешённые зависимости.'}],
+    applicability: [{requirement: 'TEAM-SECURITY-R001@1', segment: 'retail.backend', tag: 'dep-update'}],
+    evidence: [], skills: [], subagents: [],
+  });
+  const policy = workspace.state.policies.find(item => `${item.id}@${item.version}` === saved.id);
+  assert.equal(policy.segment, 'corporate.backend');
+  assert.equal(policy.requirements[0].segment, 'corporate.backend');
+  assert.equal(policy.applicability[0].segment, 'corporate.backend');
+  const decision = workspace.act('regulator', 'policy_status', {policyKey: saved.id, status: 'Current'});
+  assert.equal(decision.simulatedPeerApproval, true);
+  assert.equal(workspace.state.policies.find(item => `${item.id}@${item.version}` === saved.id).approvedBy, 'regulator-reviewer');
+  const stale = structuredClone(workspace.state), stalePolicy = stale.policies.find(item => `${item.id}@${item.version}` === saved.id);
+  stalePolicy.segment = 'retail.backend'; stalePolicy.requirements[0].segment = 'retail.backend'; stalePolicy.applicability[0].segment = 'retail.backend';
+  const migrated = migrateState(stale);
+  assert.equal(migrated.changed, true);
+  assert.equal(migrated.state.policies.find(item => `${item.id}@${item.version}` === saved.id).segment, 'corporate.backend');
+});
+
+test('segmentation classifies repositories in the current product instead of inherited demo systems', () => {
+  const workspace = domainWorkspace();
+  workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});
+  workspace.act('platform', 'save_binding', {
+    type: 'Repository', name: 'bank/lc-trade-api',
+    permissions: ['read', 'write', 'create_pr'],
+  });
+  assert.equal(workspace.state.teams[0].bindings[0].system, 'Trade Finance LC', 'Legacy catalog metadata reproduces the regression.');
+  workspace.act('regulator', 'classify_system', {
+    system: 'Новый продукт', repositories: ['bank/lc-trade-api'], segment: 'retail.backend',
+  });
+  const binding = workspace.state.teams[0].bindings[0];
+  assert.equal(binding.system, 'Новый продукт');
+  assert.equal(binding.segment, 'retail.backend');
+});
+
+test('orchestrator version must come from the platform catalog', () => {
+  const workspace = domainWorkspace();
+  const environment = workspace.state.teams[0].environment;
+  assert.throws(() => workspace.act('platform', 'save_environment', {...environment, automation: 'HG SDLC', runtimeVersion: 'custom'}), /доступную версию/);
+  workspace.act('platform', 'save_environment', {...environment, automation: 'HG SDLC', runtimeVersion: '2.0'});
+  assert.equal(workspace.state.teams[0].environment.runtimeVersion, '2.0');
+});
+
+test('a ready environment can promote resources and orchestrator version atomically', () => {
+  const workspace = domainWorkspace();
+  const environment = workspace.state.teams[0].environment;
+  workspace.act('platform', 'save_environment', {...environment, automation: 'HG SDLC'});
+  for (const type of ['Repository', 'Task Tracker', 'CI']) workspace.act('platform', 'save_binding', type === 'Repository'
+    ? {type, name: 'bank/lc-trade-api', system: 'DevPlane', permissions: ['read', 'write', 'create_pr']}
+    : {type, name: type});
+  workspace.act('platform', 'provision', {topologyConfirmed: true});
+  assert.throws(() => workspace.act('engineer', 'promote_environment', {...workspace.state.teams[0].environment, ram: 16, runtimeVersion: '2.0'}), error => error instanceof DomainError && error.status === 403);
+  workspace.act('platform', 'promote_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC', ram: 16, runtimeVersion: '2.0'});
+  assert.equal(workspace.state.teams[0].environment.ram, 16);
+  assert.equal(workspace.state.teams[0].environment.runtimeVersion, '2.0');
+  assert.equal(workspace.state.teams[0].environment.status, 'ready');
+  assert.ok(workspace.state.notifications.some(item => item.kind === 'Environment Promoted'));
+});
+
 test('Tracker only binds a resource; mock tasks are explicitly added to their project', () => {
   const w = domainWorkspace();
   w.act('platform','save_environment',{...w.state.teams[0].environment,automation:'HG SDLC'});
@@ -166,6 +259,9 @@ test('setup preserves role, required resources, topology and repository scope ga
   const projectId = w.act('engineer', 'create_project', {name: 'Проект с ограниченным scope'}).id;
   const taskId = w.act('engineer', 'add_mock_tasks', {projectId, template: 'dep-update', count: 1}).taskIds[0];
   const capabilityId = w.act('engineer', 'create_capability', {tag: 'dep-update', template: 'dependency-update@1'}).id;
+  const workflow = copy(w.state.capabilities.find(capability => capability.id === capabilityId).draft);
+  workflow.nodeConfigs = getEditableFlowNodes(workflow);
+  w.act('engineer', 'save_config', {capabilityId, expectedRevision: workflow.revision, config: workflow});
   w.act('platform', 'save_binding', {
     type: 'Repository', name: 'bank/lc-trade-api', read: '/**', write: '/src/letters-of-credit/**', createPr: true,
   });
@@ -246,6 +342,9 @@ for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor']) {
     assert.equal(capability.draft.runtime, runtime);
     assert.equal(capability.draft.gateAssignee, 'engineer');
     assert.equal(capability.draft.instructions, instructions);
+    const workflow = copy(capability.draft);
+    workflow.nodeConfigs = getEditableFlowNodes(workflow);
+    await act('save_config', {capabilityId, expectedRevision: workflow.revision, config: workflow});
     const taskId = taskIds[0];
     const runId = (await act('start_run', {taskId, capabilityId, mode: 'supervised'})).id;
     let run = current.state.runs.find(value => value.id === runId);

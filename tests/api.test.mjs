@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync, rmSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
-import {getStats, snapshotTag} from '../lib/domain.ts';
+import {copy, getEditableFlowNodes, getStats, snapshotTag} from '../lib/domain.ts';
 import {Store} from '../server/store.mjs';
 import {createApp} from '../server/app.mjs';
 
@@ -123,6 +123,10 @@ test('Kanban edits, custom Flow and Benchmark Suite use the task tag while prese
   assert.equal(flow.tag, task.tag);
   assert.equal(flow.draft.template, 'custom');
   assert.equal(flow.draft.instructions, instructions);
+  await reject('start_run', {capabilityId, taskId: task.id, mode: 'supervised'});
+  const savedConfig = copy(flow.draft);
+  savedConfig.nodeConfigs = getEditableFlowNodes(savedConfig);
+  await act('save_config', {capabilityId, expectedRevision: savedConfig.revision, config: savedConfig});
   await reject('create_capability', {tag: task.tag, template: 'custom'});
   const caseFor = value => ({taskId: value.id, pr: value.pr, base: value.base, golden: value.golden, confirmed: true});
   await reject('save_suite', {

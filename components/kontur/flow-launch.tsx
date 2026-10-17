@@ -3,20 +3,19 @@ import {useEffect, useState} from 'react';
 import {ArrowRight, FolderKanban, Play, ShieldCheck, Tag} from 'lucide-react';
 import {useKontur} from './context';
 import {Button, Field, KV, Modal, Notice, Pick, Pill, Status} from './ui';
-import {currentRelease, flowIssues, getFlowNodes, shortConfig, type Capability, type Config} from '@/lib/domain';
+import {flowIssues, type Capability, type Config} from '@/lib/domain';
 
-export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
-  open: boolean; onClose: () => void; cap: Capability; config: Config; dirty: boolean; save: () => Promise<boolean>;
+export default function FlowLaunch({open, onClose, cap, config, dirty}: {
+  open: boolean; onClose: () => void; cap: Capability; config: Config; dirty: boolean;
 }) {
   const {state, actor, team, product, act, can, busy, go} = useKontur();
-  const release = currentRelease(cap);
   const [boardId, setBoardId] = useState('all');
   const [taskId, setTaskId] = useState('');
   const [launching, setLaunching] = useState(false);
   const tasks = state.tasks.filter(task => task.productId === cap.productId && task.teamId === team.id && task.tag === cap.tag);
   const boards = state.boards.filter(board => board.teamId === team.id && board.productId === cap.productId && tasks.some(task => task.boardId === board.id));
   const activeRun = (id: string) => state.runs.find(run => run.taskId === id && run.teamId === team.id && !run.completedAt && !['failed', 'cancelled'].includes(run.status));
-  const executionConfig = cap.draft ? config : release?.snapshot.config || config;
+  const executionConfig = config;
   useEffect(() => {
     if (!open) return;
     setBoardId('all');
@@ -30,6 +29,7 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
   const reviewers = state.people.filter(person => team.people.includes(person.id) && person.assignments.includes('capability.review'));
   const gateAssignee = reviewers.find(person => person.id === actor.id) || reviewers.find(person => person.id === executionConfig.gateAssignee) || reviewers[0];
   const reasons = [
+    dirty ? 'Сначала сохраните Workflow.' : '',
     !can('Product Engineer') ? 'Для запуска требуется Product Engineer этой команды.' : '',
     team.environment.status !== 'ready' ? 'Environment ещё не готов.' : '',
     activeCount >= team.environment.parallel ? `Достигнут лимит: ${activeCount} из ${team.environment.parallel} активных запусков.` : '',
@@ -40,12 +40,10 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
     !gateAssignee ? 'Добавьте участнику команды разрешение на проверку capability (capability.review).' : '',
     ...flowIssues(executionConfig, {allowLegacyExecutors: !cap.draft}),
   ].filter(Boolean);
-  const saveBeforeRun = cap.teamId === team.id && !!cap.draft && dirty;
   async function launch() {
     if (!task || reasons.length || launching) return;
     setLaunching(true);
     try {
-      if (saveBeforeRun && !(await save())) return;
       const result = await act('start_run', {taskId: task.id, capabilityId: cap.id, mode: 'supervised'});
       if (result?.id) {onClose(); go('run', result.id);}
     } finally {setLaunching(false);}
@@ -63,6 +61,6 @@ export default function FlowLaunch({open, onClose, cap, config, dirty, save}: {
         {reasons.length > 0 && <div className="flow-launch-reasons" role="status"><strong>Для запуска:</strong><ul>{reasons.map((reason,index)=><li key={index}>{reason}</li>)}</ul></div>}
       </div>
     </div>
-    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : saveBeforeRun ? 'Сохранить и запустить сценарий' : 'Запустить сценарий'}</Button></div>
+    <div className="actions"><Button variant="outline" disabled={launching} onClick={onClose}>Отмена</Button><Button disabled={busy || launching || reasons.length > 0} onClick={() => {void launch();}}><Play size={16}/>{launching ? 'Запуск…' : 'Запустить сценарий'}</Button></div>
   </Modal>;
 }

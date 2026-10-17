@@ -52,7 +52,7 @@ for (const empty of [false, true]) for (const [file, name = 'default', context =
   if (empty && ['RunView', 'CapabilityView'].includes(name)) continue;
   render(file, name, {screen: file, ...(empty ? {team: emptyTeam} : {}), ...context});
 }
-const {ScenarioScreen, Bootstrap} = require('../components/kontur/onboarding.tsx');
+const {ScenarioScreen, Bootstrap, getSetupSteps} = require('../components/kontur/onboarding.tsx');
 const empty = createEmptyState();
 for (const [Component, props] of [
   [ScenarioScreen, {busy: false, choose: noop}],
@@ -61,12 +61,26 @@ for (const [Component, props] of [
   assert.ok(renderToStaticMarkup(React.createElement(Component, props)).length);
   count++;
 }
+function releaseGuideStep(stage, securityAccepted = false) {
+  const state = copy(seed), cap = state.capabilities.find(item => item.id === 'cap-dep'), release = cap.releases[0];
+  release.stage = stage;
+  release.securityApproval = securityAccepted ? {accepted: true} : undefined;
+  return getSetupSteps(state, state.teams[0], state.products[0], state.people.find(person => person.id === 'engineer')).find(step => step.title === 'Выпустите автономность');
+}
+assert.deepEqual({role: releaseGuideStep('frozen').role, actorId: releaseGuideStep('frozen').actorId}, {role: 'Product Engineer', actorId: 'engineer'});
+assert.deepEqual({role: releaseGuideStep('uat_passed').role, actorId: releaseGuideStep('uat_passed').actorId}, {role: 'Product Owner', actorId: 'po'});
+assert.deepEqual({role: releaseGuideStep('admitted').role, actorId: releaseGuideStep('admitted').actorId}, {role: 'Безник', actorId: 'regulator'});
+assert.deepEqual({role: releaseGuideStep('admitted', true).role, actorId: releaseGuideStep('admitted', true).actorId}, {role: 'Product Engineer', actorId: 'engineer'});
 const intro = render('onboarding', 'JourneyOverview');
 includes(intro, ['Последовательность демосценария', 'Product Owner', 'Product Engineer', 'Platform Engineer', 'Regulator'], 'Journey');
 const platforms = render('environment', 'default', {screen: 'environment', tab: 'automation', actor: seed.people.find(p => p.id === 'platform'), team: emptyTeam});
 includes(platforms, ['HG SDLC', 'Maestro', 'AI Conductor', 'AI Manager', 'Платформа исполнения'], 'Execution platforms');
 const automation = render('runs', 'Automation', {screen: 'automation'});
 includes(automation, ['Создать Workflow', 'Открыть DEV', 'Мониторинг PROD', 'Workflows продукта'], 'Automation entry');
+const messengerInput = render('messenger', 'Messenger', {screen: 'messenger', ref: 'RUN-912', tab: 'messages'});
+includes(messengerInput, ['HUMAN INPUT', 'Варианты Human Input', 'Отправить ввод'], 'Messenger Human Input');
+const messengerApproval = render('messenger', 'Messenger', {screen: 'messenger', ref: 'RUN-913', tab: 'messages'});
+includes(messengerApproval, ['HUMAN APPROVAL', 'Отправить на доработку', 'Одобрить'], 'Messenger Human Approval');
 for (const [tab, expected] of Object.entries({
   ontology: ['Как знание попадает в продукт', 'Дерево и граф'],
   publication: ['Workflow публикации', 'Предложено', 'Проверено', 'Опубликовано'],
@@ -80,6 +94,7 @@ for (const [tab, expected] of Object.entries({
 const benchmarks = render('benchmark', 'default', {screen: 'benchmark', tab: 'lab'});
 includes(benchmarks, ['Benchmarks', 'Судьи', 'Наборы тестов', 'Запустить оценку'], 'Benchmarks');
 assert.ok(!benchmarks.includes('Golden Isolation'), 'Removed benchmark boilerplate');
+assert.ok(!benchmarks.includes('Следующий шаг — набор тестов'), 'Benchmark lab does not duplicate the navigation hint');
 const judges = render('benchmark', 'default', {screen: 'benchmark', tab: 'judges'});
 includes(judges, ['Создать судью', 'Создать новую версию', 'Промпт и выходная схема'], 'Judges');
 for (const capabilityId of ['cap-statement', 'cap-dep']) {
@@ -87,6 +102,7 @@ for (const capabilityId of ['cap-statement', 'cap-dep']) {
   const config = cap.draft || currentRelease(cap).snapshot.config;
   const html = render('configuration', 'default', {screen: 'capability', ref: capabilityId, tab: 'configuration'}, {cap});
   includes(html, ['Редактор Flow', 'Контур и доступы', 'Запустить задачу', 'Общие настройки Flow'], capabilityId);
+  if (cap.draft && !cap.draft.nodeConfigs) assert.match(html, /<button(?=[^>]*disabled="")(?=[^>]*title="Сначала сохраните Workflow")[^>]*>/, 'Unsaved workflow launch guard');
   assert.equal((html.match(/class="workflow-node-card /g) || []).length, config.nodes.length, 'Flow graph reflects saved nodes');
   if (!cap.draft) includes(html, ['READ ONLY', 'Новая версия'], 'Released workflow');
 }

@@ -1,16 +1,17 @@
 import {upgradeDemoState} from './demo-v16.ts';
 export type Role = 'Product Owner' | 'Platform Engineer' | 'Product Engineer' | 'Regulator';
 export type Runtime = 'HG SDLC' | 'Maestro' | 'AI Conductor' | 'AI Manager';
-export const RUNTIME_PLATFORMS: {id: Runtime; mode: string; available: boolean; components: string[]; resources: string[]}[] = [
- {id:'HG SDLC',mode:'Externally orchestrated',available:true,components:['Workflow Runtime','Coding Agent','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
- {id:'Maestro',mode:'Externally orchestrated',available:true,components:['Maestro controller','Agent workers','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
- {id:'AI Conductor',mode:'Externally orchestrated',available:true,components:['Conductor runtime','Coding Agent','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
- {id:'AI Manager',mode:'Agent directed',available:false,components:['Manager Agent','Agent workers'],resources:[]}
+export const RUNTIME_PLATFORMS: {id: Runtime; mode: string; available: boolean; versions: string[]; components: string[]; resources: string[]}[] = [
+ {id:'HG SDLC',mode:'Externally orchestrated',available:true,versions:['1.0','2.0'],components:['Workflow Runtime','Coding Agent','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
+ {id:'Maestro',mode:'Externally orchestrated',available:true,versions:['1.0','2.0'],components:['Maestro controller','Agent workers','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
+ {id:'AI Conductor',mode:'Externally orchestrated',available:true,versions:['1.0','2.0'],components:['Conductor runtime','Coding Agent','Knowledge MCP','Jenkins adapter'],resources:['Repository','Task Tracker','CI']},
+ {id:'AI Manager',mode:'Agent directed',available:false,versions:['1.0'],components:['Manager Agent','Agent workers'],resources:[]}
 ];
 export const runtimeResources=(runtime:Runtime|null)=>RUNTIME_PLATFORMS.find(item=>item.id===runtime)?.resources||[];
+export const runtimeVersions=(runtime:Runtime|null)=>RUNTIME_PLATFORMS.find(item=>item.id===runtime)?.versions||[];
 export type Item = Record<string, any>;
 export interface Person {id:string;name:string;role:Role;assignments:string[];teams:string[];directions?:string[]}
-export interface Product {id:string;name:string;description:string;owner:string;goals:string;metrics?:string;knowledgeVersion:number}
+export interface Product {id:string;name:string;description:string;owner:string;goals:string;metrics?:string;segment?:string;knowledgeVersion:number}
 export interface Board {id:string;productId:string;teamId:string;name:string;description:string}
 export interface Team {id:string;name:string;spaceId:string;knowledgeVersion:number;people:string[];bindings:Binding[];environment:Environment;automation:Runtime|null}
 export interface Binding {platform?:Runtime;id:string;type:string;name:string;system?:string;segment?:string;read:string;write:string;createPr:boolean;merge:boolean;status:string;permissions?:string[];scope?:string}
@@ -24,7 +25,7 @@ export interface Config {description?:string;tokenLimit?:number;version:string;r
 export interface Snapshot {knowledgePackages?:Knowledge[];id:string;config:Config;capabilityId:string;tag?:string;taskClass?:LegacyTaskClass;productId:string;teamId:string;productName:string;teamName:string;runtime:Runtime;runtimeVersion:string;environment:Environment;bindings:Binding[];createdAt:string;createdBy:string;historyRefs:string[];historyRunCount?:number;benchmarkRefs:string[];testBaskets?:Suite[];baselineReleaseId?:string;uatBindings:string;policyPackages:Policy[]}
 export interface ReleaseRiskAssessment {runCount:number;minimumRuns:number;basketCount:number;basketCaseCount:number;highRisk:boolean;risks:{id:string;title:string;detail:string}[]}
 export interface Release {riskAssessment?:ReleaseRiskAssessment;id:string;snapshot:Snapshot;stage:string;status:string;uat?:{status:string;snapshotId:string;binding:string;runId:string;time:string;report?:Item};risk?:{accepted:boolean;actor:string;identity:string;comment:string;time:string;snapshotId:string;acknowledgements?:string[];assessment?:Item};securityApproval?:{accepted:boolean;actor:string;identity:string;comment:string;time:string;snapshotId:string};releasedAt?:string;autonomyScope:string}
-export interface Capability {id:string;tag:string;teamId:string;productId:string;name:string;draft:Config|null;releases:Release[];migrationFrom?:string;legacyDuplicateOf?:string}
+export interface Capability {id:string;tag:string;teamId:string;productId:string;name:string;draft:Config|null;draftSavedRevision?:number|null;releases:Release[];migrationFrom?:string;legacyDuplicateOf?:string}
 export interface Gate {id:string;runId:string;type:'input'|'approval';phase:string;revision:number;artifactRevision:number;assignee:string;status:string;question:string;options?:string[];scope:string;createdAt:string;decision?:Item;nodeId?:string;nodeRevision?:number}
 export interface Run {id:string;taskId:string;teamId:string;productId:string;capabilityId:string;snapshot:Snapshot;releaseId?:string;mode:string;status:string;startedAt:string;completedAt?:string;events:{time:string;title:string;detail?:string;kind?:string}[];gates:Gate[];attempts:Item[];attempt:number;artifactRevision:number;writer:'automation'|'human'|'none';workspace:{checkout:string;branch:string;path:string;content:string;checked:boolean};plans:Item[];evidence:Item|null;artifacts:Item;metrics:{latency:number;cost:number;humanTime:number;tokens:number;rework:number;takeover:number;input:number;approval:number;outOfScope:number};fixture?:boolean;uat?:boolean;execution:Item;scope:{repositories:string[];workTypes:string[]}}
 export interface Policy {createdBy?:string;createdAt?:string;approvedBy?:string;approvedAt?:string;productId?:string;teamId?:string;id:string;version:number;direction:string;segment:string;status:string;sunset:string;effective:string;owner:string;supersedes:string;requirements:Item[];applicability:Item[];skills:string[];subagents?:string[];evidence:Item[];changelog:string}
@@ -93,6 +94,7 @@ export const shortConfig=(c:Config)=>`v${c.version} · r${c.revision}`;
 export const policyKey=(p:Policy)=>`${p.id}@${p.version}`;
 export const snapshotTag=(snapshot:Snapshot)=>snapshot.tag??snapshot.taskClass?.tag??'';
 export function currentRelease(c:Capability|undefined){return c?.releases.find(r=>r.stage==='production'&&r.status!=='superseded')}
+export function isDraftSaved(c:Capability){if(!c.draft)return true;if(c.draftSavedRevision===null)return false;if(c.draftSavedRevision===undefined)return Array.isArray(c.draft.nodeConfigs);return c.draftSavedRevision===c.draft.revision}
 export function releaseMigrationDetails(state:State,release:Release){
  return release.snapshot.config.policies.flatMap(currentKey=>{
   const current=state.policies.find(policy=>policyKey(policy)===currentKey);
@@ -448,6 +450,14 @@ export function migrateState(source:Item):{state:State;changed:boolean}{
  }
  for(const team of state.teams)team.bindings=team.bindings.filter((binding:Binding)=>['Repository','Task Tracker','CI'].includes(binding.type));
  for(const policy of state.policies){
+  const policyTeam=policy.createdBy&&policy.teamId?state.teams.find((team:Team)=>team.id===policy.teamId):undefined;
+  const workspaceSegments=[...new Set((policyTeam?.bindings||[]).filter((binding:Binding)=>binding.type==='Repository').map((binding:Binding)=>binding.segment))];
+  if(workspaceSegments.length===1&&policy.segment!==workspaceSegments[0]){
+   policy.segment=workspaceSegments[0];
+   for(const requirement of policy.requirements)requirement.segment=policy.segment;
+   for(const rule of policy.applicability)rule.segment=policy.segment;
+   for(const rule of policy.evidence)rule.segment=policy.segment;
+  }
   for(const rule of policy.applicability){
    if(rule.taskClass!==undefined){rule.tag=rule.tag??rule.taskClass;delete rule.taskClass;}
   }

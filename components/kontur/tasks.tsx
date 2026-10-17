@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import {Filter, FolderKanban, GripVertical, Plus, Play, Tag, UserRound, Workflow} from 'lucide-react';
 import {useKontur} from './context';
 import {Button, Input, Textarea, Card, PageHead, Pill, Status, Pick, Modal, Detail, Field, KV, Blank, Notice, TextLink, DateText} from './ui';
-import {capabilityForTag, currentRelease, shortConfig, snapshotTag, type Task} from '@/lib/domain';
+import {capabilityForTag, currentRelease, isDraftSaved, shortConfig, snapshotTag, type Task} from '@/lib/domain';
 
 const columns = [
   {id: 'backlog', name: 'Backlog'},
@@ -19,7 +19,7 @@ const mockSets = [
 ];
 const initials = (name: string) => name.split(/\s+/).slice(0, 2).map(word => word[0]).join('');
 
-export default function Tasks({showSetupHints=true}:{showSetupHints?:boolean}) {
+export default function Tasks() {
   const {state, team, product, ref, tab, go, act, can, busy} = useKontur();
   const boards = state.boards.filter(board => board.teamId === team.id && board.productId === product.id);
   const tasks = state.tasks.filter(task => task.teamId === team.id && task.productId === product.id);
@@ -49,6 +49,7 @@ export default function Tasks({showSetupHints=true}:{showSetupHints?:boolean}) {
   const task = tasks.find(task => task.id === selected);
   const cap = task && capabilityForTag(state, product.id, task.tag);
   const release = cap && currentRelease(cap);
+  const workflowSaved = !cap || isDraftSaved(cap);
   const run = task && (state.runs.find(item => item.taskId === task.id && !item.completedAt && !['cancelled', 'failed'].includes(item.status)) || state.runs.filter(item => item.taskId === task.id && !item.uat).at(-1));
   const running = !!run && !run.completedAt && !['cancelled', 'failed'].includes(run.status);
   const editable = can('Product Owner', 'Product Engineer');
@@ -84,7 +85,6 @@ export default function Tasks({showSetupHints=true}:{showSetupHints?:boolean}) {
     </>}/>
     {!ready && <Notice tone="blue" title="Сначала подготовьте Automation" action={<Button variant="outline" onClick={() => go('environment', '', 'resources')}>Настроить среду</Button>}>После подготовки среды создайте доску и добавьте задачи. Затем вернитесь к плану: следующий этап — регуляторный пакет.</Notice>}
     {ready && boards.length === 0 && <Card><Blank title="Создайте первую доску" text="Добавьте на доску моковые задачи, а затем выберите Flow для нужного тега." action={<Button disabled={!editable || busy} onClick={() => setBoardOpen(true)}><Plus size={16}/>Новая доска</Button>}/></Card>}
-    {showSetupHints&&tasks.length>0&&<Notice tone="blue" title="Следующий этап — пакет политик" action={<Button variant="outline" onClick={()=>go('home')}>К плану</Button>}>Регулятор создаёт и подтверждает политики. Workflow создаётся в разделе «Автоматизация».</Notice>}
     {boards.length > 0 && <>
       <div className="board-toolbar">
         <div className="row wrap"><Filter size={16}/>
@@ -147,7 +147,7 @@ export default function Tasks({showSetupHints=true}:{showSetupHints?:boolean}) {
       {can('Product Owner') && <div className="mt-4"><Pick value={task.initiativeId || 'none'} label="Initiative" options={[{value: 'none', label: 'Без Initiative'}, ...state.initiatives.map(item => ({value: item.id, label: item.name}))]} onChange={value => {void act('task_initiative', {taskId: task.id, initiativeId: value === 'none' ? '' : value});}}/></div>}
       <div className="detail-title">Execution / Flow</div>
       {cap ? <><KV label="Flow по тегу"><TextLink onClick={() => {setSelected(''); go('capability', cap.id);}}>{cap.name}</TextLink></KV><KV label="Configuration">{cap.draft ? shortConfig(cap.draft) : release ? shortConfig(release.snapshot.config) : '—'}</KV>{release && <KV label="Trusted Capability"><Pill tone="green">#{snapshotTag(release.snapshot)}</Pill><Status value={release.status}/><span className="block mono mt-2">{release.snapshot.id}</span></KV>}
-        {running && run ? <Notice tone="blue" title={`${run.id} · ${run.status}`} action={<TextLink onClick={() => go('run', run.id)}>Открыть запуск</TextLink>}>Для задачи уже выполняется запуск.</Notice> : <div className="stack mt-5"><div className="row"><span className="subtext">Режим запуска</span><Pill tone="blue">Supervised</Pill></div><Button onClick={start} disabled={busy || !can('Product Engineer') || !ready}><Play size={15}/>Запустить задачу</Button></div>}
+        {running && run ? <Notice tone="blue" title={`${run.id} · ${run.status}`} action={<TextLink onClick={() => go('run', run.id)}>Открыть запуск</TextLink>}>Для задачи уже выполняется запуск.</Notice> : !workflowSaved ? <Notice title="Сначала сохраните Workflow" action={<Button variant="outline" size="sm" onClick={() => {setSelected(''); go('capability', cap.id, 'configuration');}}>Открыть конфигурацию</Button>}>Запуск задачи станет доступен после отдельного сохранения сценария.</Notice> : <div className="stack mt-5"><div className="row"><span className="subtext">Режим запуска</span><Pill tone="blue">Supervised</Pill></div><Button onClick={start} disabled={busy || !can('Product Engineer') || !ready}><Play size={15}/>Запустить задачу</Button></div>}
       </> : <Blank title={task.tag ? `Flow для #${task.tag} ещё не создан` : 'Добавьте тег задаче'} text="Выберите и настройте сценарий для тега, затем запустите задачу." action={task.tag ? <Button variant="outline" disabled={!can('Product Engineer') || !ready} onClick={() => {setSelected(''); addFlow(task.tag);}}>Выбрать и настроить</Button> : undefined}/>}
       <div className="detail-title">История запусков / Evidence</div>
       {state.runs.filter(item => item.taskId === task.id && !item.uat).slice(-6).reverse().map(item => <button className="item-row w-full px-0 text-left" key={item.id} onClick={() => go('run', item.id)}><div className="item-main"><h3 className="mono">{item.id}</h3><p>{shortConfig(item.snapshot.config)} · #{snapshotTag(item.snapshot)} · {item.mode} · <DateText value={item.startedAt}/></p></div><Status value={item.status}/></button>)}

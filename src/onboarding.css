@@ -55,6 +55,8 @@
 .setup-checklist > header { padding: 23px 24px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .setup-checklist h2 { font-size: 21px; margin: 7px 0 9px; font-weight: 620; }
 .setup-checklist header p:not(.eyebrow) { font-size: 14px; color: #63755f; }
+.foundation-setup-grid { padding: 24px; }
+.foundation-setup .bootstrap-note { min-height: 100%; }
 .setup-progress { height: 5px; background: #edf2e4; margin: 0 24px 6px; overflow: hidden; border-radius: 5px; }
 .setup-progress > span { display: block; height: 100%; background: #95b86d; transition: width .2s; }
 .setup-check-row { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #edf0e7; }
