@@ -134,6 +134,18 @@ test('release without Benchmark succeeds after same-snapshot UAT, risk acceptanc
 test('Production Run uses released snapshot despite newer Draft',()=>{let s=d.createSeed();s=act(s,'engineer','clone_release',{capabilityId:depId});const cfg=d.copy(s.capabilities[0].draft);cfg.instructions='New draft instructions';s=act(s,'engineer','save_config',{capabilityId:depId,expectedRevision:1,config:cfg});s=act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'});assert.equal(s.runs.at(-1).snapshot.id,'SNAP-DEP-1.4');assert.notEqual(s.runs.at(-1).snapshot.config.instructions,cfg.instructions)});
 test('current Platform grants cannot be bypassed by an older release',()=>{const s=d.createSeed();s.teams[0].bindings[0].write='';assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/grants/)});
 test('retired policy suspends capability and stops new autonomous runs',()=>{const s=act(d.createSeed(),'regulator','policy_status',{policyKey:'IS-corporate-backend@7',status:'Retired'});assert.equal(s.capabilities[0].releases[0].status,'suspended');assert.throws(()=>act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'}),/запрещён/);assert.ok(s.runs.length>0);assert.equal(s.capabilities[0].releases[0].snapshot.config.policies[0],'IS-corporate-backend@7')});
+
+test('activating a new policy version deprecates the previous current version while old releases keep running with migration required',()=>{
+ let s=d.createSeed(),old=s.policies.find(policy=>d.policyKey(policy)==='IS-corporate-backend@7'),next=s.policies.find(policy=>d.policyKey(policy)==='IS-corporate-backend@8'),release=s.capabilities[0].releases[0];
+ old.status='Current';old.sunset='';for(const requirement of old.requirements)requirement.status='Current';next.status='Draft';for(const requirement of next.requirements)requirement.status='Draft';release.status='active';
+ const frozen=JSON.stringify(release.snapshot),result=e.applyAction(s,s.people.find(person=>person.id==='regulator'),'policy_status',{teamId:'growth',productId:'accreditive',policyKey:'IS-corporate-backend@8',status:'Current'},'test');s=result.state;
+ old=s.policies.find(policy=>d.policyKey(policy)==='IS-corporate-backend@7');next=s.policies.find(policy=>d.policyKey(policy)==='IS-corporate-backend@8');release=s.capabilities[0].releases[0];
+ assert.equal(next.status,'Current');assert.equal(old.status,'Deprecating');assert.equal(old.sunset,'');assert.ok(old.requirements.every(requirement=>requirement.status==='Deprecating'));
+ assert.deepEqual(result.result.deprecated,['IS-corporate-backend@7']);assert.equal(release.status,'migration_required');assert.equal(JSON.stringify(release.snapshot),frozen);
+ assert.ok(s.notifications.some(notification=>notification.kind==='Policy migration required'&&notification.title.includes('IS-corporate-backend@7')));
+ s=act(s,'engineer','start_run',{capabilityId:depId,taskId:'BANK-1857',mode:'production'});const run=s.runs.at(-1);
+ assert.equal(run.status,'accepted');assert.equal(run.snapshot.config.policies[0],'IS-corporate-backend@7');assert.equal(s.capabilities[0].releases[0].status,'migration_required');
+});
 test('Run history is never automatically published as Knowledge',()=>{let s=d.createSeed();const count=s.knowledge.length;s=decision(s,'RUN-912','input',{value:'2.17.4'});s=decision(s,'RUN-912','approve');assert.equal(s.knowledge.length,count)});
 
 test('Model Gateway is runtime configuration, not a required or writable Resource Binding',()=>{

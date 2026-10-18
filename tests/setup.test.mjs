@@ -181,6 +181,23 @@ test('team policy follows its repository segment and demo peer approval needs no
   assert.equal(migrated.state.policies.find(item => `${item.id}@${item.version}` === saved.id).segment, 'corporate.backend');
 });
 
+test('publishing a new package version automatically starts migration from the previous current version', () => {
+  const workspace = domainWorkspace();
+  workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});
+  workspace.act('platform', 'save_binding', {type: 'Repository', name: 'bank/lc-trade-api', permissions: ['read']});
+  const create = version => workspace.act('regulator', 'save_policy', {
+    id: 'TEAM-SECURITY', direction: 'Information Security', segment: 'corporate.backend',
+    requirements: [{id: 'TEAM-SECURITY-R001', version, text: `Разрешённая версия правила ${version}.`}],
+    applicability: [{requirement: `TEAM-SECURITY-R001@${version}`, tag: 'dep-update'}], evidence: [], skills: [], subagents: [],
+  }).id;
+  const first = create(1);workspace.act('regulator', 'policy_status', {policyKey: first, status: 'Current'});
+  const second = create(2), decision = workspace.act('regulator', 'policy_status', {policyKey: second, status: 'Current'});
+  assert.deepEqual(decision.deprecated,[first]);
+  assert.equal(workspace.state.policies.find(policy => `${policy.id}@${policy.version}` === first).status,'Deprecating');
+  assert.equal(workspace.state.policies.find(policy => `${policy.id}@${policy.version}` === second).status,'Current');
+  assert.throws(()=>workspace.act('regulator','policy_status',{policyKey:first,status:'Current'}),/более новая версия/);
+});
+
 test('segmentation classifies repositories in the current product instead of inherited demo systems', () => {
   const workspace = domainWorkspace();
   workspace.act('platform', 'save_environment', {...workspace.state.teams[0].environment, automation: 'HG SDLC'});

@@ -98,6 +98,14 @@ for (const run of productionMonitoringState.runs.filter(run => run.teamId === pr
 const productionMonitoring = render('capabilities', 'CapabilityView', {state: productionMonitoringState, screen: 'capability', ref: 'cap-dep', tab: 'monitoring'});
 includes(productionMonitoring, ['Автоматическое выполнение задач', 'Прогресс PROD', 'Human Gates не используются'], 'Production monitoring progress');
 assert.ok(!productionMonitoring.includes('Эмулировать продакшн'), 'Production monitoring has no manual emulation button.');
+const migrationRelease = render('capabilities', 'CapabilityView', {screen: 'capability', ref: 'cap-dep', tab: 'releases'});
+includes(migrationRelease, ['Почему нужна миграция', 'Создать новую версию'], 'Release migration');
+assert.ok(!migrationRelease.includes('Создать версию и обновить зависимости'), 'Migration action uses the shorter label.');
+assert.equal((migrationRelease.match(/Почему нужна миграция/g) || []).length, 1, 'Migration reason is shown once in the release status notice.');
+assert.ok(!migrationRelease.includes('Почему требуется миграция'), 'Standalone migration card is removed.');
+assert.ok(!migrationRelease.includes('Изменения требуют новой версии'), 'Migration reason replaces the generic new-version notice.');
+assert.ok(migrationRelease.indexOf('Production version · Release Snapshot') < migrationRelease.indexOf('Почему нужна миграция'), 'Migration notice is rendered inside the production release card.');
+assert.ok(!migrationRelease.includes('Immutable package'), 'Completed release pipeline is replaced with a compact status.');
 const capabilityList = render('capabilities', 'CapabilityList', {screen: 'capabilities'});
 assert.ok(!capabilityList.includes('Эмулировать продакшн'), 'Production cards have no manual emulation button.');
 const messengerInput = render('messenger', 'Messenger', {screen: 'messenger', ref: 'RUN-912', tab: 'messages'});
@@ -149,10 +157,28 @@ for (const capabilityId of ['cap-statement', 'cap-dep']) {
   const config = cap.draft || currentRelease(cap).snapshot.config;
   const html = render('configuration', 'default', {screen: 'capability', ref: capabilityId, tab: 'configuration'}, {cap});
   includes(html, ['Редактор Flow', 'Контур и доступы', 'Запустить задачу', 'Общие настройки Flow'], capabilityId);
+  includes(html, ['Как политики влияют на Flow', 'Текст политики · все шаги', 'Требования', 'Реализация', 'Проверки', 'Evidence'], `${capabilityId} policy impact`);
+  assert.match(html, /<details class="flow-policy-impact"/, 'Policy impact package is collapsible.');
+  assert.doesNotMatch(html, /<details class="flow-policy-impact"[^>]*open=""/, 'Policy impact package is initially collapsed.');
   if (cap.draft && !cap.draft.nodeConfigs) assert.match(html, /<button(?=[^>]*disabled="")(?=[^>]*title="Сначала сохраните Workflow")[^>]*>/, 'Unsaved workflow launch guard');
   assert.equal((html.match(/class="workflow-node-card /g) || []).length, config.nodes.length, 'Flow graph reflects saved nodes');
   if (!cap.draft) includes(html, ['READ ONLY', 'Новая версия'], 'Released workflow');
 }
+const policyDeltaState = copy(seed), policyDeltaCap = policyDeltaState.capabilities.find(capability => capability.id === 'cap-dep'), policyDeltaRelease = currentRelease(policyDeltaCap);
+const previousPolicy = policyDeltaState.policies.find(policy => `${policy.id}@${policy.version}` === 'IS-corporate-backend@7');
+const nextPolicy = policyDeltaState.policies.find(policy => `${policy.id}@${policy.version}` === 'IS-corporate-backend@8');
+previousPolicy.stages = [{stage: 'requirements', skills: ['dependency-review@5'], subagents: []}, {stage: 'implementation', skills: ['dependency-review@5'], subagents: []}, {stage: 'checks', skills: ['dependency-review@5'], subagents: []}];
+previousPolicy.evidence = [{artifacts: 'dependency manifest'}];
+nextPolicy.stages = [{stage: 'requirements', skills: ['certified-dependency-selection@5', 'dependency-review@5'], subagents: []}, {stage: 'implementation', skills: ['certified-dependency-selection@5', 'dependency-review@5'], subagents: []}, {stage: 'checks', skills: ['dependency-evidence-check@3'], subagents: ['implementation-agent@1']}];
+nextPolicy.evidence = [{artifacts: 'Итоговый manifest; approved registry reference; Jenkins test report; vulnerability report'}];
+policyDeltaRelease.snapshot.config.policies = ['IS-corporate-backend@7'];
+policyDeltaCap.migrationFrom = policyDeltaRelease.id;
+policyDeltaCap.draft = {...copy(policyDeltaRelease.snapshot.config), version: '1.5', policies: ['IS-corporate-backend@8']};
+const policyDelta = render('configuration', 'default', {state: policyDeltaState, screen: 'capability', ref: policyDeltaCap.id, tab: 'configuration'}, {cap: policyDeltaCap});
+includes(policyDelta, ['certified-dependency-selection@5', 'dependency-evidence-check@3', 'implementation-agent@1', 'Итоговый manifest; approved registry reference; Jenkins test report; vulnerability report'], 'Policy stage delta');
+assert.ok(!policyDelta.includes('IS-corporate-backend@7'), 'Previous package version is not shown as a separate delta block.');
+assert.ok((policyDelta.match(/flow-policy-stage-value added/g) || []).length >= 4, 'Added policy effects are highlighted inside stage blocks.');
+assert.ok((policyDelta.match(/flow-policy-stage-value removed/g) || []).length >= 2, 'Removed policy effects are highlighted inside stage blocks.');
 for (const runtime of ['HG SDLC', 'Maestro', 'AI Conductor', 'AI Manager']) {
   const config = defaultConfig('dep-update', runtime);
   config.nodeConfigs = getFlowNodes(config);

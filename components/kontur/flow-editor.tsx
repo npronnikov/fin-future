@@ -1,6 +1,6 @@
 'use client';
 import {useEffect, useId, useRef, useState} from 'react';
-import {ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bot, Box, Check, CheckCircle2, Code2, FileCheck, FileText, Grip, Layers, Lock, Maximize2, Minus, Network, Plus, Save, Settings2, ShieldCheck, Sparkles, Trash2, Users, Workflow} from 'lucide-react';
+import {ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bot, Box, Check, CheckCircle2, Code2, FileCheck, FileText, Grip, Layers, Lock, Maximize2, Minus, Network, Plus, Save, ShieldCheck, Sparkles, Trash2, Users, Workflow} from 'lucide-react';
 import {useKontur} from './context';
 import {Button, Field, Input, Textarea, Pick, Pill, Modal, Notice, Toggle} from './ui';
 import SandboxPreview from './sandbox-preview';
@@ -71,7 +71,6 @@ export default function FlowEditor({config, savedConfig, flowName, ownerTeam, on
           <footer className="flow-canvas-footer"><span><Lock size={12}/>До запуска и После запуска — системные стадии</span><span>{editable ? 'Выберите шаг для настройки' : 'Только просмотр'}</span></footer>
         </div>
         {issues.length > 0 && <div className="flow-validation" role="status"><ShieldCheck size={18}/><div><strong>Проверьте Flow перед сохранением</strong><ul>{issues.map((issue, index) => <li key={`${issue}-${index}`}>{issue}</li>)}</ul></div></div>}
-        <div className="flow-editor-note"><Settings2 size={16}/><span>Порядок шагов задаёт последовательность исполнения. Skills, Subagents и параметры узлов сохраняются в конфигурации и Snapshot каждого запуска.</span></div>
       </div>
       <aside className="flow-node-inspector" aria-label="Настройки выбранного узла">
         {selected ? <>
